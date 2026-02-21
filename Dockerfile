@@ -36,27 +36,29 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libxcb1 \
     && rm -rf /var/lib/apt/lists/*
 
+# 🔥 Pull in the ultra-fast Rust-based 'uv' package manager
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /bin/uv
+
 RUN python -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
-# 🚨 CRITICAL FIX 1: Install CPU-only Torch FIRST. 
-# If put in requirements.txt, pip often ignores flags and downloads the 2.5GB GPU version!
-RUN pip install --no-cache-dir torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
+# 🚨 CRITICAL FIX 1: Install CPU-only Torch FIRST using 'uv pip'. 
+# 'uv' resolves and downloads massive packages up to 100x faster than standard pip.
+RUN uv pip install --no-cache torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
 
 COPY identity-service/requirements.txt ./
 
 # 🚨 CRITICAL FIX 2: DeepFace forces the 1GB 'tensorflow' GPU package. 
 # We install requirements, explicitly uninstall the GPU bloat, and ensure only 'tensorflow-cpu' remains.
-RUN pip install --no-cache-dir -r requirements.txt \
-    && pip uninstall -y tensorflow tensorflow-cpu \
-    && pip install --no-cache-dir tensorflow-cpu tf-keras \
+RUN uv pip install --no-cache -r requirements.txt \
+    && uv pip uninstall -y tensorflow tensorflow-cpu \
+    && uv pip install --no-cache tensorflow-cpu tf-keras \
     && rm -rf /opt/venv/lib/python3.10/site-packages/nvidia* \
     && rm -rf /opt/venv/lib/python3.10/site-packages/triton* \
     && rm -rf /opt/venv/lib/python3.10/site-packages/tensorboard* \
     && find /opt/venv -name "*.so" -exec strip {} \; || true \
     && find /opt/venv -type d -name "__pycache__" -exec rm -rf {} + \
-    && find /opt/venv -name "*.pyc" -delete \
-    && rm -rf /root/.cache/pip
+    && find /opt/venv -name "*.pyc" -delete
 
 # Pre-download ML models at build time to prevent massive startup delays/OOM in Railway
 RUN python -c "import easyocr; easyocr.Reader(['en'], gpu=False); from deepface import DeepFace; DeepFace.build_model('ArcFace')"
