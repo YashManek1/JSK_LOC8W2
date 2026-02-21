@@ -6,9 +6,13 @@ import QRPage from "./pages/QRPage";
 import StudentDashboard from "./pages/StudentDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
 import JudgeDashboard from "./pages/JudgeDashboard";
-// You will create these next:
-import CompleteProfilePage from "./pages/CompleteProfilePage"; 
+import CompleteProfilePage from "./pages/CompleteProfilePage";
 import AdminHackathonsPage from "./pages/AdminHackathonsPage";
+import HackathonSelectionPage from "./pages/HackathonSelectionPage";
+import TeamManagementPage from "./pages/TeamManagementPage";
+import ProblemStatementPreferencesPage from "./pages/ProblemStatementPreferencesPage";
+import PPTRound1Page from "./pages/PPTRound1Page";
+import ShortlistAnnouncementPage from "./pages/ShortlistAnnouncementPage";
 
 function Router() {
   const { currentPage } = useApp();
@@ -16,6 +20,11 @@ function Router() {
   const pages = {
     auth: <AuthPage />,
     completeProfile: <CompleteProfilePage />,
+    hackathonSelection: <HackathonSelectionPage />,
+    teamManagement: <TeamManagementPage />,
+    problemStatementPreferences: <ProblemStatementPreferencesPage />,
+    pptRound1: <PPTRound1Page />,
+    shortlistAnnouncement: <ShortlistAnnouncementPage />,
     landing: <LandingPage />,
     qr: <QRPage />,
     studentDashboard: <StudentDashboard />,

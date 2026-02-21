@@ -11,8 +11,12 @@ export default function SignupForm() {
     college: "",
     phone: "",
     aadhar: null,
+    collegeId: null,
+    otp: "",
   });
   const [step, setStep] = useState(1);
+  const [otpRequested, setOtpRequested] = useState(false);
+  const [otpError, setOtpError] = useState("");
 
   const handleChange = (e) => {
     const { name, value, files } = e.target;
@@ -21,6 +25,15 @@ export default function SignupForm() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    if (role === "student" && !otpRequested) {
+      setOtpError("Please request and verify OTP first");
+      return;
+    }
+    if (role === "student" && !form.otp) {
+      setOtpError("Please enter OTP");
+      return;
+    }
+    setOtpError("");
     const user = {
       id: `u_${Date.now()}`,
       ...form,
@@ -30,6 +43,18 @@ export default function SignupForm() {
       teamName: "Team " + form.name.split(" ")[0],
     };
     loginUser(user);
+  };
+
+  const handleRequestOtp = async (e) => {
+    e.preventDefault();
+    if (!form.email || !form.phone) {
+      setOtpError("Please enter email and phone first");
+      return;
+    }
+    setOtpError("");
+    setOtpRequested(true);
+    // In production: await backend OTP API call
+    alert(`OTP sent to ${form.email}. Check your email.`);
   };
 
   const inputCls =
@@ -115,6 +140,34 @@ export default function SignupForm() {
             />
           </div>
 
+          {/* OTP Verification */}
+          <div className="bg-white/5 border border-white/10 rounded-xl p-4">
+            <label className={labelCls}>OTP Verification</label>
+            <p className="text-white/50 text-xs mb-3">We'll send an OTP to your email for verification.</p>
+            <div className="flex gap-2 mb-3">
+              <input
+                name="otp"
+                value={form.otp}
+                onChange={handleChange}
+                placeholder="Enter 6-digit OTP"
+                className={inputCls}
+                maxLength="6"
+                disabled={!otpRequested}
+              />
+              <button
+                type="button"
+                onClick={handleRequestOtp}
+                disabled={otpRequested}
+                className="px-4 bg-white/10 hover:bg-white/20 border border-white/10 rounded-xl text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-colors whitespace-nowrap"
+              >
+                {otpRequested ? "✓ Sent" : "Request OTP"}
+              </button>
+            </div>
+            {otpRequested && (
+              <p className="text-[#B4ED57] text-xs">OTP sent to {form.email}</p>
+            )}
+          </div>
+
           {/* Aadhar Upload */}
           <div>
             <label className={labelCls}>Aadhar Card Upload</label>
@@ -136,7 +189,35 @@ export default function SignupForm() {
               <p className="text-[#B4ED57] text-xs mt-1.5">✓ {form.aadhar.name} uploaded</p>
             )}
           </div>
+
+          {/* College ID Upload */}
+          <div>
+            <label className={labelCls}>College ID Card Upload</label>
+            <label className="flex flex-col items-center justify-center border-2 border-dashed border-white/20 rounded-xl p-6 cursor-pointer hover:border-[#B4ED57]/40 transition-colors group">
+              <span className="text-3xl mb-2">🎓</span>
+              <span className="text-white/60 text-sm group-hover:text-white/80 transition-colors">
+                {form.collegeId ? form.collegeId.name : "Click to upload College ID"}
+              </span>
+              <span className="text-white/30 text-xs mt-1">JPG or PNG (max 5MB)</span>
+              <input
+                name="collegeId"
+                type="file"
+                accept=".jpg,.jpeg,.png"
+                onChange={handleChange}
+                className="hidden"
+              />
+            </label>
+            {form.collegeId && (
+              <p className="text-[#B4ED57] text-xs mt-1.5">✓ {form.collegeId.name} uploaded</p>
+            )}
+          </div>
         </>
+      )}
+
+      {otpError && role === "student" && (
+        <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-3 text-red-400 text-sm">
+          {otpError}
+        </div>
       )}
 
       {/* Submit */}

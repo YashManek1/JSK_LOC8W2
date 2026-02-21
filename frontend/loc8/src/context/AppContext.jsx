@@ -9,9 +9,19 @@ export function AppProvider({ children }) {
   const [currentUser, setCurrentUser] = useState(null);
   const [selectedHackathon, setSelectedHackathon] = useState(null);
   
-  // New States for your workflow
+  // Profile and Team States
   const [isProfileComplete, setIsProfileComplete] = useState(false);
-  const [teamJoined, setTeamJoined] = useState(false);
+  const [teamId, setTeamId] = useState(null);
+  const [teamData, setTeamData] = useState(null);
+  const [teamInviteCode, setTeamInviteCode] = useState(null);
+  const [isTeamLeader, setIsTeamLeader] = useState(false);
+  
+  // Hackathon Workflow States
+  const [hackathonPhase, setHackathonPhase] = useState("teamFormation");
+  const [selectedProblems, setSelectedProblems] = useState([]);
+  const [allocatedProblem, setAllocatedProblem] = useState(null);
+  const [pptScore, setPptScore] = useState(null);
+  const [isShortlisted, setIsShortlisted] = useState(null);
   const [qrScanned, setQrScanned] = useState(false);
   const [generatedQR, setGeneratedQR] = useState(null);
 
@@ -20,10 +30,9 @@ export function AppProvider({ children }) {
   const loginUser = (user) => {
     setCurrentUser(user);
     if (user.role === "student") {
-      // Check if profile is complete (simulated)
-      navigateTo(isProfileComplete ? "landing" : "completeProfile");
+      navigateTo(isProfileComplete ? "hackathonSelection" : "completeProfile");
     } else if (user.role === "admin" || user.role === "organiser") {
-      navigateTo("adminHackathons"); // New landing for admins
+      navigateTo("adminHackathons");
     } else if (user.role === "judge") {
       navigateTo("judgeDashboard");
     }
@@ -31,13 +40,59 @@ export function AppProvider({ children }) {
 
   const completeProfile = () => {
     setIsProfileComplete(true);
-    navigateTo("landing");
+    navigateTo("hackathonSelection");
   };
 
-  const joinTeam = () => {
-    setTeamJoined(true);
-    // Only generate QR once team is ready
-    setGeneratedQR(`HACKOS-TEAM-READY-${Date.now()}`);
+  const selectHackathon = (hackathon) => {
+    setSelectedHackathon(hackathon);
+    navigateTo("teamManagement");
+  };
+
+  const createTeam = (teamName, members = []) => {
+    const code = Math.random().toString(36).substring(2, 8).toUpperCase();
+    setTeamData({
+      id: `team_${Date.now()}`,
+      name: teamName,
+      leader: currentUser,
+      members: [currentUser, ...members],
+      createdAt: new Date(),
+    });
+    setTeamInviteCode(code);
+    setIsTeamLeader(true);
+    setTeamId(`team_${Date.now()}`);
+    console.log(`[SIMULATED EMAIL] Team created with code: ${code}`);
+    navigateTo("teamManagement");
+  };
+
+  const joinTeamWithCode = (code) => {
+    setTeamData((prev) => ({
+      ...prev,
+      members: [...(prev?.members || []), currentUser],
+    }));
+    console.log(`[SIMULATED EMAIL] Team is complete and ready to proceed!`);
+    navigateTo("teamManagement");
+  };
+
+  const proceedToNextPhase = () => {
+    const phases = ["teamFormation", "problemSelection", "pptRound1", "shortlist", "qrGeneration"];
+    const idx = phases.indexOf(hackathonPhase);
+    if (idx < phases.length - 1) {
+      const nextPhase = phases[idx + 1];
+      setHackathonPhase(nextPhase);
+      navigateToPhase(nextPhase);
+    }
+  };
+
+  const navigateToPhase = (phase) => {
+    if (phase === "problemSelection") navigateTo("problemStatementPreferences");
+    else if (phase === "pptRound1") navigateTo("pptRound1");
+    else if (phase === "shortlist") navigateTo("shortlistAnnouncement");
+    else if (phase === "qrGeneration") navigateTo("qr");
+  };
+
+  const saveProblemsPreference = (problems) => {
+    setSelectedProblems(problems);
+    setAllocatedProblem(problems[0]);
   };
 
   const scanQR = () => {
@@ -49,7 +104,13 @@ export function AppProvider({ children }) {
     setCurrentUser(null);
     setSelectedHackathon(null);
     setIsProfileComplete(false);
-    setTeamJoined(false);
+    setTeamId(null);
+    setTeamData(null);
+    setTeamInviteCode(null);
+    setIsTeamLeader(false);
+    setHackathonPhase("teamFormation");
+    setSelectedProblems([]);
+    setAllocatedProblem(null);
     setQrScanned(false);
     setCurrentPage("auth");
   };
@@ -64,16 +125,31 @@ export function AppProvider({ children }) {
         generatedQR,
         qrScanned,
         isProfileComplete,
-        teamJoined,
+        teamId,
+        teamData,
+        teamInviteCode,
+        isTeamLeader,
+        hackathonPhase,
+        selectedProblems,
+        allocatedProblem,
+        pptScore,
+        isShortlisted,
         navigateTo,
         setAuthMode,
         loginUser,
         completeProfile,
-        joinTeam,
+        selectHackathon,
+        createTeam,
+        joinTeamWithCode,
+        proceedToNextPhase,
+        saveProblemsPreference,
+        setPptScore,
+        setIsShortlisted,
         scanQR,
         logout,
         setSelectedHackathon,
         setCurrentUser,
+        setHackathonPhase,
       }}
     >
       {children}
