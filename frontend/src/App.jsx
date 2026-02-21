@@ -7,6 +7,8 @@ import ShortlistResult from "./pages/ShortlistResult";
 import AdminDashboard from "./pages/AdminDashboard";
 import IdentityVerification from "./pages/IdentityVerification";
 import VoiceChat from "./pages/VoiceChat";
+import HackerCockpit from "./pages/HackerCockpit";
+import EvaluatorPortal from "./pages/EvaluatorPortal";
 
 export default function App() {
   const location = useLocation();
@@ -22,6 +24,8 @@ export default function App() {
           <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/verify-identity" element={<IdentityVerification />} />
           <Route path="/voice-chat" element={<VoiceChat />} />
+          <Route path="/cockpit" element={<HackerCockpit />} />
+          <Route path="/evaluator/:teamName" element={<EvaluatorPortal />} />
         </Routes>
       </AnimatePresence>
     </div>

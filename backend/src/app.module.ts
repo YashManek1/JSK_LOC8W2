@@ -6,6 +6,8 @@ import { EvaluateModule } from './evaluate/evaluate.module';
 import { QueueModule } from './queue/queue.module';
 import { VoiceChatModule } from './voice-chat/voice-chat.module';
 import { ShortlistModule } from './shortlist/shortlist.module';
+import { GithubAnalyticsModule } from './github-analytics/github-analytics.module';
+import { MockDataController } from './test/mock-data.controller';
 import * as dotenv from 'dotenv';
 
 dotenv.config();
@@ -28,8 +30,9 @@ const redisUrl = process.env.REDIS_URL ? new URL(process.env.REDIS_URL) : null;
     QueueModule,
     VoiceChatModule,
     ShortlistModule,
+    GithubAnalyticsModule,
   ],
-  controllers: [AppController],
+  controllers: [AppController, MockDataController],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule { }

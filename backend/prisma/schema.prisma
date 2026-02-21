@@ -37,50 +37,60 @@ model Evaluation {
 }
 
 model Participant {
-  id                String        @id @default(uuid())
-  fullName          String?
-  liveSelfieUrl     String?
-  idCardUrl         String?
-  aadhaarEncrypted  String?
-  phone             String?
-  faceEmbedding     Json?
-  email             String        @unique
-  password          String?
-  role              String        @default("USER")
-  college            String?
-  education          String[]
-  githubAccessToken  String?
-  githubRefreshToken String?
-  primarySkillset    String[]
-  tagline            String?
-  projects           Json?
-  workExperience     Json?
-  positionOfResponsibility Json?
-  achievements       String[]
-  certifications     String[]
-  socialLinks        Json?
-  hackathonPreferences Json?
-  motivation         String?
-  pastProjects       String[]
-  githubUrl          String?
-  linkedinUrl        String?
-  roleSelection      String?
-  sleepHabits       String?
-  dietaryPref       String?
-  teamId            String?
-  createdAt         DateTime      @default(now())
-  updatedAt         DateTime      @updatedAt
-  chatSessions      ChatSession[]
-  team              Team?         @relation(fields: [teamId], references: [id])
+  id                              String             @id @default(uuid())
+  fullName                        String?
+  liveSelfieUrl                   String?
+  idCardUrl                       String?
+  aadhaarEncrypted                String?
+  phone                           String?
+  email                           String             @unique
+  motivation                      String?
+  pastProjects                    String[]
+  githubUrl                       String?
+  linkedinUrl                     String?
+  roleSelection                   String?
+  sleepHabits                     String?
+  dietaryPref                     String?
+  teamId                          String?
+  createdAt                       DateTime           @default(now())
+  updatedAt                       DateTime           @updatedAt
+  faceEmbedding                   Json?
+  college                         String?
+  githubAccessToken               String?
+  githubRefreshToken              String?
+  hackathonPreferences            Json?
+  password                        String?
+  positionOfResponsibility        Json?
+  projects                        Json?
+  role                            String             @default("USER")
+  socialLinks                     Json?
+  tagline                         String?
+  workExperience                  Json?
+  achievements                    String[]
+  certifications                  String[]
+  education                       String[]
+  primarySkillset                 String[]
+  chatSessions                    ChatSession[]
+  Hackathon                       Hackathon[]
+  team                            Team?              @relation(fields: [teamId], references: [id])
+  PushSubscription                PushSubscription[]
+  Registration                    Registration[]
+  Team_Team_leaderIdToParticipant Team[]             @relation("Team_leaderIdToParticipant")
 }
 
 model Team {
-  id           String        @id @default(uuid())
-  teamName     String
-  leadEmail    String
-  memberEmails String[]
-  createdAt    DateTime      @default(now())
-  participants Participant[]
+  id                                     String        @id @default(uuid())
+  teamName                               String
+  leadEmail                              String
+  memberEmails                           String[]
+  createdAt                              DateTime      @default(now())
+  hackathonId                            String?
+  inviteCode                             String?       @unique
+  leaderId                               String?
+  status                                 String        @default("INCOMPLETE")
+  participants                           Participant[]
+  Hackathon                              Hackathon?    @relation(fields: [hackathonId], references: [id])
+  Participant_Team_leaderIdToParticipant Participant?  @relation("Team_leaderIdToParticipant", fields: [leaderId], references: [id])
 }
 
 model ChatSession {
@@ -135,6 +145,87 @@ model ShortlistEntry {
   /// Set on publish: 1 = best. Tiebreak: finalScore DESC, createdAt ASC
   rank             Int?
   config           RoundConfig @relation(fields: [configId], references: [id])
+}
+
+model Domain {
+  id          String    @id
+  name        String
+  problems    Json
+  hackathonId String
+  Hackathon   Hackathon @relation(fields: [hackathonId], references: [id], onDelete: Cascade)
+}
+
+model Hackathon {
+  id                   String          @id
+  name                 String
+  startDate            DateTime
+  endDate              DateTime
+  registrationDeadline DateTime?
+  location             String
+  description          String?
+  posterUrl            String?
+  prizePool            String?
+  totalTeams           Int?
+  teamSize             Int             @default(3)
+  totalOfflineTeams    Int?
+  totalRemoteTeams     Int?
+  venueMapUrl          String?
+  ndaRequired          Boolean         @default(false)
+  status               String          @default("Active")
+  sponsors             Json?
+  rules                Json?
+  requiredFields       Json?
+  adminId              String
+  createdAt            DateTime        @default(now())
+  updatedAt            DateTime
+  psReleaseDate        DateTime?
+  psReleasedPushSent   Boolean         @default(false)
+  Domain               Domain[]
+  Participant          Participant     @relation(fields: [adminId], references: [id])
+  Registration         Registration[]
+  Room                 Room[]
+  Team                 Team[]
+  TimelineEvent        TimelineEvent[]
+}
+
+model PushSubscription {
+  id            String      @id
+  participantId String
+  endpoint      String      @unique
+  p256dh        String
+  auth          String
+  createdAt     DateTime    @default(now())
+  Participant   Participant @relation(fields: [participantId], references: [id], onDelete: Cascade)
+}
+
+model Registration {
+  id             String      @id
+  participantId  String
+  hackathonId    String
+  dynamicAnswers Json?
+  status         String      @default("SOLO")
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime
+  Hackathon      Hackathon   @relation(fields: [hackathonId], references: [id], onDelete: Cascade)
+  Participant    Participant @relation(fields: [participantId], references: [id], onDelete: Cascade)
+
+  @@unique([participantId, hackathonId])
+}
+
+model Room {
+  id          String    @id
+  name        String
+  capacity    String
+  hackathonId String
+  Hackathon   Hackathon @relation(fields: [hackathonId], references: [id], onDelete: Cascade)
+}
+
+model TimelineEvent {
+  id          String    @id
+  time        String
+  event       String
+  hackathonId String
+  Hackathon   Hackathon @relation(fields: [hackathonId], references: [id], onDelete: Cascade)
 }
 
 enum RoundStatus {

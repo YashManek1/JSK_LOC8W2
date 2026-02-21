@@ -155,10 +155,15 @@ export class ShortlistService {
 
     // ─── All Entries (admin) ──────────────────────────────────────────
     async getAllEntries() {
-        return this.db.shortlistEntry.findMany({
-            orderBy: { createdAt: 'desc' },
-            include: { config: { select: { isPublished: true, targetShortlist: true } } },
-        });
+        try {
+            return await this.db.shortlistEntry.findMany({
+                orderBy: { createdAt: 'desc' },
+                include: { config: { select: { isPublished: true, targetShortlist: true } } },
+            });
+        } catch (e: any) {
+            console.error("CRITICAL ADMIN ERROR:", e);
+            return { error: String(e.message), stack: String(e.stack) };
+        }
     }
 
     // ─── Single Entry (participant — no adminNote) ────────────────────

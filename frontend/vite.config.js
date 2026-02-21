@@ -6,6 +6,22 @@ export default defineConfig({
     server: {
         port: 5173,
         proxy: {
+            // GitHub Analytics routes
+            '/github': {
+                target: 'http://localhost:3000',
+                changeOrigin: true,
+            },
+            // Test/Mock routes
+            '/test': {
+                target: 'http://localhost:3000',
+                changeOrigin: true,
+            },
+            // Voice Chat WebSocket
+            '/socket.io': {
+                target: 'http://localhost:3000',
+                ws: true,
+                changeOrigin: true,
+            },
             // Existing routes — already have /api in their @Controller prefix
             '/api/evaluate': {
                 target: 'http://localhost:3000',
