@@ -25,7 +25,9 @@ ENV PATH="/opt/venv/bin:$PATH"
 
 COPY identity-service/requirements.txt ./
 # Install CPU-only versions of heavy ML libraries to drastically reduce size
-RUN pip install --no-cache-dir --extra-index-url https://download.pytorch.org/whl/cpu -r requirements.txt
+RUN pip install --no-cache-dir --extra-index-url https://download.pytorch.org/whl/cpu -r requirements.txt \
+    && find /opt/venv -type d -name "__pycache__" -exec rm -rf {} + \
+    && rm -rf /root/.cache/pip
 
 
 # ----- Stage 3: Final Production Image -----
