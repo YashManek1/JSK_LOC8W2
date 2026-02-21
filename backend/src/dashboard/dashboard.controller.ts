@@ -27,7 +27,7 @@ export class DashboardController {
   async getTeamSummary(@Param('teamId') teamId: string) {
     const commits = await this.dashboardService.getTeamCommits(teamId);
     const scores = await this.dashboardService.getPPTScores(teamId);
-    
+
     return {
       teamId,
       commits: commits || { total: 0, contributors: [] },

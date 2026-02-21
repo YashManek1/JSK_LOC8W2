@@ -54,8 +54,9 @@ export class RepomixService {
       this.detectPlagiarismSignatures(packedContent, githubUrl);
 
       return packedContent;
-    } catch (error: any) {
-      this.logger.error(`[${runId}] Repomix packing failed: ${error.message}`);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      this.logger.error(`[${runId}] Repomix packing failed: ${message}`);
       throw new BadRequestException(
         'Failed to pack codebase for analysis. Ensure the repository is public.',
       );
@@ -64,7 +65,7 @@ export class RepomixService {
       try {
         this.logger.log(`[${runId}] Cleaning up temp directory...`);
         await fs.rm(tmpDir, { recursive: true, force: true });
-      } catch (cleanupError) {
+      } catch {
         this.logger.error(
           `[${runId}] Failed to cleanup temp directory: ${tmpDir}`,
         );

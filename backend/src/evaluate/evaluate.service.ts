@@ -196,7 +196,7 @@ export class EvaluateService {
     await this.prisma.evaluation.update({
       where: { id: evaluationId },
       data: {
-        exaggerations: updatedScores as any,
+        exaggerations: updatedScores,
       },
     });
 

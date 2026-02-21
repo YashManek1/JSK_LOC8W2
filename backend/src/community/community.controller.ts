@@ -69,10 +69,6 @@ export class CommunityController {
     @Req() req: RequestWithUser,
     @Body() body: { content: string },
   ) {
-    return this.communityService.replyToPost(
-      id,
-      req.user.userId,
-      body.content,
-    );
+    return this.communityService.replyToPost(id, req.user.userId, body.content);
   }
 }

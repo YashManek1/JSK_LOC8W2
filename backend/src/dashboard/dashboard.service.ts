@@ -9,10 +9,7 @@ export class DashboardService {
     // Try to find by shortlist entry ID or team name
     const shortlistEntry = await this.prisma.shortlistEntry.findFirst({
       where: {
-        OR: [
-          { id: teamId },
-          { teamName: teamId },
-        ],
+        OR: [{ id: teamId }, { teamName: teamId }],
       },
     });
 
@@ -34,10 +31,7 @@ export class DashboardService {
   async getPPTScores(teamId: string) {
     const shortlistEntry = await this.prisma.shortlistEntry.findFirst({
       where: {
-        OR: [
-          { id: teamId },
-          { teamName: teamId },
-        ],
+        OR: [{ id: teamId }, { teamName: teamId }],
       },
     });
 

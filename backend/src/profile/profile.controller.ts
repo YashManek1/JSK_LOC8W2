@@ -13,7 +13,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 
 @Controller('profile')
 export class ProfileController {
-  constructor(private readonly profileService: ProfileService) { }
+  constructor(private readonly profileService: ProfileService) {}
 
   @Get(':id')
   async getProfile(@Param('id') id: string) {
@@ -21,7 +21,10 @@ export class ProfileController {
   }
 
   @Put(':id')
-  async updateProfile(@Param('id') id: string, @Body() body: any) {
+  async updateProfile(
+    @Param('id') id: string,
+    @Body() body: Record<string, unknown>,
+  ) {
     return this.profileService.updateProfile(id, body);
   }
 

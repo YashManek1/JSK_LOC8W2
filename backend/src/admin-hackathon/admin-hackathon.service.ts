@@ -111,7 +111,9 @@ export class AdminHackathonService {
       },
     });
 
-    const activeHackathons = hackathons.filter((h) => h.status === 'Active').length;
+    const activeHackathons = hackathons.filter(
+      (h) => h.status === 'Active',
+    ).length;
 
     return {
       totalHackathons: hackathons.length,
