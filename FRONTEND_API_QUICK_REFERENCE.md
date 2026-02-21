@@ -15,6 +15,178 @@ const getAuthHeaders = () => ({
 
 ---
 
+## 🆕 NEW ENDPOINTS (Just Added)
+
+### **Hackathon Management**
+
+```javascript
+// Get Admin Hackathon Stats
+async function getHackathonStats() {
+    const response = await fetch('/api/admin/hackathons/stats', {
+        headers: getAuthHeaders()
+    });
+    return await response.json();
+    // Returns: { totalHackathons, activeHackathons, totalParticipants, totalTeams, hackathons: [...] }
+}
+```
+
+### **Judging System**
+
+```javascript
+// Submit Judge Scores
+async function submitJudgeScores(evaluationId, scores, judgeId) {
+    const response = await fetch('/api/evaluate/score', {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ evaluationId, scores, judgeId })
+    });
+    return await response.json();
+}
+
+// Example usage:
+const scores = {
+    innovation: 8,
+    technical: 7,
+    presentation: 9,
+    impact: 8
+};
+await submitJudgeScores('eval-123', scores, 'judge-456');
+```
+
+### **Dashboard Widgets**
+
+```javascript
+// Get Team Commits Data
+async function getTeamCommits(teamId) {
+    const response = await fetch(`/api/dashboard/commits/${teamId}`);
+    return await response.json();
+}
+
+// Get PPT Scores
+async function getPPTScores(teamId) {
+    const response = await fetch(`/api/dashboard/ppt-scores/${teamId}`);
+    return await response.json();
+}
+
+// Get Complete Team Summary
+async function getTeamSummary(teamId) {
+    const response = await fetch(`/api/dashboard/summary/${teamId}`);
+    return await response.json();
+}
+```
+
+### **Discussion Forum**
+
+```javascript
+// Create Discussion Post
+async function createPost(title, content, hackathonId, tags) {
+    const response = await fetch('/api/community/posts', {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ title, content, hackathonId, tags })
+    });
+    return await response.json();
+}
+
+// Get Discussion Posts
+async function getPosts(hackathonId, limit = 50, offset = 0) {
+    const url = `/api/community/posts?hackathonId=${hackathonId}&limit=${limit}&offset=${offset}`;
+    const response = await fetch(url);
+    return await response.json();
+}
+
+// Like a Post
+async function likePost(postId) {
+    const response = await fetch(`/api/community/posts/${postId}/like`, {
+        method: 'POST',
+        headers: getAuthHeaders()
+    });
+    return await response.json();
+}
+
+// Reply to Post
+async function replyToPost(postId, content) {
+    const response = await fetch(`/api/community/posts/${postId}/reply`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ content })
+    });
+    return await response.json();
+}
+```
+
+### **OTP Service**
+
+```javascript
+// Send OTP
+async function sendOTP(email, phone) {
+    const response = await fetch('/api/auth/send-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, phone })
+    });
+    return await response.json();
+    // Returns: { success: true, message: "OTP sent to email", expiresIn: 300 }
+}
+
+// Verify OTP
+async function verifyOTP(email, phone, otp) {
+    const response = await fetch('/api/auth/verify-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, phone, otp })
+    });
+    return await response.json();
+    // Returns: { success: true, verified: true, message: "OTP verified successfully" }
+}
+
+// React Component Example:
+function OTPVerification() {
+    const [email, setEmail] = useState('');
+    const [otp, setOtp] = useState('');
+    const [otpSent, setOtpSent] = useState(false);
+
+    const handleSendOTP = async () => {
+        const result = await sendOTP(email);
+        if (result.success) {
+            setOtpSent(true);
+            alert('OTP sent! Check your email.');
+        }
+    };
+
+    const handleVerify = async () => {
+        const result = await verifyOTP(email, null, otp);
+        if (result.verified) {
+            alert('✅ Verified!');
+        }
+    };
+
+    return (
+        <div>
+            <input 
+                placeholder="Email" 
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+            />
+            {!otpSent ? (
+                <button onClick={handleSendOTP}>Send OTP</button>
+            ) : (
+                <>
+                    <input 
+                        placeholder="Enter 6-digit OTP" 
+                        value={otp}
+                        onChange={(e) => setOtp(e.target.value)}
+                    />
+                    <button onClick={handleVerify}>Verify</button>
+                </>
+            )}
+        </div>
+    );
+}
+```
+
+---
+
 ## 🔥 Most Used Routes (Copy-Paste Ready)
 
 ### 1. **GitHub Analytics** (Main Feature)

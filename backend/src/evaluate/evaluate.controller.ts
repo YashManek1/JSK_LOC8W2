@@ -72,4 +72,14 @@ export class EvaluateController {
     }
     return evaluation;
   }
+
+  @Post('score')
+  async saveScores(
+    @Body() body: { evaluationId: string; scores: Record<string, number>; judgeId?: string },
+  ) {
+    if (!body.evaluationId || !body.scores) {
+      throw new BadRequestException('evaluationId and scores are required');
+    }
+    return this.evaluateService.saveJudgeScores(body.evaluationId, body.scores, body.judgeId);
+  }
 }

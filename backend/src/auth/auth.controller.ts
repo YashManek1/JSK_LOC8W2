@@ -128,4 +128,25 @@ export class AuthController {
       `http://localhost:5173/auth/success?accessToken=${accessToken}&refreshToken=${refreshToken}`,
     );
   }
+
+  @Post('send-otp')
+  async sendOtp(@Body() body: { email: string; phone?: string }) {
+    if (!body.email && !body.phone) {
+      throw new BadRequestException('Email or phone is required');
+    }
+    return this.authService.sendOtp(body.email, body.phone);
+  }
+
+  @Post('verify-otp')
+  async verifyOtp(
+    @Body() body: { email: string; phone?: string; otp: string },
+  ) {
+    if (!body.email && !body.phone) {
+      throw new BadRequestException('Email or phone is required');
+    }
+    if (!body.otp) {
+      throw new BadRequestException('OTP is required');
+    }
+    return this.authService.verifyOtp(body.email, body.phone, body.otp);
+  }
 }

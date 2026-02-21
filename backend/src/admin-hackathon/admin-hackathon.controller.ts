@@ -25,4 +25,9 @@ export class AdminHackathonController {
   async getMyHackathons(@Req() req: RequestWithUser) {
     return this.adminHackathonService.getMyHackathons(req.user.userId);
   }
+
+  @Get('stats')
+  async getStats(@Req() req: RequestWithUser) {
+    return this.adminHackathonService.getStats(req.user.userId);
+  }
 }
