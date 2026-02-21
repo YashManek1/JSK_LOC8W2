@@ -6,7 +6,7 @@ set -e
 echo "🚀 Starting Identity Service (FastAPI) on port 8000..."
 cd /app/identity-service
 # Fix 1: Call the uvicorn binary directly from the virtual environment
-/opt/venv/bin/uvicorn main:app --host 127.0.0.1 --port 8000 &
+/opt/venv/bin/uvicorn main:app --host 0.0.0.0 --port 8000 &
 
 echo "⏳ Waiting 3 seconds for Python models to begin loading..."
 sleep 3
