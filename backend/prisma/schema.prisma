@@ -75,10 +75,12 @@ model Participant {
   // Relations
   chatSessions      ChatSession[]
   team              Team?          @relation(fields: [teamId], references: [id])
-  hackathons        Hackathon[]    @relation("AdminHackathons") // Hackathons created by this admin
+  hackathons        Hackathon[]    @relation("AdminHackathons")
   leadsTeams        Team[]         @relation("TeamLeader")
   registrations     Registration[]
   pushSubscriptions PushSubscription[]
+  checkInQRs        CheckInQR[]
+  mealQRs           MealQR[]
 }
 
 model Team {
@@ -177,6 +179,8 @@ model Hackathon {
   sponsors       Json? // Array of strings: ["Google", "GitHub"]
   rules          Json? // Array of strings: ["Rule 1", "Rule 2"]
   requiredFields Json? // Array of required registration fields: ["github", "college"]
+  mealTimes      Json? // { breakfast: "08:00", lunch: "13:00", dinner: "20:00" }
+  qrGenerated    Boolean @default(false) // Has the cron generated check-in QRs?
 
   // Relations
   adminId       String
@@ -186,6 +190,8 @@ model Hackathon {
   timeline      TimelineEvent[]
   teams         Team[]
   registrations Registration[]
+  checkInQRs    CheckInQR[]
+  mealQRs       MealQR[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -252,4 +258,35 @@ model PushSubscription {
   p256dh        String
   auth          String
   createdAt     DateTime    @default(now())
+}
+
+model CheckInQR {
+  id            String      @id @default(uuid())
+  participantId String
+  participant   Participant @relation(fields: [participantId], references: [id], onDelete: Cascade)
+  hackathonId   String
+  hackathon     Hackathon   @relation(fields: [hackathonId], references: [id], onDelete: Cascade)
+  qrToken       String      @unique @default(uuid())
+  isCheckedIn   Boolean     @default(false)
+  checkedInAt   DateTime?
+  emailSent     Boolean     @default(false)
+  createdAt     DateTime    @default(now())
+
+  @@unique([participantId, hackathonId])
+}
+
+model MealQR {
+  id            String      @id @default(uuid())
+  participantId String
+  participant   Participant @relation(fields: [participantId], references: [id], onDelete: Cascade)
+  hackathonId   String
+  hackathon     Hackathon   @relation(fields: [hackathonId], references: [id], onDelete: Cascade)
+  mealType      String      // BREAKFAST | LUNCH | DINNER
+  mealDate      DateTime    // The date of this specific meal
+  qrToken       String      @unique @default(uuid())
+  isScanned     Boolean     @default(false)
+  scannedAt     DateTime?
+  createdAt     DateTime    @default(now())
+
+  @@unique([participantId, hackathonId, mealType, mealDate])
 }

@@ -14,6 +14,7 @@ import { RegistrationModule } from './registration/registration.module';
 import { MailModule } from './mail/mail.module';
 import { NotificationModule } from './notification/notification.module';
 import { PsModule } from './ps/ps.module';
+import { CheckInModule } from './check-in/check-in.module';
 import * as dotenv from 'dotenv';
 
 dotenv.config();
@@ -43,8 +44,9 @@ const redisUrl = process.env.REDIS_URL ? new URL(process.env.REDIS_URL) : null;
     MailModule,
     NotificationModule,
     PsModule,
+    CheckInModule,
   ],
   controllers: [AppController, MockDataController],
   providers: [AppService],
 })
-export class AppModule { }
+export class AppModule {}

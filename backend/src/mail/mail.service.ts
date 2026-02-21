@@ -70,4 +70,49 @@ export class MailService {
       this.logger.error(`Failed to send email to ${leaderEmail}`, error);
     }
   }
+
+  async sendCheckInQR(
+    email: string,
+    participantName: string,
+    hackathonName: string,
+    qrToken: string,
+  ): Promise<void> {
+    const subject = `🎫 Your Check-In QR for ${hackathonName}`;
+
+    const html = `
+      <div style="font-family: Inter, Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px;">
+        <h1 style="color: #6c63ff;">Hey ${participantName}! 🎉</h1>
+        <p>Your hackathon is starting soon! Here's your unique check-in code for <strong>${hackathonName}</strong>:</p>
+        <div style="background: #f4f4f8; border-radius: 12px; padding: 24px; text-align: center; margin: 24px 0;">
+          <p style="font-size: 14px; color: #666; margin: 0 0 8px;">Your Check-In Token</p>
+          <p style="font-size: 28px; font-weight: bold; color: #6c63ff; letter-spacing: 4px; margin: 0;">${qrToken}</p>
+        </div>
+        <p>Show this QR code or token at the venue registration desk. An admin will scan it to check you in.</p>
+        <hr style="border: none; border-top: 1px solid #eee; margin: 24px 0;" />
+        <p style="color: #888; font-size: 12px;">This is an automated email from the Hackathon Platform.</p>
+      </div>
+    `;
+
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      const info: { messageId?: string } = await this.transporter.sendMail({
+        from:
+          process.env.SMTP_FROM ||
+          '"Hackathon Platform" <noreply@hackathon.dev>',
+        to: email,
+        subject,
+        html,
+      });
+
+      if (process.env.SMTP_HOST) {
+        this.logger.log(`Check-in QR email sent to ${email}`);
+      } else {
+        this.logger.log(
+          `[DEV] QR email would be sent to ${email}: ${String(info.messageId || subject)}`,
+        );
+      }
+    } catch (error) {
+      this.logger.error(`Failed to send QR email to ${email}`, error);
+    }
+  }
 }
