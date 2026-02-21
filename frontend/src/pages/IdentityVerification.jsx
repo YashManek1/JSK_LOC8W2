@@ -53,7 +53,7 @@ export default function IdentityVerification() {
 
     try {
       const res = await fetch(
-        "http://localhost:3000/api/chat/verify-identity",
+        "/api/chat/verify-identity",
         {
           method: "POST",
           body: formData,

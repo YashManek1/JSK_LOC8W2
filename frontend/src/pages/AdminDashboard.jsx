@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 const DEFAULT_WEIGHTS = { problemRelevance: 25, innovation: 25, technicalDepth: 20, marketImpact: 15, slideQuality: 15 };
@@ -119,6 +120,37 @@ export default function AdminDashboard() {
     const [noteText, setNoteText] = useState('');
     const [detailEntry, setDetailEntry] = useState(null);
     const [startingNewRound, setStartingNewRound] = useState(false);
+
+    // NEW: Overwatch telemetry state
+    const [overwatchData, setOverwatchData] = useState({});
+
+    // NEW: Admin Repo Sync
+    const [repoUrlInput, setRepoUrlInput] = useState({});
+    const [syncingRepo, setSyncingRepo] = useState(false);
+
+    const syncRepo = async (teamName, githubUrl) => {
+        if (!githubUrl) return;
+        setSyncingRepo(true);
+        try {
+            const res = await fetch(`/github/sync/${teamName}`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ teamName, githubUrl })
+            });
+            if (res.ok) {
+                alert("✅ Repository synced successfully! Telemetry available in Hacker Cockpit & Overwatch.");
+                loadAll();
+            } else {
+                alert("⚠️ Failed to sync repository.");
+            }
+        } catch (err) {
+            console.error(err);
+            alert("❌ Error connecting to sync service.");
+        } finally {
+            setSyncingRepo(false);
+        }
+    };
+
     const pollRef = useRef(null);
     const massUploadRef = useRef(null);
 
@@ -152,17 +184,38 @@ export default function AdminDashboard() {
                 }
             }
             if (lbRes.ok) setLeaderboard(await lbRes.json());
-            if (allRes.ok) setAllEntries(await allRes.json());
+            if (allRes.ok) {
+                const entries = await allRes.json();
+                setAllEntries(entries);
+
+                // If on overwatch tab, fetch their github stats
+                if (tab === 'overwatch') {
+                    const owData = {};
+                    await Promise.all(entries.filter(e => e.githubUrl).map(async (entry) => {
+                        try {
+                            const res = await fetch(`/github/stats/${entry.id}`);
+                            if (res.ok) {
+                                const data = await res.json();
+                                owData[entry.id] = {
+                                    githubData: data,
+                                    aiData: { implementedFeatures: [], missingPitchedFeatures: [], relevanceScore: 0 }
+                                };
+                            }
+                        } catch (e) { }
+                    }));
+                    setOverwatchData(owData);
+                }
+            }
             if (statsRes.ok) setStats(await statsRes.json());
             if (qRes.ok) setQueue(await qRes.json());
         } catch { /* ignore */ }
-    }, []);
+    }, [tab]); // Added 'tab' dependency so loadAll knows which tab is active
 
     useEffect(() => {
         loadAll();
         pollRef.current = setInterval(loadAll, 5000);
         return () => clearInterval(pollRef.current);
-    }, [loadAll]);
+    }, [loadAll, tab]); // Re-run when tab changes to instantly fetch Overwatch data
 
     const saveConfig = async (e) => {
         e.preventDefault(); setSaving(true); setSaveMsg('');
@@ -300,7 +353,7 @@ export default function AdminDashboard() {
 
                 {/* ── Tabs ── */}
                 <div className="flex gap-1 mb-6 bg-white/5 rounded-xl p-1 w-fit">
-                    {[['leaderboard', '🏆 Leaderboard'], ['config', '⚙️ Config'], ['all', '📋 All Entries']].map(([t, label]) => (
+                    {[['leaderboard', '🏆 Leaderboard'], ['config', '⚙️ Config'], ['all', '📋 All Entries'], ['overwatch', '🛡️ Overwatch']].map(([t, label]) => (
                         <button key={t} onClick={() => setTab(t)}
                             className={`px-5 py-2 rounded-lg text-sm font-medium transition-all ${tab === t ? 'bg-white text-black' : 'text-neutral-400 hover:text-white'}`}>
                             {label}
@@ -604,11 +657,61 @@ export default function AdminDashboard() {
                                 <button onClick={() => setDetailEntry(null)} className="text-neutral-500 hover:text-white text-xl">×</button>
                             </div>
 
+                            {/* GitHub Link & Sync */}
+                            <div className="mb-4 p-4 bg-blue-900/10 border border-blue-500/20 rounded-xl">
+                                <p className="text-xs font-semibold text-blue-400 mb-2 uppercase tracking-wider flex items-center gap-2">
+                                    🔗 Link Repository Codebase
+                                </p>
+                                <div className="flex gap-2">
+                                    <input type="text"
+                                        placeholder="https://github.com/team/repo"
+                                        value={repoUrlInput[detailEntry.id] ?? detailEntry.githubUrl ?? ''}
+                                        onChange={e => setRepoUrlInput(prev => ({ ...prev, [detailEntry.id]: e.target.value }))}
+                                        className="flex-1 bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:border-blue-500 outline-none transition-colors" />
+                                    <button onClick={() => syncRepo(detailEntry.teamName, repoUrlInput[detailEntry.id] || detailEntry.githubUrl)}
+                                        disabled={syncingRepo || !(repoUrlInput[detailEntry.id] || detailEntry.githubUrl)}
+                                        className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-lg text-sm transition-colors disabled:opacity-50">
+                                        {syncingRepo ? 'Scanning...' : 'Fetch & Sync'}
+                                    </button>
+                                </div>
+                            </div>
+
                             {/* Admin Note display */}
                             {detailEntry.adminNote && (
                                 <div className="mb-4 p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-xl">
                                     <p className="text-xs font-semibold text-yellow-400 mb-1">📝 Admin Note (private)</p>
                                     <p className="text-yellow-200 text-sm">{detailEntry.adminNote}</p>
+                                </div>
+                            )}
+
+                            {/* Deep AI Contributor Matrix */}
+                            {overwatchData[detailEntry.id]?.githubData?.contributors?.length > 0 && (
+                                <div className="mb-6 p-4 bg-black/40 border border-neutral-800 rounded-xl">
+                                    <h4 className="text-xs font-bold text-blue-400 mb-4 uppercase tracking-wider flex items-center gap-2">
+                                        👨‍💻 AI Feature Matrix
+                                    </h4>
+                                    <div className="space-y-4 max-h-[250px] overflow-y-auto pr-2 custom-scrollbar">
+                                        {overwatchData[detailEntry.id].githubData.contributors.map(c => (
+                                            <div key={c.author} className="bg-white/5 border border-white/10 rounded-lg p-3">
+                                                <div className="flex items-center gap-3 mb-2">
+                                                    <img src={c.avatarUrl} alt={c.author} className="w-8 h-8 rounded-full border border-neutral-700" />
+                                                    <div>
+                                                        <span className="font-bold text-white text-sm">{c.author}</span>
+                                                        <span className="text-xs text-neutral-500 ml-2">{c.commits} Commits</span>
+                                                    </div>
+                                                </div>
+                                                {c.featuresBuilt && c.featuresBuilt.length > 0 ? (
+                                                    <ul className="list-disc pl-5 mt-1 space-y-1">
+                                                        {c.featuresBuilt.map((f, i) => (
+                                                            <li key={i} className="text-xs text-neutral-300">✨ {f}</li>
+                                                        ))}
+                                                    </ul>
+                                                ) : (
+                                                    <p className="text-xs text-neutral-600 italic">No explicit features attributed.</p>
+                                                )}
+                                            </div>
+                                        ))}
+                                    </div>
                                 </div>
                             )}
 
@@ -647,6 +750,101 @@ export default function AdminDashboard() {
                     </motion.div>
                 )}
             </AnimatePresence>
+            {/* ────────── OVERWATCH (ANTI-CHEAT) TAB ────────── */}
+            {tab === 'overwatch' && (
+                <div className="space-y-6">
+                    <div className="glass-strong p-6 rounded-2xl border border-red-900/40">
+                        <h2 className="text-xl font-bold text-red-500 mb-4 flex items-center gap-2">🛡️ Contributor Audit (Anti-Cheat)</h2>
+                        <p className="text-sm text-neutral-400 mb-6">Cross-references registered Hackathon participants against actual GitHub Commits.</p>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {allEntries.filter(e => overwatchData[e.id]).map(entry => {
+                                const stats = overwatchData[entry.id].githubData;
+                                return (
+                                    <div key={`contributor-${entry.id}`} className="bg-white/5 border border-white/10 p-4 rounded-xl">
+                                        <h3 className="font-bold text-white mb-2">Team {entry.teamName}</h3>
+                                        <p className="text-xs text-neutral-400 mb-2">Total Project Commits: {stats.totalCommits}</p>
+                                        <ul className="space-y-1">
+                                            {(stats.contributors || []).map(c => (
+                                                <li key={c.author} className="text-sm text-green-400 flex justify-between">
+                                                    <span>✓ {c.author}</span>
+                                                    <span className="text-xs text-neutral-500">{c.commits} commits</span>
+                                                </li>
+                                            ))}
+                                        </ul>
+
+                                        {/* Telemetry Commit Graph for Rapid Analysis */}
+                                        {(stats.contributors && stats.contributors.length > 0) && (
+                                            <div className="h-28 mt-4 bg-black/20 rounded-lg p-2 pt-4 border border-white/5">
+                                                <ResponsiveContainer width="100%" height="100%">
+                                                    <BarChart data={stats.contributors}>
+                                                        <XAxis dataKey="author" stroke="#52525b" tick={{ fontSize: 9 }} angle={-15} textAnchor="end" />
+                                                        <Tooltip contentStyle={{ backgroundColor: '#0a0a0a', border: '1px solid #262626', fontSize: '10px' }} />
+                                                        <Bar dataKey="commits" fill="#3b82f6" radius={[2, 2, 0, 0]} />
+                                                    </BarChart>
+                                                </ResponsiveContainer>
+                                            </div>
+                                        )}
+                                    </div>
+                                );
+                            })}
+                            {Object.keys(overwatchData).length === 0 && (
+                                <p className="text-neutral-500 text-sm italic">No teams have synced repositories yet.</p>
+                            )}
+                        </div>
+                    </div>
+
+                    <div className="glass-strong p-6 rounded-2xl border border-blue-900/40">
+                        <h2 className="text-xl font-bold text-blue-400 mb-4 flex items-center gap-2">🔍 AI Progress Grid Matrix</h2>
+                        <p className="text-sm text-neutral-400 mb-6">Live AI Comparison: Pitched Idea vs. Actual Codebase Implementation.</p>
+                        <table className="w-full text-sm">
+                            <thead className="border-b border-white/10 text-left">
+                                <tr>
+                                    <th className="pb-2">Team</th>
+                                    <th className="pb-2">Relevance Score</th>
+                                    <th className="pb-2 text-green-400">Found Features</th>
+                                    <th className="pb-2 text-red-400">Missing Claims</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {allEntries.filter(e => overwatchData[e.id]).map(entry => {
+                                    const ai = overwatchData[entry.id].aiData;
+                                    return (
+                                        <tr key={`matrix-${entry.id}`} className="border-b border-white/5">
+                                            <td className="py-3 font-bold">{entry.teamName}</td>
+                                            <td className="py-3">
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-white font-bold">{ai.relevanceScore}%</span>
+                                                    <div className="w-16 h-2 bg-white/10 rounded-full overflow-hidden">
+                                                        <div className={`h-full rounded-full ${ai.relevanceScore >= 50 ? 'bg-blue-500' : 'bg-red-500'}`} style={{ width: `${ai.relevanceScore}%` }} />
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td className="py-3 text-xs text-neutral-300 max-w-[200px]">
+                                                <ul className="list-disc pl-4 space-y-1">
+                                                    {(ai.implementedFeatures || []).slice(0, 3).map((f, i) => <li key={i} className="truncate">{f}</li>)}
+                                                    {ai.implementedFeatures?.length > 3 && <li className="text-neutral-500 italic">+ {ai.implementedFeatures.length - 3} more</li>}
+                                                </ul>
+                                            </td>
+                                            <td className="py-3 text-xs text-neutral-400 max-w-[200px]">
+                                                <ul className="list-disc pl-4 space-y-1 text-red-400/80">
+                                                    {(ai.missingPitchedFeatures || []).slice(0, 3).map((f, i) => <li key={i} className="truncate">{f}</li>)}
+                                                    {ai.missingPitchedFeatures?.length > 3 && <li className="text-neutral-500 italic">+ {ai.missingPitchedFeatures.length - 3} more</li>}
+                                                </ul>
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
+                                {Object.keys(overwatchData).length === 0 && (
+                                    <tr>
+                                        <td colSpan="4" className="text-center py-6 text-neutral-500 italic">No AI scans completed yet.</td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            )}
         </motion.div>
     );
 }

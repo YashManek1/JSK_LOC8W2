@@ -6,6 +6,8 @@ import { EvaluateModule } from './evaluate/evaluate.module';
 import { QueueModule } from './queue/queue.module';
 import { VoiceChatModule } from './voice-chat/voice-chat.module';
 import { ShortlistModule } from './shortlist/shortlist.module';
+import { GithubAnalyticsModule } from './github-analytics/github-analytics.module';
+import { MockDataController } from './test/mock-data.controller';
 import { AuthModule } from './auth/auth.module';
 import { AdminHackathonModule } from './admin-hackathon/admin-hackathon.module';
 import { RegistrationModule } from './registration/registration.module';
@@ -34,6 +36,7 @@ const redisUrl = process.env.REDIS_URL ? new URL(process.env.REDIS_URL) : null;
     QueueModule,
     VoiceChatModule,
     ShortlistModule,
+    GithubAnalyticsModule,
     AuthModule,
     AdminHackathonModule,
     RegistrationModule,
@@ -41,7 +44,7 @@ const redisUrl = process.env.REDIS_URL ? new URL(process.env.REDIS_URL) : null;
     NotificationModule,
     PsModule,
   ],
-  controllers: [AppController],
+  controllers: [AppController, MockDataController],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule { }
