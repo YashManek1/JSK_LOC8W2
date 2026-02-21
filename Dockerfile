@@ -16,17 +16,19 @@ RUN npm run build
 # Prune dev dependencies
 RUN npm prune --omit=dev && npm cache clean --force
 
-# STRIP SIZE: Railway strict 4GB limit. Remove unused OS binaries from Prisma (~150MB saved)
-RUN rm -rf node_modules/@prisma/engines/*windows* \
-    && rm -rf node_modules/@prisma/engines/*darwin* \
-    && rm -rf node_modules/@prisma/engines/*debian-10*
+# MEGA STRIP: Aggressively remove all non-Debian 11 Prisma engines
+RUN find node_modules -type f -name "*windows*" -delete \
+    && find node_modules -type f -name "*darwin*" -delete \
+    && find node_modules -type f -name "*musl*" -delete \
+    && find node_modules -type f -name "*rhel*" -delete \
+    && find node_modules -type f -name "*linux-arm64*" -delete \
+    && find node_modules -type f -name "*debian-10*" -delete
 
 
 # ----- Stage 2: Build Python Dependencies -----
 FROM python:3.10-slim AS python-builder
 WORKDIR /app
 
-# FIX: Added libgl1, libglib2.0-0, and libxcb1 here so OpenCV can import successfully during the build!
 RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc g++ binutils \
     libgl1 \
@@ -37,14 +39,20 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN python -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
+# 🚨 CRITICAL FIX 1: Install CPU-only Torch FIRST. 
+# If put in requirements.txt, pip often ignores flags and downloads the 2.5GB GPU version!
+RUN pip install --no-cache-dir torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
+
 COPY identity-service/requirements.txt ./
 
-# MASSIVE SIZE REDUCTION FOR RAILWAY:
-RUN pip install --no-cache-dir --default-timeout=1000 \
-    --extra-index-url https://download.pytorch.org/whl/cpu \
-    -r requirements.txt \
+# 🚨 CRITICAL FIX 2: DeepFace forces the 1GB 'tensorflow' GPU package. 
+# We install requirements, explicitly uninstall the GPU bloat, and ensure only 'tensorflow-cpu' remains.
+RUN pip install --no-cache-dir -r requirements.txt \
+    && pip uninstall -y tensorflow \
+    && pip install --no-cache-dir tensorflow-cpu \
     && rm -rf /opt/venv/lib/python3.10/site-packages/nvidia* \
     && rm -rf /opt/venv/lib/python3.10/site-packages/triton* \
+    && rm -rf /opt/venv/lib/python3.10/site-packages/tensorboard* \
     && find /opt/venv -name "*.so" -exec strip {} \; || true \
     && find /opt/venv -type d -name "__pycache__" -exec rm -rf {} + \
     && find /opt/venv -name "*.pyc" -delete \
@@ -57,8 +65,7 @@ RUN python -c "import easyocr; easyocr.Reader(['en'], gpu=False); from deepface 
 # ----- Stage 3: Final Production Image -----
 FROM python:3.10-slim
 
-# Install ONLY runtime dependencies, wipe apt caches completely
-# Added libxcb1 here to ensure it runs smoothly in production too
+# Install ONLY runtime dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libgl1 \
     libglib2.0-0 \
