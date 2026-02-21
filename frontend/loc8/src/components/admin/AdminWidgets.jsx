@@ -31,7 +31,7 @@ export function ParticipantsTable() {
               <tr key={p.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
                 <td className="px-5 py-3">
                   <div className="flex items-center gap-2">
-                    <div className="w-7 h-7 bg-gradient-to-br from-lime-400 to-green-600 rounded-full flex items-center justify-center text-black text-xs font-bold">
+                    <div className="w-7 h-7 bg-gradient-to-br from-[#B4ED57] to-[#8bc34a] rounded-full flex items-center justify-center text-black text-xs font-bold">
                       {p.name[0]}
                     </div>
                     <span className="text-white text-sm">{p.name}</span>
@@ -41,13 +41,13 @@ export function ParticipantsTable() {
                 <td className="px-5 py-3 text-white/60 text-sm">{p.college}</td>
                 <td className="px-5 py-3">
                   <span className={`text-xs px-2 py-1 rounded-full font-semibold ${
-                    p.status === "Checked In" ? "bg-lime-400/10 text-lime-400" : "bg-yellow-400/10 text-yellow-400"
+                    p.status === "Checked In" ? "bg-[#B4ED57]/10 text-[#B4ED57]" : "bg-yellow-400/10 text-yellow-400"
                   }`}>
                     {p.status}
                   </span>
                 </td>
                 <td className="px-5 py-3">
-                  <span className={`text-sm font-bold ${p.rank <= 3 ? "text-lime-400" : "text-white/60"}`}>
+                  <span className={`text-sm font-bold ${p.rank <= 3 ? "text-[#B4ED57]" : "text-white/60"}`}>
                     #{p.rank}
                   </span>
                 </td>
@@ -82,7 +82,7 @@ export function CreateJudgeWidget() {
     setTimeout(() => setSuccess(false), 3000);
   };
 
-  const inputCls = "w-full bg-white/5 border border-white/15 rounded-xl px-4 py-2.5 text-white placeholder-white/30 text-sm focus:outline-none focus:border-lime-400/60 transition-colors";
+  const inputCls = "w-full bg-white/5 border border-white/15 rounded-xl px-4 py-2.5 text-white placeholder-white/30 text-sm focus:outline-none focus:border-[#B4ED57]/60 transition-colors";
 
   return (
     <div className="space-y-5">
@@ -107,10 +107,10 @@ export function CreateJudgeWidget() {
             <input type="password" value={form.password} onChange={(e) => setForm((p) => ({ ...p, password: e.target.value }))} required placeholder="Temp password" className={inputCls} />
           </div>
           <div className="md:col-span-2">
-            <button type="submit" className="px-6 py-2.5 bg-lime-400 hover:bg-lime-300 text-black font-bold text-sm rounded-xl transition-all">
+            <button type="submit" className="px-6 py-2.5 bg-[#B4ED57] hover:bg-[#c5f278] text-black font-bold text-sm rounded-xl transition-all">
               + Create Judge Account
             </button>
-            {success && <span className="ml-3 text-lime-400 text-sm">✓ Judge created successfully!</span>}
+            {success && <span className="ml-3 text-[#B4ED57] text-sm">✓ Judge created successfully!</span>}
           </div>
         </form>
       </div>
@@ -124,7 +124,7 @@ export function CreateJudgeWidget() {
           {judges.map((j) => (
             <div key={j.id} className="flex items-center justify-between px-5 py-4">
               <div className="flex items-center gap-3">
-                <div className="w-9 h-9 bg-gradient-to-br from-indigo-500 to-violet-600 rounded-full flex items-center justify-center text-white text-sm font-bold">
+                <div className="w-9 h-9 bg-gradient-to-br from-[#4D58D4] to-[#B4ED57] rounded-full flex items-center justify-center text-white text-sm font-bold">
                   {j.name[0]}
                 </div>
                 <div>
@@ -134,9 +134,9 @@ export function CreateJudgeWidget() {
               </div>
               <div className="flex items-center gap-3">
                 {j.specialty && (
-                  <span className="text-xs px-2 py-1 bg-indigo-400/10 text-indigo-400 rounded-full">{j.specialty}</span>
+                  <span className="text-xs px-2 py-1 bg-[#4D58D4]/10 text-[#4D58D4] rounded-full">{j.specialty}</span>
                 )}
-                <span className="text-xs px-2 py-1 bg-lime-400/10 text-lime-400 rounded-full">Active</span>
+                <span className="text-xs px-2 py-1 bg-[#B4ED57]/10 text-[#B4ED57] rounded-full">Active</span>
               </div>
             </div>
           ))}
@@ -160,7 +160,7 @@ export function AdminStatsBar({ hackathon }) {
         <div key={s.label} className="bg-[#111] border border-white/10 rounded-2xl p-5">
           <div className="flex items-center justify-between mb-2">
             <span className="text-xl">{s.icon}</span>
-            <span className="text-lime-400 text-xs">{s.delta}</span>
+            <span className="text-[#B4ED57] text-xs">{s.delta}</span>
           </div>
           <div className="text-white text-2xl font-black">{s.value}</div>
           <div className="text-white/40 text-xs mt-0.5">{s.label}</div>

@@ -13,7 +13,7 @@ function ScoreSlider({ label, value, max, onChange }) {
     <div className="space-y-1">
       <div className="flex justify-between text-xs">
         <span className="text-white/60">{label}</span>
-        <span className="text-lime-400 font-bold">{value} / {max}</span>
+        <span className="text-[#B4ED57] font-bold">{value} / {max}</span>
       </div>
       <input
         type="range"
@@ -21,7 +21,7 @@ function ScoreSlider({ label, value, max, onChange }) {
         max={max}
         value={value}
         onChange={(e) => onChange(Number(e.target.value))}
-        className="w-full accent-lime-400"
+        className="w-full accent-[#B4ED57]"
       />
     </div>
   );
@@ -61,11 +61,11 @@ export default function JudgeDashboard() {
             <h1 className="text-white text-2xl font-black">Judge Panel</h1>
             <p className="text-white/40 text-sm mt-0.5">
               {selectedHackathon?.name || "HackOS 2026"} ·{" "}
-              <span className="text-lime-400">{currentUser?.name || "Judge"}</span>
+              <span className="text-[#B4ED57]">{currentUser?.name || "Judge"}</span>
             </p>
           </div>
-          <div className="flex items-center gap-2 text-lime-400 text-xs bg-lime-400/10 border border-lime-400/20 px-3 py-1.5 rounded-full">
-            <span className="w-1.5 h-1.5 bg-lime-400 rounded-full animate-pulse" />
+          <div className="flex items-center gap-2 text-[#B4ED57] text-xs bg-[#B4ED57]/10 border border-[#B4ED57]/20 px-3 py-1.5 rounded-full">
+            <span className="w-1.5 h-1.5 bg-[#B4ED57] rounded-full animate-pulse" />
             Judging Live
           </div>
         </div>
@@ -81,7 +81,7 @@ export default function JudgeDashboard() {
                   onClick={() => setSelectedProject(p.id)}
                   className={`w-full text-left p-4 rounded-2xl border transition-all ${
                     selectedProject === p.id
-                      ? "bg-lime-400/10 border-lime-400/30"
+                      ? "bg-[#B4ED57]/10 border-[#B4ED57]/30"
                       : "bg-[#111] border-white/10 hover:border-white/20"
                   }`}
                 >
@@ -95,10 +95,10 @@ export default function JudgeDashboard() {
                     </span>
                   </div>
                   <div className="flex items-center justify-between mt-3">
-                    <span className={`text-xs ${totalScore(p.scores) > 0 ? "text-lime-400" : "text-white/30"}`}>
+                    <span className={`text-xs ${totalScore(p.scores) > 0 ? "text-[#B4ED57]" : "text-white/30"}`}>
                       Score: {totalScore(p.scores)}/100
                     </span>
-                    <span className={`text-xs px-2 py-0.5 rounded-full ${p.submitted ? "bg-lime-400/10 text-lime-400" : "bg-yellow-400/10 text-yellow-400"}`}>
+                    <span className={`text-xs px-2 py-0.5 rounded-full ${p.submitted ? "bg-[#B4ED57]/10 text-[#B4ED57]" : "bg-yellow-400/10 text-yellow-400"}`}>
                       {p.submitted ? "Submitted" : "Pending"}
                     </span>
                   </div>
@@ -117,7 +117,7 @@ export default function JudgeDashboard() {
                         <h2 className="text-white text-xl font-bold">{project.name}</h2>
                         <p className="text-white/40 text-sm">Team: {project.team} · {project.track}</p>
                       </div>
-                      <span className="text-lime-400 text-3xl font-black">{totalScore(project.scores)}<span className="text-lg text-white/30">/100</span></span>
+                      <span className="text-[#B4ED57] text-3xl font-black">{totalScore(project.scores)}<span className="text-lg text-white/30">/100</span></span>
                     </div>
 
                     <div className="space-y-5 mb-6">
@@ -131,7 +131,7 @@ export default function JudgeDashboard() {
                     <div className="flex gap-3">
                       <button
                         onClick={() => saveScores(project.id)}
-                        className="flex-1 py-3 bg-lime-400 hover:bg-lime-300 text-black font-bold rounded-xl transition-all"
+                        className="flex-1 py-3 bg-[#B4ED57] hover:bg-[#c5f278] text-black font-bold rounded-xl transition-all"
                       >
                         {saved[project.id] ? "✓ Saved!" : "Save Scores"}
                       </button>
@@ -156,7 +156,7 @@ export default function JudgeDashboard() {
               {projects.map((p) => (
                 <div key={p.id} className="flex items-center justify-between p-4 bg-white/5 rounded-xl">
                   <span className="text-white text-sm">{p.name}</span>
-                  <span className={`font-bold ${totalScore(p.scores) > 0 ? "text-lime-400" : "text-white/30"}`}>
+                  <span className={`font-bold ${totalScore(p.scores) > 0 ? "text-[#B4ED57]" : "text-white/30"}`}>
                     {totalScore(p.scores)}/100
                   </span>
                 </div>

@@ -15,7 +15,7 @@ export default function LoginForm() {
   const streamRef = useRef(null);
 
   const inputCls =
-    "w-full bg-white/5 border border-white/15 rounded-xl px-4 py-3 text-white placeholder-white/30 text-sm focus:outline-none focus:border-lime-400/60 transition-colors";
+    "w-full bg-white/5 border border-white/15 rounded-xl px-4 py-3 text-white placeholder-white/30 text-sm focus:outline-none focus:border-[#B4ED57]/60 transition-colors";
   const labelCls = "block text-white/60 text-xs mb-1.5 uppercase tracking-wider";
 
   const startCamera = async () => {
@@ -131,7 +131,7 @@ export default function LoginForm() {
             <button
               type="button"
               onClick={startCamera}
-              className="w-full border-2 border-dashed border-white/20 rounded-xl p-6 flex flex-col items-center gap-2 hover:border-lime-400/40 transition-colors group"
+              className="w-full border-2 border-dashed border-white/20 rounded-xl p-6 flex flex-col items-center gap-2 hover:border-[#B4ED57]/40 transition-colors group"
             >
               <span className="text-3xl">📷</span>
               <span className="text-white/60 text-sm group-hover:text-white/80">Click to open camera</span>
@@ -139,21 +139,21 @@ export default function LoginForm() {
             </button>
           )}
           {cameraActive && (
-            <div className="relative rounded-xl overflow-hidden border border-lime-400/30">
+            <div className="relative rounded-xl overflow-hidden border border-[#B4ED57]/30">
               <video ref={videoRef} autoPlay playsInline className="w-full h-48 object-cover" />
               <button
                 type="button"
                 onClick={captureSelfie}
-                className="absolute bottom-3 left-1/2 -translate-x-1/2 px-5 py-2 bg-lime-400 text-black text-sm font-bold rounded-full hover:bg-lime-300 transition-colors"
+                className="absolute bottom-3 left-1/2 -translate-x-1/2 px-5 py-2 bg-[#B4ED57] text-black text-sm font-bold rounded-full hover:bg-[#c5f278] transition-colors"
               >
                 📸 Capture
               </button>
             </div>
           )}
           {selfiePreview && (
-            <div className="relative rounded-xl overflow-hidden border border-lime-400/40">
+            <div className="relative rounded-xl overflow-hidden border border-[#B4ED57]/40">
               <img src={selfiePreview} alt="Selfie" className="w-full h-36 object-cover" />
-              <div className="absolute top-2 right-2 bg-lime-400 text-black text-xs px-2 py-0.5 rounded-full font-semibold">✓ Captured</div>
+              <div className="absolute top-2 right-2 bg-[#B4ED57] text-black text-xs px-2 py-0.5 rounded-full font-semibold">✓ Captured</div>
               <button
                 type="button"
                 onClick={() => { setSelfie(null); setSelfiePreview(null); }}
@@ -174,7 +174,7 @@ export default function LoginForm() {
 
       <button
         type="submit"
-        className="w-full py-3.5 bg-lime-400 hover:bg-lime-300 text-black font-bold rounded-xl transition-all hover:scale-[1.01]"
+        className="w-full py-3.5 bg-[#B4ED57] hover:bg-[#c5f278] text-black font-bold rounded-xl transition-all hover:scale-[1.01]"
       >
         Sign In →
       </button>
@@ -185,7 +185,7 @@ export default function LoginForm() {
           <button
             type="button"
             onClick={() => setAuthMode("signup")}
-            className="text-lime-400 hover:underline"
+            className="text-[#B4ED57] hover:underline"
           >
             Sign Up
           </button>

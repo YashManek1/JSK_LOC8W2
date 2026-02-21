@@ -25,17 +25,17 @@ export default function LandingPage() {
       <section className="px-4 md:px-8 max-w-7xl mx-auto pb-8">
         {/* Header */}
         <div className="text-center mb-8">
-          <span className="inline-flex items-center gap-2 text-xs text-lime-400 bg-lime-400/10 border border-lime-400/20 rounded-full px-3 py-1 mb-4">
-            <span className="w-1.5 h-1.5 bg-lime-400 rounded-full animate-pulse" />
+          <span className="inline-flex items-center gap-2 text-xs text-[#B4ED57] bg-[#B4ED57]/10 border border-[#B4ED57]/20 rounded-full px-3 py-1 mb-4">
+            <span className="w-1.5 h-1.5 bg-[#B4ED57] rounded-full animate-pulse" />
             Near You
           </span>
-          <h2 className="text-white text-4xl font-black mb-2">
+          <h2 className="text-white text-4xl font-black mb-2" style={{ fontFamily: "'Questrial', sans-serif" }}>
             Upcoming{" "}
-            <span className="text-lime-400" style={{ fontFamily: "'Courier New', monospace" }}>
+            <span className="text-[#B4ED57] text-5xl" style={{ fontFamily: "'Jersey 15', cursive" }}>
               Hackathons
             </span>
           </h2>
-          <p className="text-white/40 text-sm">Find and join hackathons happening in Bangalore</p>
+          <p className="text-white/40 text-sm" style={{ fontFamily: "'Fustat', sans-serif" }}>Find and join hackathons happening in Bangalore</p>
         </div>
 
         {/* Filter tabs */}
@@ -46,9 +46,10 @@ export default function LandingPage() {
               onClick={() => setFilter(tag)}
               className={`px-4 py-1.5 rounded-full text-sm transition-all ${
                 filter === tag
-                  ? "bg-lime-400 text-black font-bold"
+                  ? "bg-[#B4ED57] text-black font-bold"
                   : "bg-white/5 text-white/60 hover:text-white border border-white/10"
               }`}
+              style={{ fontFamily: "'Fustat', sans-serif" }}
             >
               {tag}
             </button>
@@ -68,7 +69,7 @@ export default function LandingPage() {
 
         {/* View All */}
         <div className="text-center mt-10">
-          <button className="px-8 py-3 bg-white/5 hover:bg-white/10 text-white border border-white/15 rounded-full text-sm transition-all">
+          <button className="px-8 py-3 bg-white/5 hover:bg-white/10 text-white border border-white/15 rounded-full text-sm transition-all" style={{ fontFamily: "'Fustat', sans-serif" }}>
             View All Hackathons
           </button>
         </div>

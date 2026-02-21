@@ -18,13 +18,13 @@ export default function QRPage() {
     <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center p-4 relative overflow-hidden">
       {/* BG */}
       <div className="absolute inset-0">
-        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-96 h-96 bg-lime-400/5 rounded-full blur-3xl" />
+        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-96 h-96 bg-[#B4ED57]/5 rounded-full blur-3xl" />
       </div>
 
       <div className="relative w-full max-w-sm text-center">
         {/* Logo */}
         <div className="flex items-center justify-center gap-2 mb-8">
-          <div className="w-9 h-9 rounded-lg bg-lime-400 flex items-center justify-center">
+          <div className="w-9 h-9 rounded-lg bg-[#B4ED57] flex items-center justify-center">
             <span className="text-black font-black text-sm">H</span>
           </div>
           <span className="text-white font-black tracking-widest">HACKOS</span>
@@ -33,13 +33,13 @@ export default function QRPage() {
         {/* Card */}
         <div className="bg-[#111] border border-white/10 rounded-2xl p-8">
           {/* Status */}
-          <div className="inline-flex items-center gap-2 bg-lime-400/10 border border-lime-400/20 rounded-full px-3 py-1 mb-6">
-            <span className="w-1.5 h-1.5 bg-lime-400 rounded-full animate-pulse" />
-            <span className="text-lime-400 text-xs font-semibold">Registration Complete</span>
+          <div className="inline-flex items-center gap-2 bg-[#B4ED57]/10 border border-[#B4ED57]/20 rounded-full px-3 py-1 mb-6">
+            <span className="w-1.5 h-1.5 bg-[#B4ED57] rounded-full animate-pulse" />
+            <span className="text-[#B4ED57] text-xs font-semibold">Registration Complete</span>
           </div>
 
           <h1 className="text-white text-2xl font-black mb-1">
-            Hey, <span className="text-lime-400">{currentUser?.name?.split(" ")[0]}! 👋</span>
+            Hey, <span className="text-[#B4ED57]">{currentUser?.name?.split(" ")[0]}! 👋</span>
           </h1>
           <p className="text-white/50 text-sm mb-6">
             Your entry QR has been generated for{" "}
@@ -48,7 +48,7 @@ export default function QRPage() {
 
           {/* QR Code */}
           <div className="flex justify-center mb-6">
-            <div className="p-4 bg-white rounded-2xl shadow-2xl shadow-lime-400/20 border-4 border-lime-400">
+            <div className="p-4 bg-white rounded-2xl shadow-2xl shadow-[#B4ED57]/20 border-4 border-[#B4ED57]">
               <QRCodeDisplay data={generatedQR || "HACKOS-DEMO"} size={180} />
             </div>
           </div>
@@ -67,7 +67,7 @@ export default function QRPage() {
             </div>
             <div className="flex justify-between text-xs">
               <span className="text-white/40">Status</span>
-              <span className="text-lime-400 font-semibold">Entry Granted</span>
+              <span className="text-[#B4ED57] font-semibold">Entry Granted</span>
             </div>
             <div className="flex justify-between text-xs">
               <span className="text-white/40">Type</span>
@@ -83,7 +83,7 @@ export default function QRPage() {
           <button
             onClick={handleScan}
             disabled={scanning}
-            className="w-full py-3.5 bg-lime-400 hover:bg-lime-300 disabled:opacity-60 text-black font-bold rounded-xl transition-all flex items-center justify-center gap-2"
+            className="w-full py-3.5 bg-[#B4ED57] hover:bg-[#c5f278] disabled:opacity-60 text-black font-bold rounded-xl transition-all flex items-center justify-center gap-2"
           >
             {scanning ? (
               <>

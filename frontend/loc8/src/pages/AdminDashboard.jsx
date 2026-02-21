@@ -45,11 +45,11 @@ export default function AdminDashboard() {
             </p>
           </div>
           <div className="flex items-center gap-3">
-            <div className="flex items-center gap-1.5 text-lime-400 text-xs bg-lime-400/10 border border-lime-400/20 px-3 py-1.5 rounded-full">
-              <span className="w-1.5 h-1.5 bg-lime-400 rounded-full animate-pulse" />
+            <div className="flex items-center gap-1.5 text-[#B4ED57] text-xs bg-[#B4ED57]/10 border border-[#B4ED57]/20 px-3 py-1.5 rounded-full">
+              <span className="w-1.5 h-1.5 bg-[#B4ED57] rounded-full animate-pulse" />
               LIVE
             </div>
-            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-white font-black text-sm">
+            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#4D58D4] to-[#B4ED57] flex items-center justify-center text-white font-black text-sm">
               {currentUser?.name?.[0] || "A"}
             </div>
           </div>
@@ -88,9 +88,9 @@ export default function AdminDashboard() {
                 onChange={(e) => setAnnouncement(e.target.value)}
                 placeholder="Type your announcement to all participants..."
                 rows={3}
-                className="w-full bg-white/5 border border-white/15 rounded-xl px-4 py-3 text-white placeholder-white/30 text-sm focus:outline-none focus:border-lime-400/60 transition-colors resize-none mb-3"
+                className="w-full bg-white/5 border border-white/15 rounded-xl px-4 py-3 text-white placeholder-white/30 text-sm focus:outline-none focus:border-[#B4ED57]/60 transition-colors resize-none mb-3"
               />
-              <button onClick={postAnnouncement} className="px-6 py-2.5 bg-lime-400 hover:bg-lime-300 text-black font-bold text-sm rounded-xl transition-all">
+              <button onClick={postAnnouncement} className="px-6 py-2.5 bg-[#B4ED57] hover:bg-[#c5f278] text-black font-bold text-sm rounded-xl transition-all">
                 📢 Broadcast
               </button>
             </div>

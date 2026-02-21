@@ -10,9 +10,9 @@ export default function AuthPage() {
     <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center p-4 relative overflow-hidden">
       {/* Background */}
       <div className="absolute inset-0">
-        <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-indigo-900/20 via-transparent to-lime-900/10" />
-        <div className="absolute top-1/4 right-1/4 w-96 h-96 bg-indigo-600/10 rounded-full blur-3xl" />
-        <div className="absolute bottom-1/4 left-1/4 w-64 h-64 bg-lime-400/5 rounded-full blur-3xl" />
+        <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-[#4D58D4]/20 via-transparent to-[#B4ED57]/10" />
+        <div className="absolute top-1/4 right-1/4 w-96 h-96 bg-[#4D58D4]/10 rounded-full blur-3xl" />
+        <div className="absolute bottom-1/4 left-1/4 w-64 h-64 bg-[#B4ED57]/5 rounded-full blur-3xl" />
       </div>
 
       <div className="relative w-full max-w-md">
@@ -41,7 +41,7 @@ export default function AuthPage() {
 
           {/* Logo */}
           <div className="flex items-center gap-2 mb-6">
-            <div className="w-8 h-8 rounded-lg bg-lime-400 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-lg bg-[#B4ED57] flex items-center justify-center">
               <span className="text-black font-black text-xs">H</span>
             </div>
             <span className="text-white font-black tracking-widest text-sm">HACKOS</span>
@@ -53,7 +53,7 @@ export default function AuthPage() {
               onClick={() => setAuthMode("login")}
               className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-all ${
                 authMode === "login"
-                  ? "bg-lime-400 text-black"
+                  ? "bg-[#B4ED57] text-black"
                   : "text-white/60 hover:text-white"
               }`}
             >
@@ -63,7 +63,7 @@ export default function AuthPage() {
               onClick={() => setAuthMode("signup")}
               className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-all ${
                 authMode === "signup"
-                  ? "bg-lime-400 text-black"
+                  ? "bg-[#B4ED57] text-black"
                   : "text-white/60 hover:text-white"
               }`}
             >

@@ -29,10 +29,10 @@ export default function Sidebar({ activeSection, setActiveSection, variant = "st
   const navItems = variant === "admin" ? adminNav : variant === "judge" ? judgeNav : studentNav;
 
   return (
-    <aside className="w-16 md:w-64 h-screen fixed left-0 top-0 bg-[#0f0f0f] border-r border-white/10 flex flex-col">
+    <aside className="w-16 md:w-64 h-screen fixed left-0 top-0 bg-[#0f0f0f] border-r border-white/10 flex flex-col" style={{ fontFamily: "'Questrial', sans-serif" }}>
       {/* Logo */}
       <div className="p-4 border-b border-white/10 flex items-center gap-3">
-        <div className="w-9 h-9 rounded-lg bg-lime-400 flex items-center justify-center flex-shrink-0">
+        <div className="w-9 h-9 rounded-lg bg-[#B4ED57] flex items-center justify-center flex-shrink-0">
           <span className="text-black font-black text-sm">H</span>
         </div>
         <div className="hidden md:block">
@@ -49,7 +49,7 @@ export default function Sidebar({ activeSection, setActiveSection, variant = "st
             onClick={() => setActiveSection(item.key)}
             className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl text-sm transition-all ${
               activeSection === item.key
-                ? "bg-lime-400/15 text-lime-400 border border-lime-400/20"
+                ? "bg-[#B4ED57]/15 text-[#B4ED57] border border-[#B4ED57]/20"
                 : "text-white/50 hover:text-white hover:bg-white/5"
             }`}
           >
@@ -62,7 +62,7 @@ export default function Sidebar({ activeSection, setActiveSection, variant = "st
       {/* User + Logout */}
       <div className="p-3 border-t border-white/10">
         <div className="hidden md:flex items-center gap-3 px-2 py-2 mb-2">
-          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-lime-400 to-green-600 flex items-center justify-center text-black font-bold text-sm flex-shrink-0">
+          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#B4ED57] to-[#8bc34a] flex items-center justify-center text-black font-bold text-sm flex-shrink-0">
             {currentUser?.name?.[0] || "U"}
           </div>
           <div className="min-w-0">

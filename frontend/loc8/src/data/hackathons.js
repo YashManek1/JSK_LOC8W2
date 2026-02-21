@@ -97,7 +97,7 @@ export const MOCK_JUDGES = [
 ];
 
 export const STATS = [
-  { value: "10K+", label: "Active Hackers", color: "text-white" },
-  { value: "180+", label: "Hackathons", color: "text-lime-400" },
-  { value: "₹80Cr+", label: "Prize Money", color: "text-lime-400" },
+  { value: "10K+", label: "Active Hackers", color: "text-[#B4ED57]", border: "border-l-[#B4ED57]" },
+  { value: "150+", label: "Hackathons", color: "text-[#4D58D4]", border: "border-l-[#4D58D4]" },
+  { value: "₹2Cr+", label: "Prize Money", color: "text-[#C8E64A]", border: "border-l-[#C8E64A]" },
 ];

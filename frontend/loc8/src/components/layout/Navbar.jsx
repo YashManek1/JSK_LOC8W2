@@ -5,13 +5,13 @@ export default function Navbar() {
   const { currentUser, logout, navigateTo } = useApp();
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-8 py-4 bg-[#0a0a0a]/80 backdrop-blur-md border-b border-white/10">
+    <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-8 py-4 bg-[#0a0a0a]/80 backdrop-blur-md" style={{ fontFamily: "'Fustat', sans-serif" }}>
       {/* Logo */}
       <button
         onClick={() => navigateTo("landing")}
         className="flex items-center gap-2 group"
       >
-        <div className="w-9 h-9 rounded-lg bg-lime-400 flex items-center justify-center">
+        <div className="w-9 h-9 rounded-lg bg-[#B4ED57] flex items-center justify-center">
           <span className="text-black font-black text-sm">H</span>
         </div>
         <div>
@@ -32,7 +32,7 @@ export default function Navbar() {
         {currentUser ? (
           <div className="flex items-center gap-3">
             <span className="text-white/60 text-sm">
-              Hi, <span className="text-lime-400 font-semibold">{currentUser.name?.split(" ")[0]}</span>
+              Hi, <span className="text-[#B4ED57] font-semibold">{currentUser.name?.split(" ")[0]}</span>
             </span>
             <button
               onClick={logout}
@@ -51,7 +51,7 @@ export default function Navbar() {
             </button>
             <button
               onClick={() => navigateTo("auth")}
-              className="px-4 py-2 text-sm text-black font-semibold bg-lime-400 hover:bg-lime-300 rounded-full transition-all"
+              className="px-4 py-2 text-sm text-black font-semibold bg-[#B4ED57] hover:bg-[#c5f278] rounded-full transition-all"
             >
               Sign Up
             </button>

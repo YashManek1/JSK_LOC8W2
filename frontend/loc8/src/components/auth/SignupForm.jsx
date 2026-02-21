@@ -33,7 +33,7 @@ export default function SignupForm() {
   };
 
   const inputCls =
-    "w-full bg-white/5 border border-white/15 rounded-xl px-4 py-3 text-white placeholder-white/30 text-sm focus:outline-none focus:border-lime-400/60 transition-colors";
+    "w-full bg-white/5 border border-white/15 rounded-xl px-4 py-3 text-white placeholder-white/30 text-sm focus:outline-none focus:border-[#B4ED57]/60 transition-colors";
   const labelCls = "block text-white/60 text-xs mb-1.5 uppercase tracking-wider";
 
   return (
@@ -118,7 +118,7 @@ export default function SignupForm() {
           {/* Aadhar Upload */}
           <div>
             <label className={labelCls}>Aadhar Card Upload</label>
-            <label className="flex flex-col items-center justify-center border-2 border-dashed border-white/20 rounded-xl p-6 cursor-pointer hover:border-lime-400/40 transition-colors group">
+            <label className="flex flex-col items-center justify-center border-2 border-dashed border-white/20 rounded-xl p-6 cursor-pointer hover:border-[#B4ED57]/40 transition-colors group">
               <span className="text-3xl mb-2">📄</span>
               <span className="text-white/60 text-sm group-hover:text-white/80 transition-colors">
                 {form.aadhar ? form.aadhar.name : "Click to upload Aadhar card"}
@@ -133,7 +133,7 @@ export default function SignupForm() {
               />
             </label>
             {form.aadhar && (
-              <p className="text-lime-400 text-xs mt-1.5">✓ {form.aadhar.name} uploaded</p>
+              <p className="text-[#B4ED57] text-xs mt-1.5">✓ {form.aadhar.name} uploaded</p>
             )}
           </div>
         </>
@@ -142,7 +142,7 @@ export default function SignupForm() {
       {/* Submit */}
       <button
         type="submit"
-        className="w-full py-3.5 bg-lime-400 hover:bg-lime-300 text-black font-bold rounded-xl transition-all hover:scale-[1.01] flex items-center justify-center gap-2"
+        className="w-full py-3.5 bg-[#B4ED57] hover:bg-[#c5f278] text-black font-bold rounded-xl transition-all hover:scale-[1.01] flex items-center justify-center gap-2"
       >
         Create Account →
       </button>
@@ -152,7 +152,7 @@ export default function SignupForm() {
         <button
           type="button"
           onClick={() => setAuthMode("login")}
-          className="text-lime-400 hover:underline"
+          className="text-[#B4ED57] hover:underline"
         >
           Sign In
         </button>
