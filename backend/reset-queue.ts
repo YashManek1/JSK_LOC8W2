@@ -7,8 +7,8 @@ dotenv.config();
 
 async function main() {
     const prisma = new PrismaClient();
-    const redis = new Redis(process.env.REDIS_URL);
-    const queue = new Queue('shortlistQueue', { connection: redis });
+    const redis = new Redis(process.env.REDIS_URL as string);
+     const queue = new Queue('shortlistQueue', { connection: redis });
 
     console.log('Resetting PROCESSING to PENDING...');
     const res = await prisma.shortlistEntry.updateMany({
