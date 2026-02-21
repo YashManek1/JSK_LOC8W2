@@ -88,4 +88,44 @@ export class AdminHackathonService {
       },
     });
   }
+
+  async getStats(adminId: string) {
+    const hackathons = await this.prisma.hackathon.findMany({
+      where: { adminId },
+      include: {
+        _count: {
+          select: {
+            registrations: true,
+            teams: true,
+            domains: true,
+          },
+        },
+      },
+    });
+
+    const totalParticipants = await this.prisma.registration.count({
+      where: {
+        hackathon: {
+          adminId,
+        },
+      },
+    });
+
+    const activeHackathons = hackathons.filter((h) => h.status === 'Active').length;
+
+    return {
+      totalHackathons: hackathons.length,
+      activeHackathons,
+      totalParticipants,
+      totalTeams: hackathons.reduce((sum, h) => sum + (h._count.teams || 0), 0),
+      hackathons: hackathons.map((h) => ({
+        id: h.id,
+        name: h.name,
+        status: h.status,
+        participants: h._count.registrations,
+        teams: h._count.teams,
+        domains: h._count.domains,
+      })),
+    };
+  }
 }

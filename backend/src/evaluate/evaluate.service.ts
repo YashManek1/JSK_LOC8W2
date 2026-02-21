@@ -167,4 +167,43 @@ export class EvaluateService {
       createdAt: evaluation.createdAt,
     };
   }
+
+  async saveJudgeScores(
+    evaluationId: string,
+    scores: Record<string, number>,
+    judgeId?: string,
+  ) {
+    const evaluation = await this.prisma.evaluation.findUnique({
+      where: { id: evaluationId },
+    });
+
+    if (!evaluation) {
+      throw new Error('Evaluation not found');
+    }
+
+    // Store judge scores in exaggerations field as JSON for now
+    // In a production app, you'd create a separate JudgeScore table
+    const existingScores = (evaluation.exaggerations as any) || {};
+    const updatedScores = {
+      ...existingScores,
+      judgeScores: {
+        ...(existingScores.judgeScores || {}),
+        [judgeId || 'anonymous']: scores,
+      },
+      lastScoredAt: new Date().toISOString(),
+    };
+
+    await this.prisma.evaluation.update({
+      where: { id: evaluationId },
+      data: {
+        exaggerations: updatedScores as any,
+      },
+    });
+
+    return {
+      success: true,
+      evaluationId,
+      scores,
+    };
+  }
 }
