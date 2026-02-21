@@ -14,6 +14,7 @@ import ProblemStatementPreferencesPage from "./pages/ProblemStatementPreferences
 import PPTRound1Page from "./pages/PPTRound1Page";
 import ShortlistAnnouncementPage from "./pages/ShortlistAnnouncementPage";
 import CommunityPage from "./pages/CommunityPage";
+import GeminiLivePage from "./pages/GeminiLivePage";
 
 function Router() {
   const { currentPage } = useApp();

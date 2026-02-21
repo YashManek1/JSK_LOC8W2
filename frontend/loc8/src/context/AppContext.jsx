@@ -15,18 +15,9 @@ export function AppProvider({ children }) {
     }
   });
 
-  // Navigation: token → decide page based on profile + voice data state, else auth
-  const [currentPage, setCurrentPage] = useState(() => {
-    const t = localStorage.getItem("accessToken");
-    if (t) {
-      const profileDone = localStorage.getItem("isProfileComplete") === "true";
-      if (profileDone) return "hackathonSelection";
-      // If voice data already collected, go straight to the form
-      const voiceData = localStorage.getItem("voiceExtractedData");
-      return voiceData ? "completeProfile" : "voiceProfile";
-    }
-    return "auth";
-  });
+  // Always start on the auth (signup/login) page.
+  // Post-login navigation is handled by loginUser().
+  const [currentPage, setCurrentPage] = useState("auth");
   const [authMode, setAuthMode] = useState("login");
   const [selectedHackathon, setSelectedHackathon] = useState(null);
 

@@ -37,7 +37,7 @@ export default function LoginForm() {
     const roleMap = {
       student: "Participant",
       mentor: "Mentor",
-      organiser: "Organiser",
+      organiser: "ADMIN",
     };
     const backendRole = roleMap[role] || role;
 
