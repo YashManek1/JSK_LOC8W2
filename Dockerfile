@@ -1,3 +1,23 @@
+# ----- Stage 1: Build Backend -----
+FROM node:22-bullseye-slim AS backend-builder
+WORKDIR /app/backend
+
+# Copy package files and install ALL dependencies (including dev for NestJS CLI)
+COPY backend/package.json backend/package-lock.json ./
+RUN npm ci
+
+# Copy full backend source
+COPY backend ./
+
+# Generate Prisma and build NextJS/NestJS
+RUN npx prisma generate
+RUN npm run build
+
+# Prune devDependencies to keep only production packages for the final image
+RUN npm prune --omit=dev
+
+
+# ----- Stage 2: Final Production Image -----
 FROM python:3.10-slim
 
 # 1. Install system dependencies for OpenCV and Node.js
@@ -19,22 +39,22 @@ COPY identity-service/requirements.txt ./identity-service/
 RUN pip install --no-cache-dir -r identity-service/requirements.txt
 COPY identity-service ./identity-service/
 
-# 4. Setup Node.js Backend
-COPY backend/package.json backend/package-lock.json ./backend/
+# 4. Setup Node.js Backend from builder stage
 WORKDIR /app/backend
-# Force installation of devDependencies so NestJS CLI is available for the build
-RUN npm ci --include=dev
-
-COPY backend ./
-
-# Generate Prisma Client & Build NextJS
-RUN npx prisma generate
-RUN npm run build
+# Copy only necessary files: package metadata, node_modules (prod only), prisma schema/migrations, and dist
+COPY --from=backend-builder /app/backend/package.json /app/backend/package-lock.json ./
+COPY --from=backend-builder /app/backend/node_modules ./node_modules
+COPY --from=backend-builder /app/backend/prisma ./prisma
+COPY --from=backend-builder /app/backend/dist ./dist
 
 # 5. Copy the unified start script
 WORKDIR /app
 COPY start.sh ./
 RUN chmod +x start.sh
+
+# Expose ports
+EXPOSE 3001
+EXPOSE 8000
 
 # Start both services
 CMD ["./start.sh"]
