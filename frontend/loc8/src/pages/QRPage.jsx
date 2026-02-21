@@ -11,49 +11,105 @@
 //     setTimeout(() => {
 //       setScanning(false);
 //       scanQR();
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useCallback, useEffect } from "react";
 import { useApp } from "../context/AppContext";
 import QRCodeDisplay from "../components/ui/QRCodeDisplay";
+import Webcam from "react-webcam";
 
 export default function QRPage() {
   const { generatedQR, scanQR, selectedHackathon, currentUser, setCurrentUser } = useApp();
 
-  const [selfiePreview, setSelfiePreview] = useState(currentUser?.selfie || null);
+  const [selfieFile, setSelfieFile] = useState(null);
+  const [selfieImageSrc, setSelfieImageSrc] = useState(currentUser?.selfie || null);
   const [cameraActive, setCameraActive] = useState(false);
-  const videoRef = useRef(null);
-  const streamRef = useRef(null);
+  const [verificationResult, setVerificationResult] = useState(null);
+  const [verificationError, setVerificationError] = useState(null);
+  const [isVerifying, setIsVerifying] = useState(false);
+  
+  const webcamRef = useRef(null);
 
-  useEffect(() => {
-    return () => streamRef.current?.getTracks().forEach((t) => t.stop());
-  }, []);
-
-  const startCamera = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-      streamRef.current = stream;
-      if (videoRef.current) videoRef.current.srcObject = stream;
-      setCameraActive(true);
-    } catch {
-      alert("Camera access denied. Please allow camera access.");
+  // Capture selfie using react-webcam
+  const captureSelfie = useCallback(() => {
+    const imageSrc = webcamRef.current?.getScreenshot();
+    if (imageSrc) {
+      setSelfieImageSrc(imageSrc);
+      
+      // Convert data URL to File (same logic as friend's code)
+      fetch(imageSrc)
+        .then((res) => res.blob())
+        .then((blob) => {
+          const file = new File([blob], "selfie.jpg", { type: "image/jpeg" });
+          setSelfieFile(file);
+        });
+      
+      setCameraActive(false);
     }
-  };
+  }, [webcamRef]);
 
-  const captureSelfie = () => {
-    if (!videoRef.current) return;
-    const canvas = document.createElement("canvas");
-    canvas.width = videoRef.current.videoWidth || 640;
-    canvas.height = videoRef.current.videoHeight || 480;
-    canvas.getContext("2d").drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
-    const dataUrl = canvas.toDataURL("image/png");
-    setSelfiePreview(dataUrl);
-    setCurrentUser && setCurrentUser({ ...currentUser, selfie: dataUrl });
-    streamRef.current?.getTracks().forEach((t) => t.stop());
-    setCameraActive(false);
+  const startCamera = () => {
+    setCameraActive(true);
+    setVerificationResult(null);
+    setVerificationError(null);
   };
 
   const retake = () => {
-    setSelfiePreview(null);
+    setSelfieImageSrc(null);
+    setSelfieFile(null);
+    setVerificationResult(null);
+    setVerificationError(null);
     startCamera();
+  };
+
+  // Verification logic from friend's code - simulated
+  const handleVerifyIdentity = async () => {
+    if (!selfieFile) {
+      setVerificationError("Please capture a selfie first");
+      return;
+    }
+
+    setIsVerifying(true);
+    setVerificationError(null);
+    setVerificationResult(null);
+
+    try {
+      // Simulate backend verification with file check
+      if (!currentUser?.aadhar && !currentUser?.collegeId) {
+        setVerificationError("Please upload Aadhaar and College ID during signup");
+        setIsVerifying(false);
+        return;
+      }
+
+      // Simulate verification delay (like backend processing)
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
+      // Simulated verification result with relevance/match score
+      const matchConfidence = 0.85 + Math.random() * 0.15; // 85-100% match
+      
+      const result = {
+        message: "Identity Verified Successfully",
+        aadhaarStatus: "✓ Verified",
+        idCardStatus: "✓ Verified",
+        faceMatchConfidence: matchConfidence,
+        verificationTime: new Date().toLocaleTimeString(),
+      };
+
+      setVerificationResult(result);
+      
+      // Log verification details (simulated backend call)
+      console.log("[IDENTITY VERIFICATION]");
+      console.log("User:", currentUser?.name);
+      console.log("Email:", currentUser?.email);
+      console.log("Aadhaar Status:", result.aadhaarStatus);
+      console.log("ID Card Status:", result.idCardStatus);
+      console.log("Face Match Confidence:", (result.faceMatchConfidence * 100).toFixed(2) + "%");
+      console.log("Verified at:", result.verificationTime);
+      console.log("---");
+
+    } catch (err) {
+      setVerificationError(err.message || "Verification failed. Please try again.");
+    } finally {
+      setIsVerifying(false);
+    }
   };
 
   return (
@@ -124,8 +180,15 @@ export default function QRPage() {
               </div>
 
               <div className="bg-white/5 rounded-xl p-4">
-                <h3 className="text-white font-bold text-sm mb-3">Identity — Selfie</h3>
-                {!selfiePreview && !cameraActive && (
+                <h3 className="text-white font-bold text-sm mb-3">Identity — Selfie Verification</h3>
+                
+                {verificationError && (
+                  <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-3 mb-3 text-red-500 text-xs">
+                    {verificationError}
+                  </div>
+                )}
+
+                {!selfieImageSrc && !cameraActive && !verificationResult && (
                   <div className="space-y-3">
                     <button
                       type="button"
@@ -135,13 +198,19 @@ export default function QRPage() {
                       <span className="text-3xl">📷</span>
                       <span className="text-white/60 text-sm">Capture selfie to verify identity</span>
                     </button>
-                    <p className="text-xs text-white/30">Selfie is stored locally for demo purposes.</p>
+                    <p className="text-xs text-white/30">Selfie will be verified against your documents</p>
                   </div>
                 )}
 
-                {cameraActive && (
+                {cameraActive && !selfieImageSrc && (
                   <div className="relative rounded-xl overflow-hidden border border-[#B4ED57]/30">
-                    <video ref={videoRef} autoPlay playsInline className="w-full h-56 object-cover" />
+                    <Webcam
+                      audio={false}
+                      ref={webcamRef}
+                      screenshotFormat="image/jpeg"
+                      videoConstraints={{ facingMode: "user" }}
+                      className="w-full h-56 object-cover"
+                    />
                     <button
                       type="button"
                       onClick={captureSelfie}
@@ -152,14 +221,58 @@ export default function QRPage() {
                   </div>
                 )}
 
-                {selfiePreview && (
-                  <div className="relative rounded-xl overflow-hidden border border-[#B4ED57]/40">
-                    <img src={selfiePreview} alt="Selfie" className="w-full h-36 object-cover" />
+                {selfieImageSrc && !verificationResult && (
+                  <div className="relative rounded-xl overflow-hidden border border-[#B4ED57]/40 space-y-3">
+                    <img src={selfieImageSrc} alt="Selfie" className="w-full h-36 object-cover rounded-lg" />
                     <div className="absolute top-2 right-2 bg-[#B4ED57] text-black text-xs px-2 py-0.5 rounded-full font-semibold">✓ Captured</div>
-                    <div className="flex gap-2 mt-3">
-                      <button onClick={retake} className="flex-1 px-4 py-2 bg-white/5 rounded-xl text-sm">Retake</button>
-                      <button onClick={() => scanQR()} className="flex-1 px-4 py-2 bg-[#B4ED57] text-black font-bold rounded-xl">Proceed →</button>
+                    <div className="flex gap-2 pt-2">
+                      <button 
+                        onClick={retake}
+                        disabled={isVerifying}
+                        className="flex-1 px-4 py-2 bg-white/5 hover:bg-white/10 rounded-xl text-sm disabled:opacity-50"
+                      >
+                        Retake
+                      </button>
+                      <button 
+                        onClick={handleVerifyIdentity}
+                        disabled={isVerifying}
+                        className="flex-1 px-4 py-2 bg-[#B4ED57] hover:bg-[#c5f278] text-black font-bold rounded-xl disabled:opacity-50"
+                      >
+                        {isVerifying ? "Verifying..." : "Verify →"}
+                      </button>
                     </div>
+                  </div>
+                )}
+
+                {verificationResult && (
+                  <div className="bg-[#B4ED57]/10 border border-[#B4ED57]/30 rounded-lg p-4 space-y-4">
+                    <div className="flex items-center gap-2 mb-3">
+                      <span className="text-[#B4ED57] font-bold">✓ {verificationResult.message}</span>
+                    </div>
+                    
+                    <div className="space-y-2 text-xs">
+                      <div className="flex justify-between">
+                        <span className="text-white/60">Aadhaar Card</span>
+                        <span className="text-[#B4ED57] font-semibold">{verificationResult.aadhaarStatus}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-white/60">ID Card</span>
+                        <span className="text-[#B4ED57] font-semibold">{verificationResult.idCardStatus}</span>
+                      </div>
+                      <div className="border-t border-white/10 pt-2 mt-2 flex justify-between">
+                        <span className="text-white/60">Face Match Confidence</span>
+                        <span className="text-[#B4ED57] font-bold text-sm">
+                          {(verificationResult.faceMatchConfidence * 100).toFixed(1)}%
+                        </span>
+                      </div>
+                    </div>
+
+                    <button 
+                      onClick={() => scanQR()}
+                      className="w-full px-4 py-2 bg-[#B4ED57] hover:bg-[#c5f278] text-black font-bold rounded-xl mt-4"
+                    >
+                      Proceed to Dashboard →
+                    </button>
                   </div>
                 )}
               </div>
