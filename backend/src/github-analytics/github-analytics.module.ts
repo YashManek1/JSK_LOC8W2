@@ -6,9 +6,9 @@ import { QueueModule } from '../queue/queue.module';
 import { GroqSecondaryService } from '../queue/groq-secondary/groq-secondary.service';
 
 @Module({
-    imports: [PrismaModule, QueueModule],
-    controllers: [GithubAnalyticsController],
-    providers: [GithubAnalyticsService, GroqSecondaryService],
-    exports: [GithubAnalyticsService],
+  imports: [PrismaModule, QueueModule],
+  controllers: [GithubAnalyticsController],
+  providers: [GithubAnalyticsService, GroqSecondaryService],
+  exports: [GithubAnalyticsService],
 })
-export class GithubAnalyticsModule { }
+export class GithubAnalyticsModule {}

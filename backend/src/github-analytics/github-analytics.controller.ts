@@ -1,6 +1,5 @@
 import { Controller, Get, Param, Post, Body } from '@nestjs/common';
 import { GithubAnalyticsService } from './github-analytics.service';
-import { AuthGuard } from '@nestjs/passport';
 
 @Controller('github')
 export class GithubAnalyticsController {
@@ -13,9 +12,12 @@ export class GithubAnalyticsController {
     @Post('sync/:shortlistId')
     async forceSync(
         @Param('shortlistId') shortlistId: string,
-        @Body('githubUrl') githubUrl?: string
+        @Body('githubUrl') githubUrl?: string,
     ) {
-        return this.githubService.syncRepoStats(decodeURIComponent(shortlistId), githubUrl);
+        return this.githubService.syncRepoStats(
+            decodeURIComponent(shortlistId),
+            githubUrl,
+        );
     }
 
     /**

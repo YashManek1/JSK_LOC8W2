@@ -182,18 +182,20 @@ export class ShortlistService {
       .map((e: any, idx: number) => ({ ...e, rank: idx + 1 }));
   }
 
-    // ─── All Entries (admin) ──────────────────────────────────────────
-    async getAllEntries() {
-        try {
-            return await this.db.shortlistEntry.findMany({
-                orderBy: { createdAt: 'desc' },
-                include: { config: { select: { isPublished: true, targetShortlist: true } } },
-            });
-        } catch (e: any) {
-            console.error("CRITICAL ADMIN ERROR:", e);
-            return { error: String(e.message), stack: String(e.stack) };
-        }
+  // ─── All Entries (admin) ──────────────────────────────────────────
+  async getAllEntries() {
+    try {
+      return await this.db.shortlistEntry.findMany({
+        orderBy: { createdAt: 'desc' },
+        include: {
+          config: { select: { isPublished: true, targetShortlist: true } },
+        },
+      });
+    } catch (e: any) {
+      console.error('CRITICAL ADMIN ERROR:', e);
+      return { error: String(e.message), stack: String(e.stack) };
     }
+  }
 
   // ─── Single Entry (participant — no adminNote) ────────────────────
   async getEntry(id: string) {

@@ -16,13 +16,13 @@ RUN npm run build
 # Prune dev dependencies
 RUN npm prune --omit=dev && npm cache clean --force
 
-# MEGA STRIP: Aggressively remove all non-Debian 11 Prisma engines
-RUN find node_modules -type f -name "*windows*" -delete \
-    && find node_modules -type f -name "*darwin*" -delete \
-    && find node_modules -type f -name "*musl*" -delete \
-    && find node_modules -type f -name "*rhel*" -delete \
-    && find node_modules -type f -name "*linux-arm64*" -delete \
-    && find node_modules -type f -name "*debian-10*" -delete
+# MEGA STRIP: Safely remove unused Prisma engines WITHOUT breaking other packages like nodemailer
+RUN find node_modules/@prisma node_modules/.prisma -type f -name "*windows*" -delete 2>/dev/null || true \
+    && find node_modules/@prisma node_modules/.prisma -type f -name "*darwin*" -delete 2>/dev/null || true \
+    && find node_modules/@prisma node_modules/.prisma -type f -name "*musl*" -delete 2>/dev/null || true \
+    && find node_modules/@prisma node_modules/.prisma -type f -name "*rhel*" -delete 2>/dev/null || true \
+    && find node_modules/@prisma node_modules/.prisma -type f -name "*linux-arm64*" -delete 2>/dev/null || true \
+    && find node_modules/@prisma node_modules/.prisma -type f -name "*debian-10*" -delete 2>/dev/null || true
 
 
 # ----- Stage 2: Build Python Dependencies -----
@@ -43,7 +43,6 @@ RUN python -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
 # 🚨 CRITICAL FIX 1: Set the Extra Index globally.
-# This prevents `uv` from secretly upgrading Torch to the 2.5GB GPU version when it reads requirements.txt!
 ENV UV_EXTRA_INDEX_URL="https://download.pytorch.org/whl/cpu"
 
 RUN uv pip install --no-cache torch torchvision torchaudio

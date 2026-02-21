@@ -7,16 +7,13 @@ import {
   Param,
   UseInterceptors,
   UploadedFile,
-  UseGuards,
-  Req,
 } from '@nestjs/common';
 import { ProfileService } from './profile.service';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { AuthGuard } from '@nestjs/passport';
 
 @Controller('profile')
 export class ProfileController {
-  constructor(private readonly profileService: ProfileService) {}
+  constructor(private readonly profileService: ProfileService) { }
 
   @Get(':id')
   async getProfile(@Param('id') id: string) {
