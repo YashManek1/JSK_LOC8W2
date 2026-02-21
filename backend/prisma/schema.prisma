@@ -37,68 +37,61 @@ model Evaluation {
 }
 
 model Participant {
-  id                       String   @id @default(uuid())
+  id                       String             @id @default(uuid())
   fullName                 String?
   liveSelfieUrl            String?
   idCardUrl                String?
   aadhaarEncrypted         String?
   phone                    String?
-  faceEmbedding            Json?
-  email                    String   @unique
-  password                 String?
-  role                     String   @default("USER") // Can be "USER" or "ADMIN"
-  college                  String?
-  education                Json?
-  githubAccessToken        String?
-  githubRefreshToken       String?
-  primarySkillset          String[]
-  tagline                  String?
-  projects                 Json?
-  workExperience           Json?
-  positionOfResponsibility Json?
-  achievements             String[]
-  certifications           String[]
-  socialLinks              Json?
-  hackathonPreferences     Json?
+  email                    String             @unique
   motivation               String?
   pastProjects             String[]
   githubUrl                String?
   linkedinUrl              String?
-  portfolioUrl             String?
   roleSelection            String?
   sleepHabits              String?
   dietaryPref              String?
   teamId                   String?
-  createdAt                DateTime @default(now())
-  updatedAt                DateTime @updatedAt
-
-  // Relations
-  chatSessions      ChatSession[]
-  team              Team?          @relation(fields: [teamId], references: [id])
-  hackathons        Hackathon[]    @relation("AdminHackathons")
-  leadsTeams        Team[]         @relation("TeamLeader")
-  registrations     Registration[]
-  pushSubscriptions PushSubscription[]
-  checkInQRs        CheckInQR[]
-  mealQRs           MealQR[]
+  createdAt                DateTime           @default(now())
+  updatedAt                DateTime           @updatedAt
+  faceEmbedding            Json?
+  college                  String?
+  githubAccessToken        String?
+  githubRefreshToken       String?
+  hackathonPreferences     Json?
+  password                 String?
+  positionOfResponsibility Json?
+  projects                 Json?
+  role                     String             @default("USER")
+  socialLinks              Json?
+  tagline                  String?
+  workExperience           Json?
+  achievements             String[]
+  certifications           String[]
+  primarySkillset          String[]
+  portfolioUrl             String?
+  education                Json?
+  chatSessions             ChatSession[]
+  hackathons               Hackathon[]        @relation("AdminHackathons")
+  team                     Team?              @relation(fields: [teamId], references: [id])
+  pushSubscriptions        PushSubscription[]
+  registrations            Registration[]
+  leadsTeams               Team[]             @relation("TeamLeader")
 }
 
 model Team {
-  id           String   @id @default(uuid())
+  id           String        @id @default(uuid())
   teamName     String
   leadEmail    String
   memberEmails String[]
-  createdAt    DateTime @default(now())
-
-  // Registration specifics
-  hackathonId String?
-  hackathon   Hackathon?   @relation(fields: [hackathonId], references: [id])
-  leaderId    String?
-  leader      Participant? @relation("TeamLeader", fields: [leaderId], references: [id])
-  inviteCode  String?      @unique
-  status      String       @default("INCOMPLETE") // INCOMPLETE, REGISTERED
-
+  createdAt    DateTime      @default(now())
+  hackathonId  String?
+  inviteCode   String?       @unique
+  leaderId     String?
+  status       String        @default("INCOMPLETE")
   participants Participant[]
+  hackathon    Hackathon?    @relation(fields: [hackathonId], references: [id])
+  leader       Participant?  @relation("TeamLeader", fields: [leaderId], references: [id])
 }
 
 model ChatSession {
@@ -156,57 +149,48 @@ model ShortlistEntry {
 }
 
 model Hackathon {
-  id                   String    @id @default(uuid())
+  id                   String          @id @default(uuid())
   name                 String
   startDate            DateTime
   endDate              DateTime
-  registrationDeadline DateTime? // Deadline for registrations
-  psReleaseDate        DateTime? // When to release Problem Statements
-  psReleasedPushSent   Boolean   @default(false) // Has the cron job sent the notifications?
+  registrationDeadline DateTime?
   location             String
   description          String?
-  posterUrl            String? // Frontend uploads to S3/Cloudinary and sends URL
+  posterUrl            String?
   prizePool            String?
   totalTeams           Int?
-  teamSize             Int       @default(3)
+  teamSize             Int             @default(3)
   totalOfflineTeams    Int?
   totalRemoteTeams     Int?
   venueMapUrl          String?
-  ndaRequired          Boolean   @default(false)
-  status               String    @default("Active") // e.g., "Active", "Completed"
-
-  // JSON arrays for simple lists
-  sponsors       Json? // Array of strings: ["Google", "GitHub"]
-  rules          Json? // Array of strings: ["Rule 1", "Rule 2"]
-  requiredFields Json? // Array of required registration fields: ["github", "college"]
-  mealTimes      Json? // { breakfast: "08:00", lunch: "13:00", dinner: "20:00" }
-  qrGenerated    Boolean @default(false) // Has the cron generated check-in QRs?
-
-  // Relations
-  adminId       String
-  admin         Participant     @relation("AdminHackathons", fields: [adminId], references: [id])
-  domains       Domain[]
-  rooms         Room[]
-  timeline      TimelineEvent[]
-  teams         Team[]
-  registrations Registration[]
-  checkInQRs    CheckInQR[]
-  mealQRs       MealQR[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  ndaRequired          Boolean         @default(false)
+  status               String          @default("Active")
+  sponsors             Json?
+  rules                Json?
+  requiredFields       Json?
+  adminId              String
+  createdAt            DateTime        @default(now())
+  updatedAt            DateTime        @updatedAt
+  psReleaseDate        DateTime?
+  psReleasedPushSent   Boolean         @default(false)
+  domains              Domain[]
+  admin                Participant     @relation("AdminHackathons", fields: [adminId], references: [id])
+  registrations        Registration[]
+  rooms                Room[]
+  teams                Team[]
+  timeline             TimelineEvent[]
 }
 
 model Registration {
   id             String      @id @default(uuid())
   participantId  String
-  participant    Participant @relation(fields: [participantId], references: [id], onDelete: Cascade)
   hackathonId    String
-  hackathon      Hackathon   @relation(fields: [hackathonId], references: [id], onDelete: Cascade)
-  dynamicAnswers Json? // Stores answers for hackathon.requiredFields
-  status         String      @default("SOLO") // SOLO, IN_TEAM
+  dynamicAnswers Json?
+  status         String      @default("SOLO")
   createdAt      DateTime    @default(now())
   updatedAt      DateTime    @updatedAt
+  hackathon      Hackathon   @relation(fields: [hackathonId], references: [id], onDelete: Cascade)
+  participant    Participant @relation(fields: [participantId], references: [id], onDelete: Cascade)
 
   @@unique([participantId, hackathonId])
 }
@@ -214,7 +198,7 @@ model Registration {
 model Domain {
   id          String    @id @default(uuid())
   name        String
-  problems    Json // Array of strings
+  problems    Json
   hackathonId String
   hackathon   Hackathon @relation(fields: [hackathonId], references: [id], onDelete: Cascade)
 }
@@ -222,7 +206,7 @@ model Domain {
 model Room {
   id          String    @id @default(uuid())
   name        String
-  capacity    String // Kept as string to allow "—" or "50+" based on your frontend
+  capacity    String
   hackathonId String
   hackathon   Hackathon @relation(fields: [hackathonId], references: [id], onDelete: Cascade)
 }
@@ -233,6 +217,16 @@ model TimelineEvent {
   event       String
   hackathonId String
   hackathon   Hackathon @relation(fields: [hackathonId], references: [id], onDelete: Cascade)
+}
+
+model PushSubscription {
+  id            String      @id @default(uuid())
+  participantId String
+  endpoint      String      @unique
+  p256dh        String
+  auth          String
+  createdAt     DateTime    @default(now())
+  participant   Participant @relation(fields: [participantId], references: [id], onDelete: Cascade)
 }
 
 enum RoundStatus {
@@ -248,45 +242,4 @@ enum EvaluationStatus {
   PROCESSING
   COMPLETED
   FAILED
-}
-
-model PushSubscription {
-  id            String      @id @default(uuid())
-  participantId String
-  participant   Participant @relation(fields: [participantId], references: [id], onDelete: Cascade)
-  endpoint      String      @unique
-  p256dh        String
-  auth          String
-  createdAt     DateTime    @default(now())
-}
-
-model CheckInQR {
-  id            String      @id @default(uuid())
-  participantId String
-  participant   Participant @relation(fields: [participantId], references: [id], onDelete: Cascade)
-  hackathonId   String
-  hackathon     Hackathon   @relation(fields: [hackathonId], references: [id], onDelete: Cascade)
-  qrToken       String      @unique @default(uuid())
-  isCheckedIn   Boolean     @default(false)
-  checkedInAt   DateTime?
-  emailSent     Boolean     @default(false)
-  createdAt     DateTime    @default(now())
-
-  @@unique([participantId, hackathonId])
-}
-
-model MealQR {
-  id            String      @id @default(uuid())
-  participantId String
-  participant   Participant @relation(fields: [participantId], references: [id], onDelete: Cascade)
-  hackathonId   String
-  hackathon     Hackathon   @relation(fields: [hackathonId], references: [id], onDelete: Cascade)
-  mealType      String      // BREAKFAST | LUNCH | DINNER
-  mealDate      DateTime    // The date of this specific meal
-  qrToken       String      @unique @default(uuid())
-  isScanned     Boolean     @default(false)
-  scannedAt     DateTime?
-  createdAt     DateTime    @default(now())
-
-  @@unique([participantId, hackathonId, mealType, mealDate])
 }
