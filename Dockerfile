@@ -49,6 +49,8 @@ RUN pip install --no-cache-dir --default-timeout=1000 \
     && find /opt/venv -name "*.pyc" -delete \
     && rm -rf /root/.cache/pip
 
+# Pre-download ML models at build time to prevent massive startup delays/OOM in Railway
+RUN python -c "import easyocr; easyocr.Reader(['en'], gpu=False); from deepface import DeepFace; DeepFace.build_model('ArcFace')"
 
 # ----- Stage 3: Final Production Image -----
 FROM python:3.10-slim
@@ -71,6 +73,10 @@ WORKDIR /app
 # Copy optimized Python virtual environment
 COPY --from=python-builder /opt/venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
+
+# Copy pre-downloaded ML models to their expected directories
+COPY --from=python-builder /root/.deepface /root/.deepface
+COPY --from=python-builder /root/.EasyOCR /root/.EasyOCR
 
 # Copy python code
 COPY identity-service ./identity-service/
