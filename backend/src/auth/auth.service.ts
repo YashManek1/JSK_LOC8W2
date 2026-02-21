@@ -14,12 +14,12 @@ export class AuthService {
     private prisma: PrismaService,
     private jwtService: JwtService,
     private aes256: Aes256Service,
-  ) {}
+  ) { }
 
   async signup(
     data: any,
-    aadhaarFile: Express.Multer.File,
-    idCardFile: Express.Multer.File,
+    aadhaarFile?: Express.Multer.File,
+    idCardFile?: Express.Multer.File,
   ) {
     const { email, password, fullName, phone, college, role } = data;
 
@@ -31,46 +31,52 @@ export class AuthService {
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
+    const resolvedRole = role || 'Participant';
+    const isParticipant = resolvedRole !== 'ADMIN';
 
-    // 1. OCR Aadhaar
-    const ocrFormData = new FormData();
-    ocrFormData.append(
-      'file',
-      new Blob([new Uint8Array(aadhaarFile.buffer)], {
-        type: aadhaarFile.mimetype,
-      }),
-      aadhaarFile.originalname,
-    );
+    let encryptedAadhaar = null;
 
-    const identityServiceUrl =
-      process.env.IDENTITY_SERVICE_URL || 'http://127.0.0.1:8000';
-    let ocrResponse;
-    try {
-      ocrResponse = await fetch(`${identityServiceUrl}/ocr/aadhaar`, {
-        method: 'POST',
-        body: ocrFormData,
-      });
-    } catch (e) {
-      console.error('Identity service connection error:', e);
-      throw new BadRequestException('Identity service is unavailable.');
-    }
-
-    if (!ocrResponse.ok) {
-      throw new BadRequestException(
-        `Failed to process Aadhaar document OCR. Status: ${ocrResponse.status}`,
+    if (isParticipant && aadhaarFile) {
+      // 1. OCR Aadhaar
+      const ocrFormData = new FormData();
+      ocrFormData.append(
+        'file',
+        new Blob([new Uint8Array(aadhaarFile.buffer)], {
+          type: aadhaarFile.mimetype,
+        }),
+        aadhaarFile.originalname,
       );
+
+      const identityServiceUrl =
+        process.env.IDENTITY_SERVICE_URL || 'http://127.0.0.1:8000';
+      let ocrResponse;
+      try {
+        ocrResponse = await fetch(`${identityServiceUrl}/ocr/aadhaar`, {
+          method: 'POST',
+          body: ocrFormData,
+        });
+      } catch (e) {
+        console.error('Identity service connection error:', e);
+        throw new BadRequestException('Identity service is unavailable.');
+      }
+
+      if (!ocrResponse.ok) {
+        throw new BadRequestException(
+          `Failed to process Aadhaar document OCR. Status: ${ocrResponse.status}`,
+        );
+      }
+
+      const ocrResult = (await ocrResponse.json()) as { aadhaarNumber?: string };
+      const aadhaarNumber = ocrResult.aadhaarNumber;
+
+      if (!aadhaarNumber) {
+        throw new BadRequestException(
+          'Could not clearly read a 12-digit Aadhaar number from the document.',
+        );
+      }
+
+      encryptedAadhaar = this.aes256.encrypt(aadhaarNumber);
     }
-
-    const ocrResult = (await ocrResponse.json()) as { aadhaarNumber?: string };
-    const aadhaarNumber = ocrResult.aadhaarNumber;
-
-    if (!aadhaarNumber) {
-      throw new BadRequestException(
-        'Could not clearly read a 12-digit Aadhaar number from the document.',
-      );
-    }
-
-    const encryptedAadhaar = this.aes256.encrypt(aadhaarNumber);
 
     // Create user
     const user = await this.prisma.participant.create({
@@ -80,7 +86,7 @@ export class AuthService {
         fullName,
         phone,
         college,
-        role: role || 'Participant',
+        role: resolvedRole,
         aadhaarEncrypted: encryptedAadhaar,
         // We can store the ID card URL if we upload it to S3, for now we just process it
       },

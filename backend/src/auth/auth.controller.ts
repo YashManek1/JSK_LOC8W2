@@ -23,7 +23,7 @@ export class AuthController {
     private readonly authService: AuthService,
     private readonly prisma: PrismaService,
     private readonly aes256: Aes256Service,
-  ) {}
+  ) { }
 
   @Post('signup')
   @UseInterceptors(
@@ -39,9 +39,10 @@ export class AuthController {
   ) {
     const aadhaarFile = files?.aadhaar?.[0];
     const idCardFile = files?.idCard?.[0];
+    const isParticipant = body.role !== 'ADMIN';
 
-    if (!aadhaarFile || !idCardFile) {
-      throw new BadRequestException('Aadhaar and ID Card images are required');
+    if (isParticipant && (!aadhaarFile || !idCardFile)) {
+      throw new BadRequestException('Aadhaar and ID Card images are required for Participants');
     }
 
     return this.authService.signup(body, aadhaarFile, idCardFile);
