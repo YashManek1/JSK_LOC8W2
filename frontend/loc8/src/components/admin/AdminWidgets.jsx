@@ -1,4 +1,35 @@
-﻿import React, { useState } from "react";
+﻿import React, { useState, useRef, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { gsap } from "gsap";
+
+/* ── Animation utilities ── */
+const fadeInUp = {
+  hidden: { opacity: 0, y: 30 },
+  visible: (i = 0) => ({
+    opacity: 1,
+    y: 0,
+    transition: { delay: i * 0.08, duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] },
+  }),
+};
+
+const staggerContainer = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1, transition: { staggerChildren: 0.06, delayChildren: 0.1 } },
+};
+
+const glassStyle = "backdrop-blur-xl bg-white/[0.03] border border-white/[0.08] shadow-[0_8px_32px_rgba(0,0,0,0.3)]";
+
+function AnimatedCounter({ value, className, style }) {
+  const ref = useRef(null);
+  const numVal = parseInt(value) || 0;
+  useEffect(() => {
+    if (!ref.current) return;
+    gsap.fromTo(ref.current, { innerText: 0 }, {
+      innerText: numVal, duration: 1.5, ease: "power2.out", snap: { innerText: 1 }, delay: 0.3,
+    });
+  }, [numVal]);
+  return <div ref={ref} className={className} style={style}>0</div>;
+}
 
 export function ParticipantsTable() {
   const participants = [
@@ -10,7 +41,13 @@ export function ParticipantsTable() {
   ];
 
   return (
-    <div className="bg-[#111] border border-white/10 rounded-2xl overflow-hidden" style={{ fontFamily: "'Fustat', sans-serif" }}>
+    <motion.div
+      className={`rounded-2xl overflow-hidden ${glassStyle}`}
+      style={{ fontFamily: "'Fustat', sans-serif" }}
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+    >
       <div className="p-5 border-b border-white/10 flex items-center justify-between">
         <h3 className="text-white font-semibold" style={{ fontFamily: "'Questrial', sans-serif" }}>Participants</h3>
         <span className="text-white/40 text-sm">{participants.length} registered</span>
@@ -27,8 +64,15 @@ export function ParticipantsTable() {
             </tr>
           </thead>
           <tbody>
-            {participants.map((p) => (
-              <tr key={p.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
+            {participants.map((p, idx) => (
+              <motion.tr
+                key={p.id}
+                className="border-b border-white/5 hover:bg-white/5 transition-colors"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.1 + idx * 0.08, duration: 0.4 }}
+                whileHover={{ backgroundColor: "rgba(180,237,87,0.03)" }}
+              >
                 <td className="px-5 py-3">
                   <div className="flex items-center gap-2">
                     <div className="w-7 h-7 bg-gradient-to-br from-[#B4ED57] to-[#8bc34a] rounded-full flex items-center justify-center text-black text-xs font-bold">
@@ -51,12 +95,12 @@ export function ParticipantsTable() {
                     #{p.rank}
                   </span>
                 </td>
-              </tr>
+              </motion.tr>
             ))}
           </tbody>
         </table>
       </div>
-    </div>
+    </motion.div>
   );
 }
 
@@ -164,24 +208,49 @@ export function CreateJudgeWidget() {
   };
 
   return (
-    <div className="space-y-6" style={{ fontFamily: "'Fustat', sans-serif" }}>
+    <motion.div
+      className="space-y-6"
+      style={{ fontFamily: "'Fustat', sans-serif" }}
+      initial="hidden"
+      animate="visible"
+      variants={staggerContainer}
+    >
 
       {/* ────────── Header ────────── */}
-      <div className="flex items-center justify-between">
+      <motion.div className="flex items-center justify-between" variants={fadeInUp} custom={0}>
         <div>
-          <h1 className="text-white text-3xl font-black" style={{ fontFamily: "'Questrial', sans-serif" }}>
+          <motion.h1
+            className="text-white text-3xl font-black"
+            style={{ fontFamily: "'Questrial', sans-serif" }}
+            initial={{ opacity: 0, x: -30 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.6 }}
+          >
             Credential{" "}
-            <span className="text-[#B4ED57] italic" style={{ fontFamily: "'Pixelify Sans', cursive" }}>
+            <motion.span
+              className="text-[#B4ED57] italic"
+              style={{ fontFamily: "'Pixelify Sans', cursive" }}
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.3, duration: 0.5 }}
+            >
               Management
-            </span>
-          </h1>
-          <p className="text-white/40 text-sm mt-1">
+            </motion.span>
+          </motion.h1>
+          <motion.p
+            className="text-white/40 text-sm mt-1"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.4 }}
+          >
             Manage authentication, roles &amp; permissions for Admins, Mentors &amp; Judges
-          </p>
+          </motion.p>
         </div>
-        <button
+        <motion.button
           onClick={() => setShowForm(!showForm)}
           className="px-5 py-2.5 bg-[#B4ED57] hover:bg-[#c5f278] text-black font-bold text-sm rounded-xl transition-all flex items-center gap-2"
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
         >
           <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             {showForm ? (
@@ -197,13 +266,21 @@ export function CreateJudgeWidget() {
             )}
           </svg>
           {showForm ? "Cancel" : "New Account"}
-        </button>
-      </div>
+        </motion.button>
+      </motion.div>
 
       {/* ────────── Stats Cards ────────── */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <motion.div className="grid grid-cols-2 lg:grid-cols-4 gap-4" variants={staggerContainer}>
         {/* Total Users */}
-        <div className="bg-[#B4ED57] rounded-2xl p-5">
+        <motion.div
+          className="bg-[#B4ED57] rounded-2xl p-5 relative overflow-hidden group"
+          variants={fadeInUp}
+          custom={1}
+          whileHover={{ scale: 1.03, y: -5 }}
+          transition={{ type: "spring", stiffness: 300, damping: 20 }}
+        >
+          <motion.div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+          <div className="relative z-10">
           <div className="flex items-start justify-between mb-5">
             <svg className="w-7 h-7 text-black/60" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
               <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
@@ -213,12 +290,21 @@ export function CreateJudgeWidget() {
             </svg>
             <span className="text-black/50 text-xs font-medium">System</span>
           </div>
-          <div className="text-black text-4xl font-black" style={{ fontFamily: "'Questrial', sans-serif" }}>{totalUsers}</div>
+          <AnimatedCounter value={totalUsers} className="text-black text-4xl font-black" style={{ fontFamily: "'Questrial', sans-serif" }} />
           <div className="text-black/50 text-sm mt-1">Total Users</div>
-        </div>
+          </div>
+        </motion.div>
 
         {/* Active */}
-        <div className="bg-[#4D58D4] rounded-2xl p-5">
+        <motion.div
+          className="bg-[#4D58D4] rounded-2xl p-5 relative overflow-hidden group"
+          variants={fadeInUp}
+          custom={2}
+          whileHover={{ scale: 1.03, y: -5 }}
+          transition={{ type: "spring", stiffness: 300, damping: 20 }}
+        >
+          <motion.div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+          <div className="relative z-10">
           <div className="flex items-start justify-between mb-5">
             <svg className="w-7 h-7 text-white/60" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
               <path d="M22 11.08V12a10 10 0 11-5.93-9.14" />
@@ -226,12 +312,19 @@ export function CreateJudgeWidget() {
             </svg>
             <span className="text-white/50 text-xs font-medium">{((activeUsers / totalUsers) * 100).toFixed(0)}%</span>
           </div>
-          <div className="text-white text-4xl font-black" style={{ fontFamily: "'Questrial', sans-serif" }}>{activeUsers}</div>
+          <AnimatedCounter value={activeUsers} className="text-white text-4xl font-black" style={{ fontFamily: "'Questrial', sans-serif" }} />
           <div className="text-white/50 text-sm mt-1">Active</div>
-        </div>
+          </div>
+        </motion.div>
 
         {/* 2FA Enabled */}
-        <div className="bg-[#111] border border-white/10 rounded-2xl p-5">
+        <motion.div
+          className={`rounded-2xl p-5 relative overflow-hidden group ${glassStyle}`}
+          variants={fadeInUp}
+          custom={3}
+          whileHover={{ scale: 1.03, y: -5, borderColor: "rgba(180,237,87,0.3)" }}
+          transition={{ type: "spring", stiffness: 300, damping: 20 }}
+        >
           <div className="flex items-start justify-between mb-5">
             <svg className="w-7 h-7 text-[#B4ED57]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
               <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
@@ -242,10 +335,16 @@ export function CreateJudgeWidget() {
           </div>
           <div className="text-[#B4ED57] text-4xl font-black" style={{ fontFamily: "'Questrial', sans-serif" }}>{twoFAEnabled}</div>
           <div className="text-white/40 text-sm mt-1">2FA Enabled</div>
-        </div>
+        </motion.div>
 
         {/* Suspended */}
-        <div className="bg-[#111] border border-white/10 rounded-2xl p-5">
+        <motion.div
+          className={`rounded-2xl p-5 relative overflow-hidden group ${glassStyle}`}
+          variants={fadeInUp}
+          custom={4}
+          whileHover={{ scale: 1.03, y: -5, borderColor: "rgba(248,113,113,0.3)" }}
+          transition={{ type: "spring", stiffness: 300, damping: 20 }}
+        >
           <div className="flex items-start justify-between mb-5">
             <svg className="w-7 h-7 text-red-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="12" cy="12" r="10" />
@@ -255,18 +354,23 @@ export function CreateJudgeWidget() {
           </div>
           <div className="text-red-400 text-4xl font-black" style={{ fontFamily: "'Questrial', sans-serif" }}>{suspendedUsers}</div>
           <div className="text-white/40 text-sm mt-1">Suspended</div>
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
 
       {/* ────────── Toast ────────── */}
-      {toast && (
-        <div
-          className={`rounded-2xl px-5 py-3 flex items-center gap-3 ${
-            toast.type === "success"
-              ? "bg-[#B4ED57]/10 border border-[#B4ED57]/30"
-              : "bg-yellow-400/10 border border-yellow-400/30"
-          }`}
-        >
+      <AnimatePresence>
+        {toast && (
+          <motion.div
+            className={`rounded-2xl px-5 py-3 flex items-center gap-3 ${
+              toast.type === "success"
+                ? "bg-[#B4ED57]/10 border border-[#B4ED57]/30 backdrop-blur-md"
+                : "bg-yellow-400/10 border border-yellow-400/30 backdrop-blur-md"
+            }`}
+            initial={{ opacity: 0, y: -20, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -20, scale: 0.95 }}
+            transition={{ duration: 0.3 }}
+          >
           <svg
             className={`w-5 h-5 shrink-0 ${toast.type === "success" ? "text-[#B4ED57]" : "text-yellow-400"}`}
             viewBox="0 0 24 24"
@@ -282,12 +386,20 @@ export function CreateJudgeWidget() {
           <span className={`text-sm font-medium ${toast.type === "success" ? "text-[#B4ED57]" : "text-yellow-400"}`}>
             {toast.msg}
           </span>
-        </div>
+        </motion.div>
       )}
+      </AnimatePresence>
 
       {/* ────────── Create Form ────────── */}
+      <AnimatePresence>
       {showForm && (
-        <div className="bg-[#111] border border-white/10 rounded-2xl p-6">
+        <motion.div
+          className={`rounded-2xl p-6 ${glassStyle}`}
+          initial={{ opacity: 0, height: 0, y: -10 }}
+          animate={{ opacity: 1, height: "auto", y: 0 }}
+          exit={{ opacity: 0, height: 0, y: -10 }}
+          transition={{ duration: 0.4, ease: "easeInOut" }}
+        >
           <h3 className="text-white font-bold text-sm mb-5" style={{ fontFamily: "'Questrial', sans-serif" }}>
             Create{" "}
             <span className="text-[#4D58D4] italic" style={{ fontFamily: "'Pixelify Sans', cursive" }}>
@@ -361,11 +473,12 @@ export function CreateJudgeWidget() {
               </button>
             </div>
           </form>
-        </div>
+        </motion.div>
       )}
+      </AnimatePresence>
 
       {/* ────────── Filters ────────── */}
-      <div className="bg-[#111] border border-white/10 rounded-2xl p-4">
+      <motion.div className={`rounded-2xl p-4 ${glassStyle}`} variants={fadeInUp} custom={5}>
         <div className="flex flex-wrap items-center gap-3">
           <div className="flex-1 min-w-[200px] relative">
             <svg
@@ -407,10 +520,14 @@ export function CreateJudgeWidget() {
             <option value="Suspended">Suspended</option>
           </select>
         </div>
-      </div>
+      </motion.div>
 
       {/* ────────── Master Table ────────── */}
-      <div className="bg-[#111] border border-white/10 rounded-2xl overflow-hidden">
+      <motion.div
+        className={`rounded-2xl overflow-hidden ${glassStyle}`}
+        variants={fadeInUp}
+        custom={6}
+      >
         <div className="p-5 border-b border-white/10 flex items-center justify-between">
           <h3 className="text-white font-bold text-sm" style={{ fontFamily: "'Questrial', sans-serif" }}>
             System{" "}
@@ -443,7 +560,15 @@ export function CreateJudgeWidget() {
             </thead>
             <tbody>
               {filtered.map((u) => (
-                <tr key={u.id} className="border-b border-white/5 hover:bg-white/[0.02] transition-colors">
+                <motion.tr
+                  key={u.id}
+                  className="border-b border-white/5 hover:bg-white/[0.02] transition-colors"
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.3 }}
+                  whileHover={{ backgroundColor: "rgba(180,237,87,0.02)" }}
+                  layout
+                >
                   {/* User */}
                   <td className="pl-5 pr-3 py-2.5">
                     <div className="flex items-center gap-3">
@@ -573,7 +698,7 @@ export function CreateJudgeWidget() {
                       </button>
                     </div>
                   </td>
-                </tr>
+                </motion.tr>
               ))}
             </tbody>
           </table>
@@ -587,8 +712,8 @@ export function CreateJudgeWidget() {
             <p className="text-white/30 text-sm">No users match your filters</p>
           </div>
         )}
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 }
 
@@ -601,16 +726,29 @@ export function AdminStatsBar({ hackathon }) {
   ];
 
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6" style={{ fontFamily: "'Fustat', sans-serif" }}>
-      {stats.map((s) => (
-        <div key={s.label} className="bg-[#111] border border-white/10 rounded-2xl p-5">
+    <motion.div
+      className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6"
+      style={{ fontFamily: "'Fustat', sans-serif" }}
+      initial="hidden"
+      animate="visible"
+      variants={staggerContainer}
+    >
+      {stats.map((s, i) => (
+        <motion.div
+          key={s.label}
+          className={`rounded-2xl p-5 ${glassStyle}`}
+          variants={fadeInUp}
+          custom={i}
+          whileHover={{ scale: 1.03, y: -4, borderColor: "rgba(180,237,87,0.2)" }}
+          transition={{ type: "spring", stiffness: 300, damping: 20 }}
+        >
           <div className="flex items-center justify-between mb-2">
             <span className="text-[#B4ED57] text-xs">{s.delta}</span>
           </div>
           <div className="text-white text-2xl font-black" style={{ fontFamily: "'Questrial', sans-serif" }}>{s.value}</div>
           <div className="text-white/40 text-xs mt-0.5">{s.label}</div>
-        </div>
+        </motion.div>
       ))}
-    </div>
+    </motion.div>
   );
 }

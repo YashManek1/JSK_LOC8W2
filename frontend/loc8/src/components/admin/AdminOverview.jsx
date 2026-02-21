@@ -1,4 +1,31 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { gsap } from "gsap";
+
+/* ── Animation variants ── */
+const fadeInUp = {
+  hidden: { opacity: 0, y: 30 },
+  visible: (i = 0) => ({
+    opacity: 1,
+    y: 0,
+    transition: { delay: i * 0.1, duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] },
+  }),
+};
+
+const staggerContainer = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { staggerChildren: 0.08, delayChildren: 0.1 },
+  },
+};
+
+const cardHover = {
+  rest: { scale: 1, y: 0 },
+  hover: { scale: 1.02, y: -4, transition: { duration: 0.3, ease: "easeOut" } },
+};
+
+const glassStyle = "backdrop-blur-xl bg-white/[0.03] border border-white/[0.08] shadow-[0_8px_32px_rgba(0,0,0,0.3)]";
 
 /* ═══════════════════════════════════════════════════════════════════ */
 /*  DATA                                                               */
@@ -79,10 +106,30 @@ function DonutChart() {
 /*  MAIN OVERVIEW                                                      */
 /* ═══════════════════════════════════════════════════════════════════ */
 
+/* ── Animated Counter Component ── */
+function AnimatedCounter({ value, className, style }) {
+  const ref = useRef(null);
+  const numVal = parseInt(value) || 0;
+
+  useEffect(() => {
+    if (!ref.current) return;
+    gsap.fromTo(ref.current, { innerText: 0 }, {
+      innerText: numVal,
+      duration: 1.8,
+      ease: "power2.out",
+      snap: { innerText: 1 },
+      delay: 0.3,
+    });
+  }, [numVal]);
+
+  return <div ref={ref} className={className} style={style}>0</div>;
+}
+
 export default function AdminOverview() {
   /* live clock */
   const [clock, setClock] = useState(new Date());
   const [autoRefresh, setAutoRefresh] = useState(true);
+  const statsRef = useRef(null);
 
   useEffect(() => {
     const t = setInterval(() => setClock(new Date()), 1000);
@@ -96,26 +143,58 @@ export default function AdminOverview() {
   const activeIdx = TIMELINE.findIndex((e) => e.status === "active");
 
   return (
-    <div className="space-y-6" style={{ fontFamily: "'Fustat', sans-serif" }}>
+    <motion.div
+      className="space-y-6"
+      style={{ fontFamily: "'Fustat', sans-serif" }}
+      initial="hidden"
+      animate="visible"
+      variants={staggerContainer}
+    >
       {/* ────────────────── Header ────────────────── */}
-      <div className="flex items-center justify-between">
+      <motion.div className="flex items-center justify-between" variants={fadeInUp} custom={0}>
         <div>
-          <h1 className="text-white text-3xl font-black" style={{ fontFamily: "'Questrial', sans-serif" }}>
+          <motion.h1
+            className="text-white text-3xl font-black"
+            style={{ fontFamily: "'Questrial', sans-serif" }}
+            initial={{ opacity: 0, x: -30 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.6, ease: "easeOut" }}
+          >
             Admin{" "}
-            <span className="text-[#B4ED57] italic" style={{ fontFamily: "'Pixelify Sans', cursive" }}>
+            <motion.span
+              className="text-[#B4ED57] italic"
+              style={{ fontFamily: "'Pixelify Sans', cursive" }}
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.3, duration: 0.5 }}
+            >
               Dashboard
-            </span>
-          </h1>
-          <p className="text-white/40 text-sm mt-1">Real-time hackathon monitoring &amp; analytics</p>
+            </motion.span>
+          </motion.h1>
+          <motion.p
+            className="text-white/40 text-sm mt-1"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.4 }}
+          >
+            Real-time hackathon monitoring &amp; analytics
+          </motion.p>
         </div>
-        <div className="flex items-center gap-3">
-          <button
+        <motion.div
+          className="flex items-center gap-3"
+          initial={{ opacity: 0, x: 30 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.3, duration: 0.5 }}
+        >
+          <motion.button
             onClick={() => setAutoRefresh((v) => !v)}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold border transition-all ${
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold border transition-all backdrop-blur-md ${
               autoRefresh
                 ? "border-[#B4ED57] text-[#B4ED57] bg-[#B4ED57]/5"
                 : "border-white/20 text-white/40 bg-white/5"
             }`}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
           >
             <svg
               className={`w-4 h-4 ${autoRefresh ? "animate-spin" : ""}`}
@@ -133,82 +212,131 @@ export default function AdminOverview() {
               <path d="M21 12a9 9 0 01-15 6.7L3 16" />
             </svg>
             Auto Refresh
-          </button>
-          <div className="flex items-center gap-2 bg-[#111] border border-white/10 rounded-xl px-4 py-2.5">
+          </motion.button>
+          <motion.div
+            className={`flex items-center gap-2 rounded-xl px-4 py-2.5 ${glassStyle}`}
+            animate={{ boxShadow: ["0 0 0px rgba(180,237,87,0)", "0 0 15px rgba(180,237,87,0.15)", "0 0 0px rgba(180,237,87,0)"] }}
+            transition={{ duration: 2, repeat: Infinity }}
+          >
             <span className="w-2 h-2 bg-[#B4ED57] rounded-full animate-pulse" />
             <span className="text-white font-bold text-sm tracking-wider" style={{ fontFamily: "'Questrial', sans-serif" }}>
               {clockStr}
             </span>
-          </div>
-        </div>
-      </div>
+          </motion.div>
+        </motion.div>
+      </motion.div>
 
       {/* ────────────────── Stats Cards ────────────────── */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <motion.div ref={statsRef} className="grid grid-cols-2 lg:grid-cols-4 gap-4" variants={staggerContainer}>
         {/* Registered */}
-        <div className="bg-[#B4ED57] rounded-2xl p-5">
-          <div className="flex items-start justify-between mb-5">
-            <svg className="w-7 h-7 text-black/60" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="9" cy="7" r="4" />
-              <path d="M3 21v-2a4 4 0 014-4h4a4 4 0 014 4v2" />
-              <circle cx="17" cy="9" r="3" />
-              <path d="M21 21v-2a3 3 0 00-3-3h-1" />
-            </svg>
-            <span className="text-black/50 text-xs font-medium flex items-center gap-1">
-              <span>↑</span> 24 today
-            </span>
+        <motion.div
+          className="bg-[#B4ED57] rounded-2xl p-5 relative overflow-hidden group"
+          variants={fadeInUp}
+          custom={1}
+          whileHover={{ scale: 1.03, y: -5 }}
+          transition={{ type: "spring", stiffness: 300, damping: 20 }}
+        >
+          <motion.div
+            className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+          />
+          <div className="relative z-10">
+            <div className="flex items-start justify-between mb-5">
+              <svg className="w-7 h-7 text-black/60" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="9" cy="7" r="4" />
+                <path d="M3 21v-2a4 4 0 014-4h4a4 4 0 014 4v2" />
+                <circle cx="17" cy="9" r="3" />
+                <path d="M21 21v-2a3 3 0 00-3-3h-1" />
+              </svg>
+              <motion.span
+                className="text-black/50 text-xs font-medium flex items-center gap-1"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 1 }}
+              >
+                <span>↑</span> 24 today
+              </motion.span>
+            </div>
+            <AnimatedCounter value={318} className="text-black text-4xl font-black" style={{ fontFamily: "'Questrial', sans-serif" }} />
+            <div className="text-black/50 text-sm mt-1">Registered</div>
           </div>
-          <div className="text-black text-4xl font-black" style={{ fontFamily: "'Questrial', sans-serif" }}>318</div>
-          <div className="text-black/50 text-sm mt-1">Registered</div>
-        </div>
+        </motion.div>
 
         {/* Verified */}
-        <div className="bg-[#4D58D4] rounded-2xl p-5">
-          <div className="flex items-start justify-between mb-5">
-            <svg className="w-7 h-7 text-white/60" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M22 11.08V12a10 10 0 11-5.93-9.14" />
-              <path d="M22 4L12 14.01 9 11.01" />
-            </svg>
-            <span className="text-white/50 text-xs font-medium">92.6% RATE</span>
+        <motion.div
+          className="bg-[#4D58D4] rounded-2xl p-5 relative overflow-hidden group"
+          variants={fadeInUp}
+          custom={2}
+          whileHover={{ scale: 1.03, y: -5 }}
+          transition={{ type: "spring", stiffness: 300, damping: 20 }}
+        >
+          <motion.div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+          <div className="relative z-10">
+            <div className="flex items-start justify-between mb-5">
+              <svg className="w-7 h-7 text-white/60" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M22 11.08V12a10 10 0 11-5.93-9.14" />
+                <path d="M22 4L12 14.01 9 11.01" />
+              </svg>
+              <span className="text-white/50 text-xs font-medium">92.6% RATE</span>
+            </div>
+            <AnimatedCounter value={289} className="text-white text-4xl font-black" style={{ fontFamily: "'Questrial', sans-serif" }} />
+            <div className="text-white/50 text-sm mt-1">Verified</div>
           </div>
-          <div className="text-white text-4xl font-black" style={{ fontFamily: "'Questrial', sans-serif" }}>289</div>
-          <div className="text-white/50 text-sm mt-1">Verified</div>
-        </div>
+        </motion.div>
 
         {/* Teams */}
-        <div className="bg-[#111] border border-white/10 rounded-2xl p-5">
-          <div className="flex items-start justify-between mb-5">
-            <svg className="w-7 h-7 text-[#B4ED57]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M6 9H4.5a2.5 2.5 0 010-5H6" />
-              <path d="M18 9h1.5a2.5 2.5 0 000-5H18" />
-              <path d="M4 22h16" />
-              <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20 7 22" />
-              <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20 17 22" />
-              <path d="M18 2H6v7a6 6 0 0012 0V2z" />
-            </svg>
-            <span className="text-white/30 text-[10px] font-bold uppercase tracking-widest">Teams</span>
+        <motion.div
+          className={`rounded-2xl p-5 relative overflow-hidden group ${glassStyle}`}
+          variants={fadeInUp}
+          custom={3}
+          whileHover={{ scale: 1.03, y: -5, borderColor: "rgba(180,237,87,0.3)" }}
+          transition={{ type: "spring", stiffness: 300, damping: 20 }}
+        >
+          <div className="relative z-10">
+            <div className="flex items-start justify-between mb-5">
+              <svg className="w-7 h-7 text-[#B4ED57]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M6 9H4.5a2.5 2.5 0 010-5H6" />
+                <path d="M18 9h1.5a2.5 2.5 0 000-5H18" />
+                <path d="M4 22h16" />
+                <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20 7 22" />
+                <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20 17 22" />
+                <path d="M18 2H6v7a6 6 0 0012 0V2z" />
+              </svg>
+              <span className="text-white/30 text-[10px] font-bold uppercase tracking-widest">Teams</span>
+            </div>
+            <AnimatedCounter value={74} className="text-white text-4xl font-black" style={{ fontFamily: "'Questrial', sans-serif" }} />
+            <div className="text-white/40 text-sm mt-1">6 RSVP pending</div>
           </div>
-          <div className="text-white text-4xl font-black" style={{ fontFamily: "'Questrial', sans-serif" }}>74</div>
-          <div className="text-white/40 text-sm mt-1">6 RSVP pending</div>
-        </div>
+        </motion.div>
 
         {/* Meals */}
-        <div className="bg-[#111] border border-white/10 rounded-2xl p-5">
-          <div className="flex items-start justify-between mb-5">
-            <svg className="w-7 h-7 text-[#4D58D4]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 002-2V2" />
-              <path d="M7 2v20" />
-              <path d="M21 15V2a5 5 0 00-5 5v6c0 1.1.9 2 2 2h3zm0 0v7" />
-            </svg>
-            <span className="text-white/30 text-[10px] font-bold uppercase tracking-widest">Meals</span>
+        <motion.div
+          className={`rounded-2xl p-5 relative overflow-hidden group ${glassStyle}`}
+          variants={fadeInUp}
+          custom={4}
+          whileHover={{ scale: 1.03, y: -5, borderColor: "rgba(77,88,212,0.3)" }}
+          transition={{ type: "spring", stiffness: 300, damping: 20 }}
+        >
+          <div className="relative z-10">
+            <div className="flex items-start justify-between mb-5">
+              <svg className="w-7 h-7 text-[#4D58D4]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 002-2V2" />
+                <path d="M7 2v20" />
+                <path d="M21 15V2a5 5 0 00-5 5v6c0 1.1.9 2 2 2h3zm0 0v7" />
+              </svg>
+              <span className="text-white/30 text-[10px] font-bold uppercase tracking-widest">Meals</span>
+            </div>
+            <AnimatedCounter value={186} className="text-white text-4xl font-black" style={{ fontFamily: "'Questrial', sans-serif" }} />
+            <div className="text-white/40 text-sm mt-1">Lunch: 64%</div>
           </div>
-          <div className="text-white text-4xl font-black" style={{ fontFamily: "'Questrial', sans-serif" }}>186</div>
-          <div className="text-white/40 text-sm mt-1">Lunch: 64%</div>
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
 
       {/* ────────────────── Event Timeline ────────────────── */}
-      <div className="bg-[#111] border border-white/10 rounded-2xl p-6">
+      <motion.div
+        className={`rounded-2xl p-6 ${glassStyle}`}
+        variants={fadeInUp}
+        custom={5}
+      >
         <div className="flex items-center gap-3 mb-6">
           <svg className="w-5 h-5 text-white/50" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <rect x="3" y="4" width="18" height="18" rx="2" />
@@ -242,15 +370,25 @@ export default function AdminOverview() {
               const soon = ev.status === "upcoming";
 
               return (
-                <div
+                <motion.div
                   key={i}
-                  className={`flex-shrink-0 w-[156px] rounded-2xl p-4 text-center flex flex-col items-center justify-between min-h-[150px] transition-all ${
+                  className={`flex-shrink-0 w-[156px] rounded-2xl p-4 text-center flex flex-col items-center justify-between min-h-[150px] transition-all cursor-pointer ${
                     now
                       ? "bg-[#B4ED57]/10 border-2 border-[#B4ED57]/40"
                       : done
                       ? "bg-white/[0.03] border border-white/10"
                       : "bg-[#4D58D4]/8 border border-[#4D58D4]/25"
                   }`}
+                  initial={{ opacity: 0, y: 20, scale: 0.9 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  transition={{ delay: 0.5 + i * 0.08, duration: 0.4, ease: "easeOut" }}
+                  whileHover={{
+                    scale: 1.05,
+                    y: -8,
+                    boxShadow: now
+                      ? "0 12px 40px rgba(180,237,87,0.2)"
+                      : "0 12px 40px rgba(77,88,212,0.15)",
+                  }}
                 >
                   {now ? (
                     <>
@@ -295,15 +433,15 @@ export default function AdminOverview() {
                       )}
                     </>
                   )}
-                </div>
+                </motion.div>
               );
             })}
           </div>
         </div>
-      </div>
+      </motion.div>
 
       {/* ────────────────── Mentor & Judge Activity + Verification Status ────────────────── */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+      <motion.div className="grid grid-cols-1 lg:grid-cols-2 gap-5" variants={staggerContainer}>
         {/* Mentor & Judge Activity Funnel */}
         {(() => {
           const totalCompleted = MENTOR_JUDGE_ACTIVITY.reduce((s, m) => s + m.completed, 0);
@@ -311,7 +449,12 @@ export default function AdminOverview() {
           const overallPct = ((totalCompleted / totalAssigned) * 100).toFixed(1);
           const maxAssigned = Math.max(...MENTOR_JUDGE_ACTIVITY.map((m) => m.assigned));
           return (
-            <div className="bg-[#111] border border-white/10 rounded-2xl p-6">
+            <motion.div
+              className={`rounded-2xl p-6 ${glassStyle}`}
+              variants={fadeInUp}
+              custom={6}
+              whileHover={{ borderColor: "rgba(180,237,87,0.2)" }}
+            >
               <div className="flex items-center justify-between mb-1">
                 <h3 className="text-white text-lg font-bold" style={{ fontFamily: "'Questrial', sans-serif" }}>
                   Mentor &amp; Judge Activity
@@ -359,12 +502,17 @@ export default function AdminOverview() {
                   );
                 })}
               </div>
-            </div>
+            </motion.div>
           );
         })()}
 
         {/* Verification Status */}
-        <div className="bg-[#111] border border-white/10 rounded-2xl p-6">
+        <motion.div
+          className={`rounded-2xl p-6 ${glassStyle}`}
+          variants={fadeInUp}
+          custom={7}
+          whileHover={{ borderColor: "rgba(77,88,212,0.2)" }}
+        >
           <h3 className="text-white text-lg font-bold mb-1" style={{ fontFamily: "'Questrial', sans-serif" }}>
             Verification Status
           </h3>
@@ -389,11 +537,15 @@ export default function AdminOverview() {
               ))}
             </div>
           </div>
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
 
       {/* ────────────────── Meal Usage Analysis ────────────────── */}
-      <div className="bg-[#111] border border-white/10 rounded-2xl p-6">
+      <motion.div
+        className={`rounded-2xl p-6 ${glassStyle}`}
+        variants={fadeInUp}
+        custom={8}
+      >
         <h3 className="text-white text-lg font-bold mb-1" style={{ fontFamily: "'Questrial', sans-serif" }}>
           Meal Usage Analysis
         </h3>
@@ -406,13 +558,17 @@ export default function AdminOverview() {
             const pct = meal.registered > 0 ? (meal.consumed / meal.registered) * 100 : 0;
 
             return (
-              <div
+              <motion.div
                 key={i}
                 className={`rounded-2xl p-5 border transition-all ${
                   isActive
                     ? "bg-[#B4ED57]/5 border-[#B4ED57]/30"
                     : "bg-white/[0.02] border-white/10"
                 }`}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.8 + i * 0.15, duration: 0.5 }}
+                whileHover={{ scale: 1.03, y: -4, boxShadow: isActive ? "0 8px 30px rgba(180,237,87,0.15)" : "0 8px 30px rgba(255,255,255,0.05)" }}
               >
                 {/* Meal header */}
                 <div className="flex items-center justify-between mb-4">
@@ -500,11 +656,11 @@ export default function AdminOverview() {
                 >
                   Consumption Rate: <span className="font-bold">{meal.rate}%</span>
                 </div>
-              </div>
+              </motion.div>
             );
           })}
         </div>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 }

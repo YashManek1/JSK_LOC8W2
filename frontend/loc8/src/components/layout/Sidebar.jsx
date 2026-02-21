@@ -21,9 +21,12 @@ const adminNav = [
 
 const judgeNav = [
   { icon: "⊞", label: "Dashboard", key: "dashboard" },
-  { icon: "📋", label: "Projects", key: "projects" },
-  { icon: "⭐", label: "Scoring", key: "scoring" },
-  { icon: "📊", label: "Results", key: "results" },
+  { icon: "�", label: "Assigned Teams", key: "assignedTeams" },
+  { icon: "📝", label: "Evaluation Workspace", key: "evaluation" },
+  { icon: "📒", label: "Notes & Feedback", key: "notes" },
+  { icon: "🏆", label: "Leaderboard", key: "leaderboard" },
+  { icon: "💼", label: "Recruitment", key: "recruitment", sponsorOnly: true },
+  { icon: "⚙️", label: "Profile & Settings", key: "settings" },
 ];
 
 /* ── SVG Icons for admin sidebar ── */
@@ -110,7 +113,7 @@ function AdminIcon({ name, active }) {
   }
 }
 
-export default function Sidebar({ activeSection, setActiveSection, variant = "student" }) {
+export default function Sidebar({ activeSection, setActiveSection, variant = "student", showRecruitment = false }) {
   const { logout, currentUser } = useApp();
 
   /* ═══════════ ADMIN: Hover-expandable sidebar ═══════════ */
@@ -197,7 +200,8 @@ export default function Sidebar({ activeSection, setActiveSection, variant = "st
   }
 
   /* ═══════════ STUDENT / JUDGE: existing sidebar ═══════════ */
-  const navItems = variant === "judge" ? judgeNav : studentNav;
+  const rawNav = variant === "judge" ? judgeNav : studentNav;
+  const navItems = rawNav.filter((item) => !item.sponsorOnly || showRecruitment);
 
   return (
     <aside className="w-16 md:w-64 h-screen fixed left-0 top-0 bg-[#0f0f0f] border-r border-white/10 flex flex-col" style={{ fontFamily: "'Questrial', sans-serif" }}>

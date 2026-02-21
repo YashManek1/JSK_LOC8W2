@@ -3,7 +3,7 @@ import { useApp } from "../../context/AppContext";
 import { API_BASE_URL, PYTHON_API_BASE_URL } from "../../api";
 
 export default function SignupForm() {
-  const { loginUser, selectedHackathon, setAuthMode } = useApp();
+  const { loginUser, navigateTo, selectedHackathon, setAuthMode } = useApp();
   const [role, setRole] = useState("student");
   const [form, setForm] = useState({
     name: "",
@@ -102,71 +102,9 @@ export default function SignupForm() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    if (role === "student" && !form.aadhar) {
-      setOtpError("Please upload your Aadhar card");
-      return;
-    }
-    if (role === "student" && !form.collegeId) {
-      setOtpError("Please upload your College ID");
-      return;
-    }
-
-    setOtpError("");
-    setLoading(true);
-
-    // Map frontend role to backend role
-    const roleMap = {
-      student: "Participant",
-      mentor: "Mentor",
-      organiser: "Organiser",
-    };
-    const backendRole = roleMap[role] || role;
-
-    try {
-      const formData = new FormData();
-      formData.append("fullName", form.name);
-      formData.append("email", form.email);
-      formData.append("password", form.password);
-      formData.append("role", backendRole);
-
-      if (role === "student") {
-        formData.append("phone", form.phone);
-        formData.append("college", form.college);
-        if (form.aadhar) formData.append("aadhaar", form.aadhar);
-        if (form.collegeId) formData.append("idCard", form.collegeId);
-      }
-
-      const res = await fetch(`${API_BASE_URL}/auth/signup`, {
-        method: "POST",
-        body: formData,
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        setOtpError(data.message || "Signup failed. Please try again.");
-        return;
-      }
-
-      // Call loginUser with the API response
-      loginUser(
-        {
-          id: data.user.id,
-          name: data.user.fullName || form.name,
-          email: data.user.email,
-          role: role, // keep frontend role for navigation
-          hackathonId: selectedHackathon?.id || "h1",
-          hackathonName: selectedHackathon?.name || "HackOS 2026",
-          teamName: "Team " + form.name.split(" ")[0],
-        },
-        data.accessToken,
-      );
-    } catch (err) {
-      setOtpError("Network error. Is the server running?");
-    } finally {
-      setLoading(false);
-    }
+    // Temporarily navigate directly to judge dashboard
+    navigateTo("judgeDashboard");
+    return;
   };
 
   const handleRequestOtp = async (e) => {

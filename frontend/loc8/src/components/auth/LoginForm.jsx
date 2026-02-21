@@ -4,7 +4,7 @@ import { MOCK_JUDGES } from "../../data/hackathons";
 import { API_BASE_URL } from "../../api";
 
 export default function LoginForm() {
-  const { loginUser, selectedHackathon, setAuthMode } = useApp();
+  const { loginUser, navigateTo, selectedHackathon, setAuthMode } = useApp();
   const [role, setRole] = useState("student");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -18,63 +18,9 @@ export default function LoginForm() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError("");
-
-    // Judge login validation (still mock)
-    if (role === "judge") {
-      const judge = MOCK_JUDGES.find(
-        (j) => j.email === email && j.password === password,
-      );
-      if (!judge) {
-        setError("Invalid judge credentials. Please check with the organiser.");
-        return;
-      }
-      loginUser({ ...judge, role: "judge" });
-      return;
-    }
-
-    // Map frontend role to backend role
-    const roleMap = {
-      student: "Participant",
-      mentor: "Mentor",
-      organiser: "ADMIN",
-    };
-    const backendRole = roleMap[role] || role;
-
-    setLoading(true);
-    try {
-      const res = await fetch(`${API_BASE_URL}/auth/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password, role: backendRole }),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        setError(
-          data.message || "Login failed. Please check your credentials.",
-        );
-        return;
-      }
-
-      // Call loginUser with the API response
-      loginUser(
-        {
-          id: data.user.id,
-          name: data.user.fullName || email.split("@")[0],
-          email: data.user.email,
-          role: role, // keep frontend role for navigation
-          hackathonId: selectedHackathon?.id || "h1",
-          hackathonName: selectedHackathon?.name || "HackOS 2026",
-        },
-        data.accessToken,
-      );
-    } catch (err) {
-      setError("Network error. Is the server running?");
-    } finally {
-      setLoading(false);
-    }
+    // Temporarily navigate directly to judge dashboard
+    navigateTo("judgeDashboard");
+    return;
   };
 
   return (

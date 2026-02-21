@@ -1,5 +1,24 @@
 import React, { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { useApp } from "../context/AppContext";
+
+/* ── Animation variants ─────────────────────────────────────────── */
+const fadeInUp = {
+  hidden: { opacity: 0, y: 30 },
+  visible: (i = 0) => ({
+    opacity: 1,
+    y: 0,
+    transition: { delay: i * 0.08, duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] },
+  }),
+};
+
+const staggerContainer = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1, transition: { staggerChildren: 0.1, delayChildren: 0.1 } },
+};
+
+const glassStyle =
+  "backdrop-blur-xl bg-white/[0.03] border border-white/[0.08] shadow-[0_8px_32px_rgba(0,0,0,0.3)]";
 
 /* ── Shared input class ─────────────────────────────────────────── */
 const inputCls =
@@ -8,18 +27,26 @@ const inputCls =
 /* ── Section wrapper with number + title ─────────────────────────── */
 function Section({ number, title, subtitle, children }) {
   return (
-    <div className="mb-8">
+    <motion.div
+      className="mb-8"
+      initial={{ opacity: 0, x: -20 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ duration: 0.4, delay: number * 0.06 }}
+    >
       <div className="flex items-center gap-3 mb-4">
-        <span className="w-7 h-7 rounded-lg bg-[#4D58D4]/20 border border-[#4D58D4]/30 flex items-center justify-center text-[#4D58D4] text-xs font-bold shrink-0">
+        <motion.span
+          className="w-7 h-7 rounded-lg bg-[#4D58D4]/20 border border-[#4D58D4]/30 flex items-center justify-center text-[#4D58D4] text-xs font-bold shrink-0"
+          whileHover={{ scale: 1.2, rotate: 10, backgroundColor: "rgba(77,88,212,0.35)" }}
+        >
           {number}
-        </span>
+        </motion.span>
         <div>
           <h3 className="text-white font-semibold text-sm" style={{ fontFamily: "'Questrial', sans-serif" }}>{title}</h3>
           {subtitle && <p className="text-white/30 text-xs">{subtitle}</p>}
         </div>
       </div>
       <div className="pl-10">{children}</div>
-    </div>
+    </motion.div>
   );
 }
 

@@ -1,9 +1,19 @@
 ﻿import React, { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { useApp } from "../context/AppContext";
 import Sidebar from "../components/layout/Sidebar";
 import { ParticipantsTable, CreateJudgeWidget, AdminStatsBar } from "../components/admin/AdminWidgets";
 import TeamsTab from "../components/admin/TeamsTab";
 import AdminOverview from "../components/admin/AdminOverview";
+
+/* ── Animation variants ── */
+const pageTransition = {
+  initial: { opacity: 0, y: 20, filter: "blur(8px)" },
+  animate: { opacity: 1, y: 0, filter: "blur(0px)", transition: { duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] } },
+  exit: { opacity: 0, y: -20, filter: "blur(8px)", transition: { duration: 0.3 } },
+};
+
+const glassStyle = "backdrop-blur-xl bg-white/[0.03] border border-white/[0.08] shadow-[0_8px_32px_rgba(0,0,0,0.3)]";
 
 const sections = {
   overview: "Overview",
@@ -41,7 +51,12 @@ function TimelineSection() {
   }, [visibleCount]);
 
   return (
-    <div className="bg-[#111] border border-white/10 rounded-2xl p-6 md:p-8">
+    <motion.div
+      className={`rounded-2xl p-6 md:p-8 ${glassStyle}`}
+      initial={{ opacity: 0, y: 30 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+    >
       <div className="flex items-center justify-between mb-8">
         <div>
           <h3 className="text-white text-lg font-bold" style={{ fontFamily: "'Questrial', sans-serif" }}>Event Timeline</h3>
@@ -92,7 +107,7 @@ function TimelineSection() {
           })}
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }
 
@@ -108,38 +123,67 @@ export default function AdminDashboard() {
       <main className="flex-1 ml-16 p-6" style={{ fontFamily: "'Fustat', sans-serif" }}>
         {/* Header — hidden on tabs that have their own styled header */}
         {activeSection !== "overview" && activeSection !== "teams" && activeSection !== "credentials" && (
-          <div className="flex items-center justify-between mb-6">
+          <motion.div
+            className="flex items-center justify-between mb-6"
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+          >
             <div>
-              <h1 className="text-white text-2xl font-black" style={{ fontFamily: "'Questrial', sans-serif" }}>
+              <motion.h1
+                className="text-white text-2xl font-black"
+                style={{ fontFamily: "'Questrial', sans-serif" }}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.5 }}
+                key={activeSection}
+              >
                 {sections[activeSection]}
-              </h1>
+              </motion.h1>
               <p className="text-white/40 text-sm mt-0.5">
                 {selectedHackathon?.name || "HackOS 2026"} {"\u00b7"} Admin Panel
               </p>
             </div>
             <div className="flex items-center gap-3">
-              <div className="flex items-center gap-1.5 text-[#B4ED57] text-xs bg-[#B4ED57]/10 border border-[#B4ED57]/20 px-3 py-1.5 rounded-full">
+              <motion.div
+                className="flex items-center gap-1.5 text-[#B4ED57] text-xs bg-[#B4ED57]/10 border border-[#B4ED57]/20 px-3 py-1.5 rounded-full backdrop-blur-md"
+                animate={{ boxShadow: ["0 0 0px rgba(180,237,87,0)", "0 0 12px rgba(180,237,87,0.3)", "0 0 0px rgba(180,237,87,0)"] }}
+                transition={{ duration: 2, repeat: Infinity }}
+              >
                 <span className="w-1.5 h-1.5 bg-[#B4ED57] rounded-full animate-pulse" />
                 LIVE
-              </div>
-              <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#4D58D4] to-[#B4ED57] flex items-center justify-center text-white font-black text-sm" style={{ fontFamily: "'Questrial', sans-serif" }}>
+              </motion.div>
+              <motion.div
+                className="w-9 h-9 rounded-full bg-gradient-to-br from-[#4D58D4] to-[#B4ED57] flex items-center justify-center text-white font-black text-sm"
+                style={{ fontFamily: "'Questrial', sans-serif" }}
+                whileHover={{ scale: 1.1, rotate: 10 }}
+              >
                 {currentUser?.name?.[0] || "A"}
-              </div>
+              </motion.div>
             </div>
-          </div>
+          </motion.div>
         )}
 
-        {/* Content */}
+        {/* Content with page transitions */}
+        <AnimatePresence mode="wait">
+          <motion.div key={activeSection} {...pageTransition}>
         {activeSection === "overview" && <AdminOverview />}
 
         {activeSection === "teams" && <TeamsTab />}
 
         {activeSection === "ppt" && (
-          <div className="bg-[#111] border border-white/10 rounded-2xl p-8 text-center">
-            <span className="text-5xl block mb-4">{"\ud83d\udcca"}</span>
+          <motion.div
+            className={`rounded-2xl p-8 text-center ${glassStyle}`}
+            whileHover={{ borderColor: "rgba(180,237,87,0.2)" }}
+          >
+            <motion.span
+              className="text-5xl block mb-4"
+              animate={{ y: [0, -8, 0] }}
+              transition={{ duration: 2, repeat: Infinity }}
+            >{"\ud83d\udcca"}</motion.span>
             <h3 className="text-white font-bold text-xl mb-2" style={{ fontFamily: "'Questrial', sans-serif" }}>PPT Evaluation</h3>
             <p className="text-white/40 text-sm">Evaluate and score team presentations</p>
-          </div>
+          </motion.div>
         )}
 
         {activeSection === "qr" && (
@@ -147,9 +191,11 @@ export default function AdminDashboard() {
             {/* Tabs */}
             <div className="flex gap-2">
               {["food", "entry"].map((tab) => (
-                <button
+                <motion.button
                   key={tab}
                   onClick={() => setQrTab(tab)}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
                   className={`px-5 py-2.5 rounded-xl text-sm font-bold transition-all ${
                     qrTab === tab
                       ? "bg-[#B4ED57] text-black shadow-lg shadow-[#B4ED57]/20"
@@ -157,33 +203,56 @@ export default function AdminDashboard() {
                   }`}
                 >
                   {tab === "food" ? "\ud83c\udf7d  Food" : "\ud83d\udeaa  Entry"}
-                </button>
+                </motion.button>
               ))}
             </div>
             {/* Tab content */}
-            <div className="bg-[#111] border border-white/10 rounded-2xl p-8 text-center">
-              <span className="text-5xl block mb-4">{qrTab === "food" ? "\ud83c\udf7d" : "\ud83d\udeaa"}</span>
-              <h3 className="text-white font-bold text-xl mb-2" style={{ fontFamily: "'Questrial', sans-serif" }}>
-                {qrTab === "food" ? "Food QR Management" : "Entry QR Management"}
-              </h3>
-              <p className="text-white/40 text-sm">
-                {qrTab === "food"
-                  ? "Manage meal QR codes for participants"
-                  : "Manage entry/exit QR scanning for venue check-in"}
-              </p>
-            </div>
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={qrTab}
+                className={`rounded-2xl p-8 text-center ${glassStyle}`}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.3 }}
+                whileHover={{ borderColor: "rgba(180,237,87,0.2)" }}
+              >
+                <motion.span
+                  className="text-5xl block mb-4"
+                  animate={{ y: [0, -8, 0] }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                >{qrTab === "food" ? "\ud83c\udf7d" : "\ud83d\udeaa"}</motion.span>
+                <h3 className="text-white font-bold text-xl mb-2" style={{ fontFamily: "'Questrial', sans-serif" }}>
+                  {qrTab === "food" ? "Food QR Management" : "Entry QR Management"}
+                </h3>
+                <p className="text-white/40 text-sm">
+                  {qrTab === "food"
+                    ? "Manage meal QR codes for participants"
+                    : "Manage entry/exit QR scanning for venue check-in"}
+                </p>
+              </motion.div>
+            </AnimatePresence>
           </div>
         )}
 
         {activeSection === "credentials" && <CreateJudgeWidget />}
 
         {activeSection === "allocations" && (
-          <div className="bg-[#111] border border-white/10 rounded-2xl p-8 text-center">
-            <span className="text-5xl block mb-4">{"\ud83d\udce6"}</span>
+          <motion.div
+            className={`rounded-2xl p-8 text-center ${glassStyle}`}
+            whileHover={{ borderColor: "rgba(180,237,87,0.2)" }}
+          >
+            <motion.span
+              className="text-5xl block mb-4"
+              animate={{ y: [0, -8, 0] }}
+              transition={{ duration: 2, repeat: Infinity }}
+            >{"\ud83d\udce6"}</motion.span>
             <h3 className="text-white font-bold text-xl mb-2" style={{ fontFamily: "'Questrial', sans-serif" }}>Allocations</h3>
             <p className="text-white/40 text-sm">Manage room, lab & seating allocations for teams</p>
-          </div>
+          </motion.div>
         )}
+          </motion.div>
+        </AnimatePresence>
       </main>
     </div>
   );

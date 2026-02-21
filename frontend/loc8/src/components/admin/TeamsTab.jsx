@@ -1,4 +1,32 @@
-﻿import React, { useState } from "react";
+﻿import React, { useState, useRef, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { gsap } from "gsap";
+
+/* ── Animation variants ── */
+const fadeInUp = {
+  hidden: { opacity: 0, y: 30 },
+  visible: (i = 0) => ({
+    opacity: 1, y: 0,
+    transition: { delay: i * 0.08, duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] },
+  }),
+};
+const staggerContainer = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1, transition: { staggerChildren: 0.06, delayChildren: 0.1 } },
+};
+const glassStyle = "backdrop-blur-xl bg-white/[0.03] border border-white/[0.08] shadow-[0_8px_32px_rgba(0,0,0,0.3)]";
+
+function AnimatedCounter({ value, className, style }) {
+  const ref = useRef(null);
+  const numVal = parseInt(value) || 0;
+  useEffect(() => {
+    if (!ref.current) return;
+    gsap.fromTo(ref.current, { innerText: 0 }, {
+      innerText: numVal, duration: 1.5, ease: "power2.out", snap: { innerText: 1 }, delay: 0.3,
+    });
+  }, [numVal]);
+  return <div ref={ref} className={className} style={style}>0</div>;
+}
 
 /* ======================================================================= */
 /*  MOCK DATA                                                               */
@@ -232,13 +260,24 @@ function TeamDetail({ team, onClose, onToggleShortlist, onToggleFlag }) {
   const allRsvp = t.members.every((m) => m.rsvp === "confirmed");
 
   return (
-    <div className="bg-[#111] border border-white/10 rounded-2xl overflow-hidden">
+    <motion.div
+      className={`rounded-2xl overflow-hidden ${glassStyle}`}
+      initial={{ opacity: 0, scale: 0.97, y: 20 }}
+      animate={{ opacity: 1, scale: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.97 }}
+      transition={{ duration: 0.4, ease: "easeOut" }}
+      layout
+    >
       {/* Header */}
       <div className="p-6 border-b border-white/10 flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#4D58D4] to-[#B4ED57] flex items-center justify-center text-white font-black text-lg">
+          <motion.div
+            className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#4D58D4] to-[#B4ED57] flex items-center justify-center text-white font-black text-lg"
+            whileHover={{ rotate: 360 }}
+            transition={{ duration: 0.6 }}
+          >
             {t.name[0]}
-          </div>
+          </motion.div>
           <div>
             <h3 className="text-white font-black text-lg" style={{ fontFamily: "'Questrial', sans-serif" }}>{t.name}</h3>
             <p className="text-white/40 text-xs">{t.domain} &middot; {t.problemStatement}</p>
@@ -254,9 +293,14 @@ function TeamDetail({ team, onClose, onToggleShortlist, onToggleFlag }) {
 
       <div className="p-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* LEFT COLUMN */}
-        <div className="space-y-6">
+        <motion.div
+          className="space-y-6"
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.2, duration: 0.5 }}
+        >
           {/* Members */}
-          <div className="bg-[#111] border border-white/10 rounded-2xl p-5">
+          <div className="backdrop-blur-xl bg-white/[0.03] border border-white/[0.08] shadow-[0_8px_32px_rgba(0,0,0,0.3)] rounded-2xl p-5">
             <div className="flex items-center justify-between mb-4">
               <h4 className="text-white font-bold text-sm" style={{ fontFamily: "'Questrial', sans-serif" }}>
                 Members &middot;{" "}
@@ -278,7 +322,7 @@ function TeamDetail({ team, onClose, onToggleShortlist, onToggleFlag }) {
           </div>
 
           {/* Round 1 AI Evaluation */}
-          <div className="bg-[#111] border border-white/10 rounded-2xl p-5">
+          <div className="backdrop-blur-xl bg-white/[0.03] border border-white/[0.08] shadow-[0_8px_32px_rgba(0,0,0,0.3)] rounded-2xl p-5">
             <h4 className="text-white font-bold text-sm mb-4" style={{ fontFamily: "'Questrial', sans-serif" }}>
               Round 1{" "}
               <span className="text-[#4D58D4] italic" style={{ fontFamily: "'Pixelify Sans', cursive" }}>
@@ -299,7 +343,7 @@ function TeamDetail({ team, onClose, onToggleShortlist, onToggleFlag }) {
           </div>
 
           {/* Resume Keywords */}
-          <div className="bg-[#111] border border-white/10 rounded-2xl p-5">
+          <div className="backdrop-blur-xl bg-white/[0.03] border border-white/[0.08] shadow-[0_8px_32px_rgba(0,0,0,0.3)] rounded-2xl p-5">
             <h4 className="text-white font-bold text-sm mb-3" style={{ fontFamily: "'Questrial', sans-serif" }}>Extracted Keywords</h4>
             <div className="flex flex-wrap gap-2">
               {t.resumeKeywords.map((kw, i) => (
@@ -309,12 +353,17 @@ function TeamDetail({ team, onClose, onToggleShortlist, onToggleFlag }) {
               ))}
             </div>
           </div>
-        </div>
+        </motion.div>
 
         {/* RIGHT COLUMN */}
-        <div className="space-y-6">
+        <motion.div
+          className="space-y-6"
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.3, duration: 0.5 }}
+        >
           {/* GitHub Metrics */}
-          <div className="bg-[#111] border border-white/10 rounded-2xl p-5">
+          <div className="backdrop-blur-xl bg-white/[0.03] border border-white/[0.08] shadow-[0_8px_32px_rgba(0,0,0,0.3)] rounded-2xl p-5">
             <h4 className="text-white font-bold text-sm mb-4" style={{ fontFamily: "'Questrial', sans-serif" }}>
               GitHub{" "}
               <span className="text-[#B4ED57] italic" style={{ fontFamily: "'Pixelify Sans', cursive" }}>
@@ -348,7 +397,7 @@ function TeamDetail({ team, onClose, onToggleShortlist, onToggleFlag }) {
           </div>
 
           {/* Sponsor & Judge Engagement */}
-          <div className="bg-[#111] border border-white/10 rounded-2xl p-5">
+          <div className="backdrop-blur-xl bg-white/[0.03] border border-white/[0.08] shadow-[0_8px_32px_rgba(0,0,0,0.3)] rounded-2xl p-5">
             <h4 className="text-white font-bold text-sm mb-4" style={{ fontFamily: "'Questrial', sans-serif" }}>
               Sponsor & Judge{" "}
               <span className="text-purple-400 italic" style={{ fontFamily: "'Pixelify Sans', cursive" }}>
@@ -384,7 +433,7 @@ function TeamDetail({ team, onClose, onToggleShortlist, onToggleFlag }) {
           </div>
 
           {/* Admin Controls */}
-          <div className="bg-[#111] border border-white/10 rounded-2xl p-5">
+          <div className="backdrop-blur-xl bg-white/[0.03] border border-white/[0.08] shadow-[0_8px_32px_rgba(0,0,0,0.3)] rounded-2xl p-5">
             <h4 className="text-white font-bold text-sm mb-4" style={{ fontFamily: "'Questrial', sans-serif" }}>Admin Controls</h4>
             <div className="flex flex-wrap gap-2">
               <button
@@ -415,9 +464,9 @@ function TeamDetail({ team, onClose, onToggleShortlist, onToggleFlag }) {
               </button>
             </div>
           </div>
-        </div>
+        </motion.div>
       </div>
-    </div>
+    </motion.div>
   );
 }
 
@@ -431,16 +480,26 @@ function TeamCard({ team, onClick }) {
   const pct = ((t.github.totalCommits / 210) * 100).toFixed(0);
 
   return (
-    <div
+    <motion.div
       onClick={onClick}
-      className="bg-[#111] border border-white/10 rounded-2xl p-5 hover:border-[#B4ED57]/30 transition-all cursor-pointer group"
+      className={`rounded-2xl p-5 cursor-pointer group ${glassStyle} hover:border-[#B4ED57]/30`}
+      whileHover={{
+        scale: 1.03,
+        y: -6,
+        boxShadow: "0 16px 50px rgba(180,237,87,0.1)",
+      }}
+      whileTap={{ scale: 0.98 }}
+      layout
     >
       {/* Top row */}
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#4D58D4] to-[#B4ED57] flex items-center justify-center text-white font-black text-sm">
+          <motion.div
+            className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#4D58D4] to-[#B4ED57] flex items-center justify-center text-white font-black text-sm"
+            whileHover={{ rotate: 10 }}
+          >
             {t.name[0]}
-          </div>
+          </motion.div>
           <div>
             <div className="text-white font-bold text-sm" style={{ fontFamily: "'Questrial', sans-serif" }}>{t.name}</div>
             <div className="text-white/30 text-[10px]">{t.domain} &middot; {t.members.length} members</div>
@@ -489,7 +548,7 @@ function TeamCard({ team, onClick }) {
           )}
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }
 
@@ -534,11 +593,23 @@ export default function TeamsTab() {
   const avgScore = (teams.reduce((s, t) => s + t.round1.weighted, 0) / totalTeams).toFixed(1);
 
   return (
-    <div className="space-y-6" style={{ fontFamily: "'Fustat', sans-serif" }}>
+    <motion.div
+      className="space-y-6"
+      style={{ fontFamily: "'Fustat', sans-serif" }}
+      initial="hidden"
+      animate="visible"
+      variants={staggerContainer}
+    >
 
       {/* Header */}
-      <div>
-        <h1 className="text-white text-3xl font-black" style={{ fontFamily: "'Questrial', sans-serif" }}>
+      <motion.div variants={fadeInUp} custom={0}>
+        <motion.h1
+          className="text-white text-3xl font-black"
+          style={{ fontFamily: "'Questrial', sans-serif" }}
+          initial={{ opacity: 0, x: -30 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.6 }}
+        >
           Team{" "}
           <span className="text-[#B4ED57] italic" style={{ fontFamily: "'Pixelify Sans', cursive" }}>
             Command Center
@@ -548,14 +619,22 @@ export default function TeamsTab() {
               — {selectedTeam.name}
             </span>
           )}
-        </h1>
+        </motion.h1>
         <p className="text-white/40 text-sm mt-1">Monitor, evaluate & manage all participating teams</p>
-      </div>
+      </motion.div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <motion.div className="grid grid-cols-2 lg:grid-cols-4 gap-4" variants={staggerContainer}>
         {/* Total Teams */}
-        <div className="bg-[#B4ED57] rounded-2xl p-5">
+        <motion.div
+          className="bg-[#B4ED57] rounded-2xl p-5 relative overflow-hidden group"
+          variants={fadeInUp}
+          custom={1}
+          whileHover={{ scale: 1.03, y: -5 }}
+          transition={{ type: "spring", stiffness: 300, damping: 20 }}
+        >
+          <motion.div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+          <div className="relative z-10">
           <div className="flex items-start justify-between mb-5">
             <svg className="w-7 h-7 text-black/60" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
               <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
@@ -565,12 +644,21 @@ export default function TeamsTab() {
             </svg>
             <span className="text-black/50 text-xs font-medium">Registered</span>
           </div>
-          <div className="text-black text-4xl font-black" style={{ fontFamily: "'Questrial', sans-serif" }}>{totalTeams}</div>
+          <AnimatedCounter value={totalTeams} className="text-black text-4xl font-black" style={{ fontFamily: "'Questrial', sans-serif" }} />
           <div className="text-black/50 text-sm mt-1">Total Teams</div>
-        </div>
+          </div>
+        </motion.div>
 
         {/* Shortlisted */}
-        <div className="bg-[#4D58D4] rounded-2xl p-5">
+        <motion.div
+          className="bg-[#4D58D4] rounded-2xl p-5 relative overflow-hidden group"
+          variants={fadeInUp}
+          custom={2}
+          whileHover={{ scale: 1.03, y: -5 }}
+          transition={{ type: "spring", stiffness: 300, damping: 20 }}
+        >
+          <motion.div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+          <div className="relative z-10">
           <div className="flex items-start justify-between mb-5">
             <svg className="w-7 h-7 text-white/60" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
               <path d="M22 11.08V12a10 10 0 11-5.93-9.14" />
@@ -578,12 +666,19 @@ export default function TeamsTab() {
             </svg>
             <span className="text-white/50 text-xs font-medium">{((shortlisted / totalTeams) * 100).toFixed(0)}% Rate</span>
           </div>
-          <div className="text-white text-4xl font-black" style={{ fontFamily: "'Questrial', sans-serif" }}>{shortlisted}</div>
+          <AnimatedCounter value={shortlisted} className="text-white text-4xl font-black" style={{ fontFamily: "'Questrial', sans-serif" }} />
           <div className="text-white/50 text-sm mt-1">Shortlisted</div>
-        </div>
+          </div>
+        </motion.div>
 
         {/* Flagged */}
-        <div className="bg-[#111] border border-white/10 rounded-2xl p-5">
+        <motion.div
+          className={`rounded-2xl p-5 ${glassStyle}`}
+          variants={fadeInUp}
+          custom={3}
+          whileHover={{ scale: 1.03, y: -5, borderColor: "rgba(248,113,113,0.3)" }}
+          transition={{ type: "spring", stiffness: 300, damping: 20 }}
+        >
           <div className="flex items-start justify-between mb-5">
             <svg className="w-7 h-7 text-red-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
               <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
@@ -594,10 +689,16 @@ export default function TeamsTab() {
           </div>
           <div className="text-red-400 text-4xl font-black" style={{ fontFamily: "'Questrial', sans-serif" }}>{flaggedCount}</div>
           <div className="text-white/40 text-sm mt-1">Flagged</div>
-        </div>
+        </motion.div>
 
         {/* Avg Score */}
-        <div className="bg-[#111] border border-white/10 rounded-2xl p-5">
+        <motion.div
+          className={`rounded-2xl p-5 ${glassStyle}`}
+          variants={fadeInUp}
+          custom={4}
+          whileHover={{ scale: 1.03, y: -5, borderColor: "rgba(180,237,87,0.3)" }}
+          transition={{ type: "spring", stiffness: 300, damping: 20 }}
+        >
           <div className="flex items-start justify-between mb-5">
             <svg className="w-7 h-7 text-[#4D58D4]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="12" cy="12" r="10" />
@@ -609,11 +710,11 @@ export default function TeamsTab() {
           </div>
           <div className="text-[#B4ED57] text-4xl font-black" style={{ fontFamily: "'Questrial', sans-serif" }}>{avgScore}</div>
           <div className="text-white/40 text-sm mt-1">Avg Score</div>
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
 
       {/* Filters */}
-      <div className="bg-[#111] border border-white/10 rounded-2xl p-4">
+      <motion.div className={`rounded-2xl p-4 ${glassStyle}`} variants={fadeInUp} custom={5}>
         <div className="flex flex-wrap items-center gap-3">
           <div className="flex-1 min-w-[200px] relative">
             <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -644,9 +745,10 @@ export default function TeamsTab() {
             <option value="plagiarism">Sort: Plagiarism</option>
           </select>
         </div>
-      </div>
+      </motion.div>
 
       {/* Detail or Grid */}
+      <AnimatePresence mode="wait">
       {selectedTeam ? (
         <TeamDetail
           team={selectedTeam}
@@ -655,12 +757,20 @@ export default function TeamsTab() {
           onToggleFlag={() => toggleFlag(selectedTeam.id)}
         />
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filtered.map((t) => (
-            <TeamCard key={t.id} team={t} onClick={() => setSelectedId(t.id)} />
+        <motion.div
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
+          initial="hidden"
+          animate="visible"
+          variants={staggerContainer}
+        >
+          {filtered.map((t, i) => (
+            <motion.div key={t.id} variants={fadeInUp} custom={i}>
+              <TeamCard team={t} onClick={() => setSelectedId(t.id)} />
+            </motion.div>
           ))}
-        </div>
+        </motion.div>
       )}
-    </div>
+      </AnimatePresence>
+    </motion.div>
   );
 }
