@@ -11,11 +11,11 @@ const studentNav = [
 
 const adminNav = [
   { icon: "⊞", label: "Overview", key: "overview" },
-  { icon: "👥", label: "Participants", key: "participants" },
-  { icon: "⚖️", label: "Judges", key: "judges" },
-  { icon: "📊", label: "Submissions", key: "submissions" },
-  { icon: "", label: "Timeline", key: "timeline" },
-  { icon: "�📢", label: "Announcements", key: "announcements" },
+  { icon: "👥", label: "Teams", key: "teams" },
+  { icon: "📊", label: "PPT Evaluation", key: "ppt" },
+  { icon: "📱", label: "QR Management", key: "qr" },
+  { icon: "🔑", label: "Credential Management", key: "credentials" },
+  { icon: "📦", label: "Allocations", key: "allocations" },
 ];
 
 const judgeNav = [
@@ -42,14 +42,26 @@ function AdminIcon({ name, active }) {
           <rect x="14" y="14" width="7" height="7" rx="1.5" />
         </svg>
       );
-    case "participants":
+    case "teams":
       return (
         <svg {...props}>
-          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-          <path d="M9 12l2 2 4-4" />
+          <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
+          <circle cx="9" cy="7" r="4" />
+          <path d="M23 21v-2a4 4 0 00-3-3.87" />
+          <path d="M16 3.13a4 4 0 010 7.75" />
         </svg>
       );
-    case "judges":
+    case "ppt":
+      return (
+        <svg {...props}>
+          <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+          <polyline points="14 2 14 8 20 8" />
+          <line x1="16" y1="13" x2="8" y2="13" />
+          <line x1="16" y1="17" x2="8" y2="17" />
+          <polyline points="10 9 9 9 8 9" />
+        </svg>
+      );
+    case "qr":
       return (
         <svg {...props}>
           <rect x="2" y="2" width="8" height="8" rx="1" />
@@ -61,26 +73,20 @@ function AdminIcon({ name, active }) {
           <rect x="18.5" y="18.5" width="3" height="3" rx=".5" />
         </svg>
       );
-    case "submissions":
+    case "credentials":
       return (
         <svg {...props}>
-          <path d="M6 2l-3 4v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z" />
-          <line x1="3" y1="6" x2="21" y2="6" />
-          <path d="M16 10a4 4 0 01-8 0" />
+          <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+          <path d="M7 11V7a5 5 0 0110 0v4" />
+          <circle cx="12" cy="16" r="1" />
         </svg>
       );
-    case "timeline":
+    case "allocations":
       return (
         <svg {...props}>
-          <circle cx="12" cy="12" r="10" />
-          <polyline points="12 6 12 12 16 14" />
-        </svg>
-      );
-    case "announcements":
-      return (
-        <svg {...props}>
-          <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9" />
-          <path d="M13.73 21a2 2 0 01-3.46 0" />
+          <path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z" />
+          <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
+          <line x1="12" y1="22.08" x2="12" y2="12" />
         </svg>
       );
     case "profile":

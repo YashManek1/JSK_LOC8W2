@@ -207,6 +207,56 @@ function TimelineListField({ items, setItems }) {
   );
 }
 
+/* ── Rooms: name + capacity, one at a time ───────────────────────── */
+function RoomListField({ items, setItems }) {
+  const [roomName, setRoomName] = useState("");
+  const [roomCap, setRoomCap] = useState("");
+  const add = () => {
+    if (!roomName.trim()) return;
+    setItems([...items, { name: roomName.trim(), capacity: roomCap.trim() || "—" }]);
+    setRoomName("");
+    setRoomCap("");
+  };
+  const remove = (i) => setItems(items.filter((_, idx) => idx !== i));
+  return (
+    <div>
+      <label className="text-xs text-white/50 mb-2 block">Add each area / room with its seating capacity</label>
+      <div className="flex gap-2 mb-3">
+        <input
+          value={roomName}
+          onChange={(e) => setRoomName(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), add())}
+          className={inputCls + " flex-[3]  min-w-0"}
+          placeholder="Area name (e.g. Coding Hall, Food Court, Lab 301)"
+        />
+        <input
+          value={roomCap}
+          onChange={(e) => setRoomCap(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), add())}
+          className={inputCls + " flex-1 min-w-0"}
+          placeholder="Capacity"
+          type="number"
+        />
+        <button type="button" onClick={add} className="px-4 py-2 bg-[#B4ED57] hover:bg-[#c5f278] text-black font-bold text-sm rounded-xl transition-colors shrink-0">
+          + Add
+        </button>
+      </div>
+      {items.length > 0 && (
+        <div className="space-y-2">
+          {items.map((item, i) => (
+            <div key={i} className="flex items-center gap-3 bg-white/5 border border-white/10 rounded-xl px-4 py-2.5">
+              <span className="text-[#B4ED57] text-xs font-bold shrink-0">R{i + 1}</span>
+              <span className="flex-1 text-white/80 text-sm truncate">{item.name}</span>
+              <span className="text-white/40 text-xs bg-white/5 px-2 py-0.5 rounded-md">{item.capacity} seats</span>
+              <button type="button" onClick={() => remove(i)} className="text-white/20 hover:text-red-400 transition-colors text-sm shrink-0">✕</button>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 /* ── Rules: add one at a time ────────────────────────────────────── */
 function RulesField({ items, setItems }) {
   const [draft, setDraft] = useState("");
@@ -258,6 +308,7 @@ export default function AdminHackathonsPage() {
   const [domains, setDomains] = useState([]); // [{ name, problems: [] }]
   const [timelineItems, setTimelineItems] = useState([]);
   const [rules, setRules] = useState([]);
+  const [roomsList, setRoomsList] = useState([]);
 
   const [form, setForm] = useState({
     name: "",
@@ -272,18 +323,14 @@ export default function AdminHackathonsPage() {
     teamSize: "3",
     totalRemoteTeams: "",
     totalOfflineTeams: "",
-    rooms: "",
-    labs: "",
-    teamsPerRoom: "",
-    teamsPerLab: "",
-    mapUrl: "",
+    venueMap: null,
     ndaRequired: false,
   });
 
   const update = (k, v) => setForm((s) => ({ ...s, [k]: v }));
 
   const handlePublish = () => {
-    const prepared = { ...form, sponsors, domains, timeline: timelineItems, rules };
+    const prepared = { ...form, sponsors, domains, timeline: timelineItems, rules, roomsList };
     console.log("Publishing hackathon:", prepared);
     setShowCreateForm(false);
   };
@@ -385,17 +432,37 @@ export default function AdminHackathonsPage() {
             </Section>
 
             {/* ──────── 3. VENUE & INFRASTRUCTURE ──────── */}
-            <Section number={3} title="Venue & Infrastructure" subtitle="Rooms, labs & seating allocation">
-              <div className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <input value={form.rooms} onChange={(e) => update("rooms", e.target.value)} className={inputCls} placeholder="No. of rooms" type="number" />
-                  <input value={form.teamsPerRoom} onChange={(e) => update("teamsPerRoom", e.target.value)} className={inputCls} placeholder="Teams per room" type="number" />
+            <Section number={3} title="Venue & Infrastructure" subtitle="Areas, rooms & seating allocation">
+              <div className="space-y-5">
+                {/* Rooms / Areas — dynamic list with name + capacity */}
+                <RoomListField items={roomsList} setItems={setRoomsList} />
+
+                {/* Venue Map upload */}
+                <div>
+                  <label className="text-xs text-white/50 mb-1.5 block">Upload Venue / Premise Map (helps manage crowd flow)</label>
+                  <div className="relative">
+                    <input
+                      type="file"
+                      accept="image/*,.pdf"
+                      onChange={(e) => update("venueMap", e.target.files[0] || null)}
+                      className="hidden"
+                      id="venueMapUpload"
+                    />
+                    <label
+                      htmlFor="venueMapUpload"
+                      className="flex items-center gap-3 w-full bg-white/5 border border-dashed border-white/20 hover:border-[#B4ED57]/40 rounded-xl p-4 cursor-pointer transition-colors"
+                    >
+                      <svg className="w-6 h-6 text-white/30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+                        <polyline points="17 8 12 3 7 8" />
+                        <line x1="12" y1="3" x2="12" y2="15" />
+                      </svg>
+                      <span className="text-white/40 text-sm">
+                        {form.venueMap ? form.venueMap.name : "Click to upload map image or PDF"}
+                      </span>
+                    </label>
+                  </div>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <input value={form.labs} onChange={(e) => update("labs", e.target.value)} className={inputCls} placeholder="No. of labs" type="number" />
-                  <input value={form.teamsPerLab} onChange={(e) => update("teamsPerLab", e.target.value)} className={inputCls} placeholder="Teams per lab" type="number" />
-                </div>
-                <input value={form.mapUrl} onChange={(e) => update("mapUrl", e.target.value)} className={inputCls} placeholder="Venue Map URL (optional)" />
               </div>
             </Section>
 
