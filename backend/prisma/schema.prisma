@@ -72,17 +72,28 @@ model Participant {
   updatedAt                DateTime @updatedAt
 
   // Relations
-  chatSessions ChatSession[]
-  team         Team?         @relation(fields: [teamId], references: [id])
-  hackathons   Hackathon[]   @relation("AdminHackathons") // Hackathons created by this admin
+  chatSessions  ChatSession[]
+  team          Team?          @relation(fields: [teamId], references: [id])
+  hackathons    Hackathon[]    @relation("AdminHackathons") // Hackathons created by this admin
+  leadsTeams    Team[]         @relation("TeamLeader")
+  registrations Registration[]
 }
 
 model Team {
-  id           String        @id @default(uuid())
+  id           String   @id @default(uuid())
   teamName     String
   leadEmail    String
   memberEmails String[]
-  createdAt    DateTime      @default(now())
+  createdAt    DateTime @default(now())
+
+  // Registration specifics
+  hackathonId String?
+  hackathon   Hackathon?   @relation(fields: [hackathonId], references: [id])
+  leaderId    String?
+  leader      Participant? @relation("TeamLeader", fields: [leaderId], references: [id])
+  inviteCode  String?      @unique
+  status      String       @default("INCOMPLETE") // INCOMPLETE, REGISTERED
+
   participants Participant[]
 }
 
@@ -141,35 +152,53 @@ model ShortlistEntry {
 }
 
 model Hackathon {
-  id                String   @id @default(uuid())
-  name              String
-  startDate         DateTime
-  endDate           DateTime
-  location          String
-  description       String?
-  posterUrl         String? // Frontend uploads to S3/Cloudinary and sends URL
-  prizePool         String?
-  totalTeams        Int?
-  teamSize          Int      @default(3)
-  totalOfflineTeams Int?
-  totalRemoteTeams  Int?
-  venueMapUrl       String?
-  ndaRequired       Boolean  @default(false)
-  status            String   @default("Active") // e.g., "Active", "Completed"
+  id                   String    @id @default(uuid())
+  name                 String
+  startDate            DateTime
+  endDate              DateTime
+  registrationDeadline DateTime? // Deadline for registrations
+  location             String
+  description          String?
+  posterUrl            String? // Frontend uploads to S3/Cloudinary and sends URL
+  prizePool            String?
+  totalTeams           Int?
+  teamSize             Int       @default(3)
+  totalOfflineTeams    Int?
+  totalRemoteTeams     Int?
+  venueMapUrl          String?
+  ndaRequired          Boolean   @default(false)
+  status               String    @default("Active") // e.g., "Active", "Completed"
 
   // JSON arrays for simple lists
-  sponsors Json? // Array of strings: ["Google", "GitHub"]
-  rules    Json? // Array of strings: ["Rule 1", "Rule 2"]
+  sponsors       Json? // Array of strings: ["Google", "GitHub"]
+  rules          Json? // Array of strings: ["Rule 1", "Rule 2"]
+  requiredFields Json? // Array of required registration fields: ["github", "college"]
 
   // Relations
-  adminId  String
-  admin    Participant     @relation("AdminHackathons", fields: [adminId], references: [id])
-  domains  Domain[]
-  rooms    Room[]
-  timeline TimelineEvent[]
+  adminId       String
+  admin         Participant     @relation("AdminHackathons", fields: [adminId], references: [id])
+  domains       Domain[]
+  rooms         Room[]
+  timeline      TimelineEvent[]
+  teams         Team[]
+  registrations Registration[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model Registration {
+  id             String      @id @default(uuid())
+  participantId  String
+  participant    Participant @relation(fields: [participantId], references: [id], onDelete: Cascade)
+  hackathonId    String
+  hackathon      Hackathon   @relation(fields: [hackathonId], references: [id], onDelete: Cascade)
+  dynamicAnswers Json? // Stores answers for hackathon.requiredFields
+  status         String      @default("SOLO") // SOLO, IN_TEAM
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  @@unique([participantId, hackathonId])
 }
 
 model Domain {

@@ -14,7 +14,7 @@ export class AuthService {
     private prisma: PrismaService,
     private jwtService: JwtService,
     private aes256: Aes256Service,
-  ) { }
+  ) {}
 
   async signup(
     data: any,
@@ -42,7 +42,8 @@ export class AuthService {
       aadhaarFile.originalname,
     );
 
-    const identityServiceUrl = process.env.IDENTITY_SERVICE_URL || 'http://127.0.0.1:8000';
+    const identityServiceUrl =
+      process.env.IDENTITY_SERVICE_URL || 'http://127.0.0.1:8000';
     let ocrResponse;
     try {
       ocrResponse = await fetch(`${identityServiceUrl}/ocr/aadhaar`, {
@@ -55,7 +56,9 @@ export class AuthService {
     }
 
     if (!ocrResponse.ok) {
-      throw new BadRequestException(`Failed to process Aadhaar document OCR. Status: ${ocrResponse.status}`);
+      throw new BadRequestException(
+        `Failed to process Aadhaar document OCR. Status: ${ocrResponse.status}`,
+      );
     }
 
     const ocrResult = (await ocrResponse.json()) as { aadhaarNumber?: string };

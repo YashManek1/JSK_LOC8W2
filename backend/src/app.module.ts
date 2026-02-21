@@ -8,6 +8,7 @@ import { VoiceChatModule } from './voice-chat/voice-chat.module';
 import { ShortlistModule } from './shortlist/shortlist.module';
 import { AuthModule } from './auth/auth.module';
 import { AdminHackathonModule } from './admin-hackathon/admin-hackathon.module';
+import { RegistrationModule } from './registration/registration.module';
 import * as dotenv from 'dotenv';
 
 dotenv.config();
@@ -32,8 +33,9 @@ const redisUrl = process.env.REDIS_URL ? new URL(process.env.REDIS_URL) : null;
     ShortlistModule,
     AuthModule,
     AdminHackathonModule,
+    RegistrationModule,
   ],
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule { }
+export class AppModule {}
