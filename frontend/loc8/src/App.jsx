@@ -13,7 +13,7 @@ import TeamManagementPage from "./pages/TeamManagementPage";
 import ProblemStatementPreferencesPage from "./pages/ProblemStatementPreferencesPage";
 import PPTRound1Page from "./pages/PPTRound1Page";
 import ShortlistAnnouncementPage from "./pages/ShortlistAnnouncementPage";
-import GeminiLivePage from "./pages/GeminiLivePage";
+import CommunityPage from "./pages/CommunityPage";
 
 function Router() {
   const { currentPage } = useApp();
@@ -27,6 +27,7 @@ function Router() {
     problemStatementPreferences: <ProblemStatementPreferencesPage />,
     pptRound1: <PPTRound1Page />,
     shortlistAnnouncement: <ShortlistAnnouncementPage />,
+    community: <CommunityPage />,
     landing: <LandingPage />,
     qr: <QRPage />,
     studentDashboard: <StudentDashboard />,

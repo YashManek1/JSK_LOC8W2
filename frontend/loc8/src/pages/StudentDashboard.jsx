@@ -12,14 +12,22 @@ import {
 } from "../components/student/StudentWidgets";
 
 export default function StudentDashboard() {
-  const { currentUser, generatedQR, selectedHackathon } = useApp();
+  const { currentUser, generatedQR, selectedHackathon, navigateTo } = useApp();
   const [activeSection, setActiveSection] = useState("dashboard");
+
+  const handleSectionChange = (section) => {
+    if (section === "community") {
+      navigateTo("community");
+      return;
+    }
+    setActiveSection(section);
+  };
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] flex">
       <Sidebar
         activeSection={activeSection}
-        setActiveSection={setActiveSection}
+        setActiveSection={handleSectionChange}
         variant="student"
       />
 

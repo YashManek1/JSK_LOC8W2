@@ -5,6 +5,7 @@ const studentNav = [
   { icon: "⊞", label: "Dashboard", key: "dashboard" },
   { icon: "🏆", label: "Leaderboard", key: "leaderboard" },
   { icon: "👥", label: "My Team", key: "team" },
+  { icon: "🌐", label: "Community", key: "community" },
   { icon: "📋", label: "Submissions", key: "submissions" },
   { icon: "🍽", label: "Meal QR", key: "meal" },
 ];
@@ -153,11 +154,10 @@ export default function Sidebar({ activeSection, setActiveSection, variant = "st
               <button
                 key={item.key}
                 onClick={() => setActiveSection(item.key)}
-                className={`w-full flex items-center rounded-xl transition-all duration-200 ${
-                  isActive
+                className={`w-full flex items-center rounded-xl transition-all duration-200 ${isActive
                     ? "bg-[#B4ED57] text-black font-bold shadow-lg shadow-[#B4ED57]/20"
                     : "text-white/50 hover:text-white hover:bg-white/5"
-                }`}
+                  }`}
               >
                 <span className="w-12 h-10 flex items-center justify-center shrink-0">
                   <AdminIcon name={item.key} active={isActive} />
@@ -218,11 +218,10 @@ export default function Sidebar({ activeSection, setActiveSection, variant = "st
           <button
             key={item.key}
             onClick={() => setActiveSection(item.key)}
-            className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl text-sm transition-all ${
-              activeSection === item.key
+            className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl text-sm transition-all ${activeSection === item.key
                 ? "bg-[#B4ED57]/15 text-[#B4ED57] border border-[#B4ED57]/20"
                 : "text-white/50 hover:text-white hover:bg-white/5"
-            }`}
+              }`}
           >
             <span className="text-base flex-shrink-0">{item.icon}</span>
             <span className="hidden md:block font-medium">{item.label}</span>
