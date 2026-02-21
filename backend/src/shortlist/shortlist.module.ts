@@ -9,11 +9,13 @@ import { ShortlistPptService } from './shortlist-ppt.service';
 import { PrismaModule } from '../prisma/prisma.module';
 
 @Module({
-    imports: [
-        PrismaModule,
-        BullModule.registerQueue({ name: 'shortlistQueue' }),
-    ],
-    controllers: [ShortlistController, AdminController],
-    providers: [ShortlistService, ShortlistProcessor, GroqService, ShortlistPptService],
+  imports: [PrismaModule, BullModule.registerQueue({ name: 'shortlistQueue' })],
+  controllers: [ShortlistController, AdminController],
+  providers: [
+    ShortlistService,
+    ShortlistProcessor,
+    GroqService,
+    ShortlistPptService,
+  ],
 })
 export class ShortlistModule {}

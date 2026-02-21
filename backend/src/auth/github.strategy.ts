@@ -2,6 +2,12 @@ import { Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { Strategy } from 'passport-github2';
 
+interface GitHubProfile {
+  id: string;
+  username: string;
+  emails?: Array<{ value: string }>;
+}
+
 @Injectable()
 export class GithubStrategy extends PassportStrategy(Strategy, 'github') {
   constructor() {
@@ -13,11 +19,11 @@ export class GithubStrategy extends PassportStrategy(Strategy, 'github') {
     });
   }
 
-  async validate(
+  validate(
     accessToken: string,
     refreshToken: string,
-    profile: any,
-    done: any,
+    profile: GitHubProfile,
+    done: (err: Error | null, user?: Record<string, unknown>) => void,
   ) {
     const { id, username, emails } = profile;
     const email = emails?.[0]?.value;

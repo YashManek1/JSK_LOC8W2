@@ -12,10 +12,27 @@ import {
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
-import type { Request, Response } from 'express';
+import type { Response } from 'express';
 import { AuthGuard } from '@nestjs/passport';
 import { PrismaService } from '../prisma/prisma.service';
 import { Aes256Service } from '../security/aes256.service';
+
+interface SignupBody {
+  email: string;
+  password: string;
+  fullName?: string;
+  phone?: string;
+  college?: string;
+  role?: string;
+}
+
+interface GitHubUser {
+  id: string;
+  username: string;
+  email: string;
+  accessToken: string;
+  refreshToken: string;
+}
 
 @Controller('auth')
 export class AuthController {
@@ -33,35 +50,41 @@ export class AuthController {
     ]),
   )
   async signup(
-    @Body() body: any,
+    @Body() body: SignupBody,
     @UploadedFiles()
     files: { aadhaar?: Express.Multer.File[]; idCard?: Express.Multer.File[] },
   ) {
     const aadhaarFile = files?.aadhaar?.[0];
     const idCardFile = files?.idCard?.[0];
+    const isParticipant = body.role !== 'ADMIN';
 
-    if (!aadhaarFile || !idCardFile) {
-      throw new BadRequestException('Aadhaar and ID Card images are required');
+    if (isParticipant && (!aadhaarFile || !idCardFile)) {
+      throw new BadRequestException(
+        'Aadhaar and ID Card images are required for Participants',
+      );
     }
 
     return this.authService.signup(body, aadhaarFile, idCardFile);
   }
 
   @Post('login')
-  async login(@Body() body: any) {
+  async login(@Body() body: { email: string; password: string; role: string }) {
     return this.authService.login(body);
   }
 
   @Get('github')
   @UseGuards(AuthGuard('github'))
-  async githubAuth(@Req() req: Request) {
+  githubAuth() {
     // Initiates the GitHub OAuth flow
   }
 
   @Get('github/callback')
   @UseGuards(AuthGuard('github'))
-  async githubAuthRedirect(@Req() req: any, @Res() res: Response) {
-    const githubUser = req.user;
+  async githubAuthRedirect(
+    @Req() req: { user: GitHubUser },
+    @Res() res: Response,
+  ) {
+    const githubUser: GitHubUser = req.user;
 
     if (!githubUser) {
       return res.redirect(
@@ -99,7 +122,7 @@ export class AuthController {
     });
 
     const { accessToken, refreshToken } =
-      await this.authService.generateTokens(participant);
+      this.authService.generateTokens(participant);
 
     res.redirect(
       `http://localhost:5173/auth/success?accessToken=${accessToken}&refreshToken=${refreshToken}`,

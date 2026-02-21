@@ -7,6 +7,22 @@ import { PrismaService } from '../prisma/prisma.service';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import { Aes256Service } from '../security/aes256.service';
+import { Participant } from '@prisma/client';
+
+interface SignupData {
+  email: string;
+  password: string;
+  fullName?: string;
+  phone?: string;
+  college?: string;
+  role?: string;
+}
+
+interface LoginData {
+  email: string;
+  password: string;
+  role: string;
+}
 
 @Injectable()
 export class AuthService {
@@ -17,9 +33,9 @@ export class AuthService {
   ) {}
 
   async signup(
-    data: any,
-    aadhaarFile: Express.Multer.File,
-    idCardFile: Express.Multer.File,
+    data: SignupData,
+    aadhaarFile?: Express.Multer.File,
+    _idCardFile?: Express.Multer.File,
   ) {
     const { email, password, fullName, phone, college, role } = data;
 
@@ -31,41 +47,54 @@ export class AuthService {
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
+    const resolvedRole = role || 'Participant';
+    const isParticipant = resolvedRole !== 'ADMIN';
 
-    // 1. OCR Aadhaar
-    const ocrFormData = new FormData();
-    ocrFormData.append(
-      'file',
-      new Blob([new Uint8Array(aadhaarFile.buffer)], {
-        type: aadhaarFile.mimetype,
-      }),
-      aadhaarFile.originalname,
-    );
+    let encryptedAadhaar: string | null = null;
 
-    let ocrResponse;
-    try {
-      ocrResponse = await fetch('http://127.0.0.1:8000/ocr/aadhaar', {
-        method: 'POST',
-        body: ocrFormData,
-      });
-    } catch (e) {
-      throw new BadRequestException('Identity service is unavailable.');
-    }
-
-    if (!ocrResponse.ok) {
-      throw new BadRequestException('Failed to process Aadhaar document OCR.');
-    }
-
-    const ocrResult = (await ocrResponse.json()) as { aadhaarNumber?: string };
-    const aadhaarNumber = ocrResult.aadhaarNumber;
-
-    if (!aadhaarNumber) {
-      throw new BadRequestException(
-        'Could not clearly read a 12-digit Aadhaar number from the document.',
+    if (isParticipant && aadhaarFile) {
+      // 1. OCR Aadhaar
+      const ocrFormData = new FormData();
+      ocrFormData.append(
+        'file',
+        new Blob([new Uint8Array(aadhaarFile.buffer)], {
+          type: aadhaarFile.mimetype,
+        }),
+        aadhaarFile.originalname,
       );
-    }
 
-    const encryptedAadhaar = this.aes256.encrypt(aadhaarNumber);
+      const identityServiceUrl =
+        process.env.IDENTITY_SERVICE_URL || 'http://127.0.0.1:8000';
+      let ocrResponse: Response;
+      try {
+        ocrResponse = await fetch(`${identityServiceUrl}/ocr/aadhaar`, {
+          method: 'POST',
+          body: ocrFormData,
+        });
+      } catch (e) {
+        console.error('Identity service connection error:', e);
+        throw new BadRequestException('Identity service is unavailable.');
+      }
+
+      if (!ocrResponse.ok) {
+        throw new BadRequestException(
+          `Failed to process Aadhaar document OCR. Status: ${ocrResponse.status}`,
+        );
+      }
+
+      const ocrResult = (await ocrResponse.json()) as {
+        aadhaarNumber?: string;
+      };
+      const aadhaarNumber = ocrResult.aadhaarNumber;
+
+      if (!aadhaarNumber) {
+        throw new BadRequestException(
+          'Could not clearly read a 12-digit Aadhaar number from the document.',
+        );
+      }
+
+      encryptedAadhaar = this.aes256.encrypt(aadhaarNumber);
+    }
 
     // Create user
     const user = await this.prisma.participant.create({
@@ -75,9 +104,8 @@ export class AuthService {
         fullName,
         phone,
         college,
-        role: role || 'Participant',
+        role: resolvedRole,
         aadhaarEncrypted: encryptedAadhaar,
-        // We can store the ID card URL if we upload it to S3, for now we just process it
       },
     });
 
@@ -96,7 +124,7 @@ export class AuthService {
     };
   }
 
-  async login(data: any) {
+  async login(data: LoginData) {
     const { email, password, role } = data;
 
     const user = await this.prisma.participant.findUnique({ where: { email } });
@@ -127,7 +155,7 @@ export class AuthService {
     };
   }
 
-  async generateTokens(user: any) {
+  generateTokens(user: Pick<Participant, 'email' | 'id' | 'role'>) {
     const payload = { email: user.email, sub: user.id, role: user.role };
     const accessToken = this.jwtService.sign(payload);
     const refreshToken = this.jwtService.sign(payload, { expiresIn: '7d' });

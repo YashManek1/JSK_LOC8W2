@@ -16,10 +16,14 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-print("Loading EasyOCR model...")
-# Initialize once at startup to save time on requests
-reader = easyocr.Reader(['en'], gpu=False) 
-print("EasyOCR loaded.")
+reader_instance = None
+
+def get_reader():
+    global reader_instance
+    if reader_instance is None:
+        print("Lazy loading EasyOCR model into memory...")
+        reader_instance = easyocr.Reader(['en'], gpu=False) 
+    return reader_instance
 
 @app.get("/")
 def health_check():
@@ -38,7 +42,8 @@ async def ocr_aadhaar(file: UploadFile = File(...)):
     if img is None:
         raise HTTPException(status_code=400, detail="Invalid image file")
 
-    results = reader.readtext(img)
+    local_reader = get_reader()
+    results = local_reader.readtext(img)
     
     aadhaar_number = None
     extracted_text = []
