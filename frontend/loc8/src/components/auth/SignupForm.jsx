@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useApp } from "../../context/AppContext";
+import { API_BASE_URL, PYTHON_API_BASE_URL } from "../../api";
 
 export default function SignupForm() {
   const { loginUser, selectedHackathon, setAuthMode } = useApp();
@@ -17,32 +18,117 @@ export default function SignupForm() {
   const [step, setStep] = useState(1);
   const [otpRequested, setOtpRequested] = useState(false);
   const [otpError, setOtpError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [aadhaarNumber, setAadhaarNumber] = useState(null);
+  const [aadhaarLoading, setAadhaarLoading] = useState(false);
+  const [aadhaarError, setAadhaarError] = useState("");
 
   const handleChange = (e) => {
     const { name, value, files } = e.target;
+    if (name === "aadhar" && files && files[0]) {
+      setForm((prev) => ({ ...prev, aadhar: files[0] }));
+      performAadhaarOCR(files[0]);
+      return;
+    }
     setForm((prev) => ({ ...prev, [name]: files ? files[0] : value }));
   };
 
-  const handleSubmit = (e) => {
+  // Call Python OCR service when Aadhaar card is uploaded
+  const performAadhaarOCR = async (file) => {
+    setAadhaarLoading(true);
+    setAadhaarError("");
+    setAadhaarNumber(null);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await fetch(`${PYTHON_API_BASE_URL}/ocr/aadhaar`, {
+        method: "POST",
+        body: fd,
+      });
+      const data = await res.json();
+      if (res.ok && data.aadhaarNumber) {
+        setAadhaarNumber(data.aadhaarNumber);
+      } else {
+        setAadhaarError(
+          "Could not read Aadhaar number. Please try a clearer image.",
+        );
+      }
+    } catch {
+      setAadhaarError(
+        "OCR service unavailable. Upload will still be sent during signup.",
+      );
+    } finally {
+      setAadhaarLoading(false);
+    }
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (role === "student" && !otpRequested) {
-      setOtpError("Please request and verify OTP first");
+
+    if (role === "student" && !form.aadhar) {
+      setOtpError("Please upload your Aadhar card");
       return;
     }
-    if (role === "student" && !form.otp) {
-      setOtpError("Please enter OTP");
+    if (role === "student" && !form.collegeId) {
+      setOtpError("Please upload your College ID");
       return;
     }
+
     setOtpError("");
-    const user = {
-      id: `u_${Date.now()}`,
-      ...form,
-      role,
-      hackathonId: selectedHackathon?.id || "h1",
-      hackathonName: selectedHackathon?.name || "HackOS 2026",
-      teamName: "Team " + form.name.split(" ")[0],
+    setLoading(true);
+
+    // Map frontend role to backend role
+    const roleMap = {
+      student: "Participant",
+      mentor: "Mentor",
+      organiser: "Organiser",
     };
-    loginUser(user);
+    const backendRole = roleMap[role] || role;
+
+    try {
+      const formData = new FormData();
+      formData.append("fullName", form.name);
+      formData.append("email", form.email);
+      formData.append("password", form.password);
+      formData.append("role", backendRole);
+
+      if (role === "student") {
+        formData.append("phone", form.phone);
+        formData.append("college", form.college);
+        if (form.aadhar) formData.append("aadhaar", form.aadhar);
+        if (form.collegeId) formData.append("idCard", form.collegeId);
+      }
+
+      const res = await fetch(`${API_BASE_URL}/auth/signup`, {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setOtpError(data.message || "Signup failed. Please try again.");
+        return;
+      }
+
+      // Call loginUser with the API response
+      loginUser(
+        {
+          id: data.user.id,
+          name: data.user.fullName || form.name,
+          email: data.user.email,
+          role: role, // keep frontend role for navigation
+          hackathonId: selectedHackathon?.id || "h1",
+          hackathonName: selectedHackathon?.name || "HackOS 2026",
+          teamName: "Team " + form.name.split(" ")[0],
+        },
+        data.accessToken,
+      );
+    } catch (err) {
+      setOtpError("Network error. Is the server running?");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleRequestOtp = async (e) => {
@@ -59,7 +145,8 @@ export default function SignupForm() {
 
   const inputCls =
     "w-full bg-white/5 border border-white/15 rounded-xl px-4 py-3 text-white placeholder-white/30 text-sm focus:outline-none focus:border-[#B4ED57]/60 transition-colors";
-  const labelCls = "block text-white/60 text-xs mb-1.5 uppercase tracking-wider";
+  const labelCls =
+    "block text-white/60 text-xs mb-1.5 uppercase tracking-wider";
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
@@ -143,7 +230,9 @@ export default function SignupForm() {
           {/* OTP Verification */}
           <div className="bg-white/5 border border-white/10 rounded-xl p-4">
             <label className={labelCls}>OTP Verification</label>
-            <p className="text-white/50 text-xs mb-3">We'll send an OTP to your email for verification.</p>
+            <p className="text-white/50 text-xs mb-3">
+              We'll send an OTP to your email for verification.
+            </p>
             <div className="flex gap-2 mb-3">
               <input
                 name="otp"
@@ -176,7 +265,9 @@ export default function SignupForm() {
               <span className="text-white/60 text-sm group-hover:text-white/80 transition-colors">
                 {form.aadhar ? form.aadhar.name : "Click to upload Aadhar card"}
               </span>
-              <span className="text-white/30 text-xs mt-1">PDF, JPG or PNG (max 5MB)</span>
+              <span className="text-white/30 text-xs mt-1">
+                PDF, JPG or PNG (max 5MB)
+              </span>
               <input
                 name="aadhar"
                 type="file"
@@ -186,7 +277,32 @@ export default function SignupForm() {
               />
             </label>
             {form.aadhar && (
-              <p className="text-[#B4ED57] text-xs mt-1.5">✓ {form.aadhar.name} uploaded</p>
+              <p className="text-[#B4ED57] text-xs mt-1.5">
+                ✓ {form.aadhar.name} uploaded
+              </p>
+            )}
+            {aadhaarLoading && (
+              <div className="mt-2 flex items-center gap-2 bg-white/5 border border-white/10 rounded-xl p-3">
+                <span className="animate-spin text-sm">⏳</span>
+                <span className="text-white/60 text-xs">
+                  Reading Aadhaar number via OCR...
+                </span>
+              </div>
+            )}
+            {aadhaarNumber && (
+              <div className="mt-2 bg-[#B4ED57]/10 border border-[#B4ED57]/30 rounded-xl p-3">
+                <div className="text-[#B4ED57]/70 text-xs mb-1">
+                  ✓ Aadhaar Number Detected
+                </div>
+                <div className="text-white font-mono text-sm tracking-widest">
+                  {aadhaarNumber.replace(/(\d{4})(\d{4})(\d{4})/, "$1 $2 $3")}
+                </div>
+              </div>
+            )}
+            {aadhaarError && (
+              <div className="mt-2 bg-red-500/10 border border-red-500/30 rounded-xl p-3 text-red-400 text-xs">
+                {aadhaarError}
+              </div>
             )}
           </div>
 
@@ -196,9 +312,13 @@ export default function SignupForm() {
             <label className="flex flex-col items-center justify-center border-2 border-dashed border-white/20 rounded-xl p-6 cursor-pointer hover:border-[#B4ED57]/40 transition-colors group">
               <span className="text-3xl mb-2">🎓</span>
               <span className="text-white/60 text-sm group-hover:text-white/80 transition-colors">
-                {form.collegeId ? form.collegeId.name : "Click to upload College ID"}
+                {form.collegeId
+                  ? form.collegeId.name
+                  : "Click to upload College ID"}
               </span>
-              <span className="text-white/30 text-xs mt-1">JPG or PNG (max 5MB)</span>
+              <span className="text-white/30 text-xs mt-1">
+                JPG or PNG (max 5MB)
+              </span>
               <input
                 name="collegeId"
                 type="file"
@@ -208,7 +328,9 @@ export default function SignupForm() {
               />
             </label>
             {form.collegeId && (
-              <p className="text-[#B4ED57] text-xs mt-1.5">✓ {form.collegeId.name} uploaded</p>
+              <p className="text-[#B4ED57] text-xs mt-1.5">
+                ✓ {form.collegeId.name} uploaded
+              </p>
             )}
           </div>
         </>
@@ -223,9 +345,10 @@ export default function SignupForm() {
       {/* Submit */}
       <button
         type="submit"
-        className="w-full py-3.5 bg-[#B4ED57] hover:bg-[#c5f278] text-black font-bold rounded-xl transition-all hover:scale-[1.01] flex items-center justify-center gap-2"
+        disabled={loading}
+        className="w-full py-3.5 bg-[#B4ED57] hover:bg-[#c5f278] text-black font-bold rounded-xl transition-all hover:scale-[1.01] flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
       >
-        Create Account →
+        {loading ? "Creating Account..." : "Create Account →"}
       </button>
 
       <p className="text-center text-white/40 text-sm">

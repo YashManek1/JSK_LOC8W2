@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
+import { API_BASE_URL } from "../../api";
 
 export function CountdownWidget() {
   const [time, setTime] = useState({ h: 11, m: 24, s: 50 });
@@ -8,9 +9,19 @@ export function CountdownWidget() {
       setTime((prev) => {
         let { h, m, s } = prev;
         s--;
-        if (s < 0) { s = 59; m--; }
-        if (m < 0) { m = 59; h--; }
-        if (h < 0) { h = 0; m = 0; s = 0; }
+        if (s < 0) {
+          s = 59;
+          m--;
+        }
+        if (m < 0) {
+          m = 59;
+          h--;
+        }
+        if (h < 0) {
+          h = 0;
+          m = 0;
+          s = 0;
+        }
         return { h, m, s };
       });
     }, 1000);
@@ -20,17 +31,31 @@ export function CountdownWidget() {
   const pad = (n) => String(n).padStart(2, "0");
 
   return (
-    <div className="bg-[#111] border border-white/10 rounded-2xl p-6 space-y-4" style={{ fontFamily: "'Fustat', sans-serif" }}>
-      <h3 className="text-white font-semibold" style={{ fontFamily: "'Questrial', sans-serif" }}>Countdown & Alerts</h3>
+    <div
+      className="bg-[#111] border border-white/10 rounded-2xl p-6 space-y-4"
+      style={{ fontFamily: "'Fustat', sans-serif" }}
+    >
+      <h3
+        className="text-white font-semibold"
+        style={{ fontFamily: "'Questrial', sans-serif" }}
+      >
+        Countdown & Alerts
+      </h3>
       <div className="bg-[#0a0a0a] rounded-xl p-4">
         <div className="text-white/40 text-xs mb-1">Current Time</div>
-        <div className="text-white text-2xl font-bold" style={{ fontFamily: "'Questrial', sans-serif" }}>
+        <div
+          className="text-white text-2xl font-bold"
+          style={{ fontFamily: "'Questrial', sans-serif" }}
+        >
           {pad(13)}:{pad(28)}:{pad(50)}
         </div>
       </div>
       <div className="bg-[#161616] rounded-xl p-4">
         <div className="text-white/40 text-xs mb-1">Remaining</div>
-        <div className="text-[#B4ED57] text-xl font-bold italic" style={{ fontFamily: "'Pixelify Sans', cursive" }}>
+        <div
+          className="text-[#B4ED57] text-xl font-bold italic"
+          style={{ fontFamily: "'Pixelify Sans', cursive" }}
+        >
           {pad(time.h)}h {pad(time.m)}m remaining
         </div>
       </div>
@@ -55,8 +80,16 @@ export function PPTScoreWidget() {
   ];
 
   return (
-    <div className="bg-[#111] border border-white/10 rounded-2xl p-6" style={{ fontFamily: "'Fustat', sans-serif" }}>
-      <h3 className="text-white font-semibold mb-4" style={{ fontFamily: "'Questrial', sans-serif" }}>Your PPT Score · AI Transparency Breakdown</h3>
+    <div
+      className="bg-[#111] border border-white/10 rounded-2xl p-6"
+      style={{ fontFamily: "'Fustat', sans-serif" }}
+    >
+      <h3
+        className="text-white font-semibold mb-4"
+        style={{ fontFamily: "'Questrial', sans-serif" }}
+      >
+        Your PPT Score · AI Transparency Breakdown
+      </h3>
       <div className="rounded-xl overflow-hidden border border-white/10">
         <div className="grid grid-cols-3 text-white/40 text-xs px-4 py-2 border-b border-white/10 bg-white/5">
           <span>Criteria</span>
@@ -64,9 +97,17 @@ export function PPTScoreWidget() {
           <span className="text-right">Weight</span>
         </div>
         {scores.map((s) => (
-          <div key={s.label} className="grid grid-cols-3 items-center px-4 py-3 border-b border-white/5 last:border-0">
+          <div
+            key={s.label}
+            className="grid grid-cols-3 items-center px-4 py-3 border-b border-white/5 last:border-0"
+          >
             <span className="text-white/80 text-sm">{s.label}</span>
-            <span className="text-[#B4ED57] font-bold text-right" style={{ fontFamily: "'Questrial', sans-serif" }}>{s.score}</span>
+            <span
+              className="text-[#B4ED57] font-bold text-right"
+              style={{ fontFamily: "'Questrial', sans-serif" }}
+            >
+              {s.score}
+            </span>
             <span className="text-white/40 text-sm text-right">/{s.max}</span>
           </div>
         ))}
@@ -74,7 +115,8 @@ export function PPTScoreWidget() {
       <div className="mt-4 bg-[#B4ED57]/5 border border-[#B4ED57]/20 rounded-xl p-4">
         <div className="text-[#B4ED57]/60 text-xs mb-1">⚡ AI Reasoning</div>
         <p className="text-white/60 text-xs leading-relaxed">
-          "High Technical Depth due to mentions of federated learning, model quantization, and real-time inference pipeline in slides 7–9."
+          "High Technical Depth due to mentions of federated learning, model
+          quantization, and real-time inference pipeline in slides 7–9."
         </p>
       </div>
     </div>
@@ -95,23 +137,37 @@ export function MealQRWidget() {
   };
 
   return (
-    <div className="bg-[#111] border border-white/10 rounded-2xl p-6" style={{ fontFamily: "'Fustat', sans-serif" }}>
-      <h3 className="text-white font-semibold mb-4" style={{ fontFamily: "'Questrial', sans-serif" }}>Meal QRs</h3>
+    <div
+      className="bg-[#111] border border-white/10 rounded-2xl p-6"
+      style={{ fontFamily: "'Fustat', sans-serif" }}
+    >
+      <h3
+        className="text-white font-semibold mb-4"
+        style={{ fontFamily: "'Questrial', sans-serif" }}
+      >
+        Meal QRs
+      </h3>
       <div className="space-y-2">
         {meals.map((meal) => (
           <div
             key={meal.name}
             className={`flex items-center justify-between p-4 rounded-xl ${
-              meal.status === "Active" ? "bg-[#B4ED57]/10 border border-[#B4ED57]/20" : "bg-white/5"
+              meal.status === "Active"
+                ? "bg-[#B4ED57]/10 border border-[#B4ED57]/20"
+                : "bg-white/5"
             }`}
           >
             <div>
-              <div className={`text-sm font-semibold ${meal.status === "Active" ? "text-white" : "text-white/50"}`}>
+              <div
+                className={`text-sm font-semibold ${meal.status === "Active" ? "text-white" : "text-white/50"}`}
+              >
                 {meal.name}
               </div>
               <div className="text-white/30 text-xs">{meal.time}</div>
             </div>
-            <span className={`text-xs px-3 py-1 rounded-full font-semibold ${statusStyle[meal.status]}`}>
+            <span
+              className={`text-xs px-3 py-1 rounded-full font-semibold ${statusStyle[meal.status]}`}
+            >
               {meal.status}
             </span>
           </div>
@@ -127,7 +183,13 @@ export function MealQRWidget() {
 
 export function TeamCommitsWidget({ teamName }) {
   const members = [
-    { name: "Ananya", commits: 45, color: "bg-[#B4ED57]", isYou: true, badge: "👑 King" },
+    {
+      name: "Ananya",
+      commits: 45,
+      color: "bg-[#B4ED57]",
+      isYou: true,
+      badge: "👑 King",
+    },
     { name: "Ravi", commits: 32, color: "bg-[#4D58D4]", isYou: false },
     { name: "Sara", commits: 28, color: "bg-purple-500", isYou: false },
     { name: "Kiran", commits: 8, color: "bg-gray-600", isYou: false },
@@ -135,27 +197,57 @@ export function TeamCommitsWidget({ teamName }) {
   const total = members.reduce((s, m) => s + m.commits, 0);
 
   return (
-    <div className="bg-[#111] border border-white/10 rounded-2xl p-6" style={{ fontFamily: "'Fustat', sans-serif" }}>
+    <div
+      className="bg-[#111] border border-white/10 rounded-2xl p-6"
+      style={{ fontFamily: "'Fustat', sans-serif" }}
+    >
       <div className="flex items-center justify-between mb-1">
-        <h3 className="text-white font-semibold" style={{ fontFamily: "'Questrial', sans-serif" }}>Team Commits · {teamName || "404 Found"}</h3>
-        <button className="text-[#B4ED57] text-xs hover:underline">View details →</button>
+        <h3
+          className="text-white font-semibold"
+          style={{ fontFamily: "'Questrial', sans-serif" }}
+        >
+          Team Commits · {teamName || "404 Found"}
+        </h3>
+        <button className="text-[#B4ED57] text-xs hover:underline">
+          View details →
+        </button>
       </div>
-      <p className="text-white/40 text-xs mb-4">Total: <span style={{ fontFamily: "'Questrial', sans-serif" }} className="font-bold text-white/70">{total}</span> commits</p>
+      <p className="text-white/40 text-xs mb-4">
+        Total:{" "}
+        <span
+          style={{ fontFamily: "'Questrial', sans-serif" }}
+          className="font-bold text-white/70"
+        >
+          {total}
+        </span>{" "}
+        commits
+      </p>
       <div className="space-y-3">
         {members.map((m) => (
           <div key={m.name} className="space-y-1.5">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <div className={`w-7 h-7 ${m.isYou ? "bg-[#B4ED57]" : m.color} rounded-full flex items-center justify-center text-xs font-bold text-black`}>
+                <div
+                  className={`w-7 h-7 ${m.isYou ? "bg-[#B4ED57]" : m.color} rounded-full flex items-center justify-center text-xs font-bold text-black`}
+                >
                   {m.name[0]}
                 </div>
                 <span className="text-white text-sm">
                   {m.name}
-                  {m.isYou && <span className="text-[#B4ED57]/70 text-xs ml-1">(You)</span>}
+                  {m.isYou && (
+                    <span className="text-[#B4ED57]/70 text-xs ml-1">
+                      (You)
+                    </span>
+                  )}
                   {m.badge && <span className="text-xs ml-1">{m.badge}</span>}
                 </span>
               </div>
-              <span className="text-white font-bold text-sm" style={{ fontFamily: "'Questrial', sans-serif" }}>{m.commits}</span>
+              <span
+                className="text-white font-bold text-sm"
+                style={{ fontFamily: "'Questrial', sans-serif" }}
+              >
+                {m.commits}
+              </span>
             </div>
             <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
               <div
@@ -179,8 +271,16 @@ export function HackerCockpitWidget() {
   ];
 
   return (
-    <div className="bg-[#B4ED57] rounded-2xl p-6" style={{ fontFamily: "'Fustat', sans-serif" }}>
-      <h3 className="text-black font-bold mb-4" style={{ fontFamily: "'Questrial', sans-serif" }}>Hacker Cockpit</h3>
+    <div
+      className="bg-[#B4ED57] rounded-2xl p-6"
+      style={{ fontFamily: "'Fustat', sans-serif" }}
+    >
+      <h3
+        className="text-black font-bold mb-4"
+        style={{ fontFamily: "'Questrial', sans-serif" }}
+      >
+        Hacker Cockpit
+      </h3>
       <div className="grid grid-cols-2 gap-3 mb-4">
         {stats.map((s) => (
           <div key={s.label} className="bg-black/10 rounded-xl p-3">
@@ -188,7 +288,12 @@ export function HackerCockpitWidget() {
               <span>{s.icon}</span>
               <span>{s.label}</span>
             </div>
-            <div className="text-black font-bold text-xl mb-2" style={{ fontFamily: "'Questrial', sans-serif" }}>{s.value}%</div>
+            <div
+              className="text-black font-bold text-xl mb-2"
+              style={{ fontFamily: "'Questrial', sans-serif" }}
+            >
+              {s.value}%
+            </div>
             <div className="h-1.5 bg-black/20 rounded-full overflow-hidden">
               <div
                 className={`h-full rounded-full ${s.warn ? "bg-red-600" : "bg-black/50"}`}
@@ -213,52 +318,226 @@ export function HackerCockpitWidget() {
   );
 }
 
-export function VoiceAssistantWidget() {
+export function VoiceAssistantWidget({ userEmail }) {
   const [input, setInput] = useState("");
-  const [messages, setMessages] = useState([
-    { from: "ai", text: "Hey Ananya! I'm HackOS AI. Let's complete your hackathon profile. What's your full name and year?" },
-  ]);
+  const [messages, setMessages] = useState([]);
+  const [sessionId, setSessionId] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [extractedData, setExtractedData] = useState({});
+  const [isComplete, setIsComplete] = useState(false);
+  const [recording, setRecording] = useState(false);
+  const mediaRecorderRef = useRef(null);
+  const chunksRef = useRef([]);
+  const messagesEndRef = useRef(null);
 
-  const send = () => {
-    if (!input.trim()) return;
+  // Auto-scroll to bottom when messages change
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
+  // Start session on mount
+  useEffect(() => {
+    if (!userEmail) return;
+    const startSession = async () => {
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/chat/start`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: userEmail }),
+        });
+        const data = await res.json();
+        if (res.ok) {
+          setSessionId(data.sessionId);
+          setMessages([{ from: "ai", text: data.greeting }]);
+        }
+      } catch (err) {
+        setMessages([
+          {
+            from: "ai",
+            text: "Could not connect to AI assistant. Please try again later.",
+          },
+        ]);
+      }
+    };
+    startSession();
+  }, [userEmail]);
+
+  // Send text message
+  const send = async () => {
+    if (!input.trim() || !sessionId || loading) return;
+    const userMsg = input.trim();
+    setInput("");
+    setMessages((prev) => [...prev, { from: "user", text: userMsg }]);
+    setLoading(true);
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/chat/message`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sessionId, message: userMsg }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setMessages((prev) => [...prev, { from: "ai", text: data.text }]);
+        if (data.extractedData) setExtractedData(data.extractedData);
+        if (data.isComplete) setIsComplete(true);
+      } else {
+        setMessages((prev) => [
+          ...prev,
+          { from: "ai", text: "Something went wrong. Try again." },
+        ]);
+      }
+    } catch {
+      setMessages((prev) => [
+        ...prev,
+        { from: "ai", text: "Network error. Please try again." },
+      ]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Voice recording
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const recorder = new MediaRecorder(stream, { mimeType: "audio/webm" });
+      chunksRef.current = [];
+      recorder.ondataavailable = (e) => {
+        if (e.data.size > 0) chunksRef.current.push(e.data);
+      };
+      recorder.onstop = async () => {
+        stream.getTracks().forEach((t) => t.stop());
+        const blob = new Blob(chunksRef.current, { type: "audio/webm" });
+        await sendAudio(blob);
+      };
+      recorder.start();
+      mediaRecorderRef.current = recorder;
+      setRecording(true);
+    } catch {
+      alert("Microphone access denied.");
+    }
+  };
+
+  const stopRecording = () => {
+    if (
+      mediaRecorderRef.current &&
+      mediaRecorderRef.current.state === "recording"
+    ) {
+      mediaRecorderRef.current.stop();
+      setRecording(false);
+    }
+  };
+
+  const sendAudio = async (blob) => {
+    if (!sessionId) return;
     setMessages((prev) => [
       ...prev,
-      { from: "user", text: input },
-      { from: "ai", text: "Got it! Your profile has been updated. Anything else I can help with?" },
+      { from: "user", text: "🎤 [Voice message]" },
     ]);
-    setInput("");
+    setLoading(true);
+    try {
+      const fd = new FormData();
+      fd.append("audio", blob, "recording.webm");
+      fd.append("sessionId", sessionId);
+      const res = await fetch(`${API_BASE_URL}/api/chat/voice`, {
+        method: "POST",
+        body: fd,
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setMessages((prev) => [...prev, { from: "ai", text: data.text }]);
+        if (data.extractedData) setExtractedData(data.extractedData);
+        if (data.isComplete) setIsComplete(true);
+      } else {
+        setMessages((prev) => [
+          ...prev,
+          { from: "ai", text: "Could not process audio. Try typing instead." },
+        ]);
+      }
+    } catch {
+      setMessages((prev) => [
+        ...prev,
+        { from: "ai", text: "Network error processing audio." },
+      ]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div className="bg-[#4D58D4] rounded-2xl p-6 flex flex-col gap-4" style={{ fontFamily: "'Fustat', sans-serif" }}>
+    <div
+      className="bg-[#4D58D4] rounded-2xl p-6 flex flex-col gap-4"
+      style={{ fontFamily: "'Fustat', sans-serif" }}
+    >
       <div className="flex items-center gap-3">
         <span className="text-2xl">⚡</span>
         <div>
-          <h3 className="text-white font-semibold text-sm" style={{ fontFamily: "'Questrial', sans-serif" }}>Voice Assistant Profile Completion AI</h3>
+          <h3
+            className="text-white font-semibold text-sm"
+            style={{ fontFamily: "'Questrial', sans-serif" }}
+          >
+            Voice Assistant Profile Completion AI
+          </h3>
           <div className="flex items-center gap-2 text-white/50 text-xs">
-            <span>Model: PersonaPlex-7b</span>
-            <span className="w-1.5 h-1.5 bg-[#B4ED57] rounded-full animate-pulse" />
-            <span className="text-[#B4ED57]">NER Active</span>
+            <span>Model: Gemini 2.5 Flash</span>
+            <span
+              className={`w-1.5 h-1.5 rounded-full ${sessionId ? "bg-[#B4ED57] animate-pulse" : "bg-red-400"}`}
+            />
+            <span className={sessionId ? "text-[#B4ED57]" : "text-red-400"}>
+              {sessionId ? "Connected" : "Offline"}
+            </span>
           </div>
         </div>
       </div>
+      {isComplete && (
+        <div className="bg-[#B4ED57]/20 border border-[#B4ED57]/40 rounded-xl p-2 text-[#B4ED57] text-xs font-bold text-center">
+          Registration Complete!
+        </div>
+      )}
       <div className="flex-1 space-y-2 max-h-36 overflow-y-auto">
         {messages.map((m, i) => (
-          <div key={i} className={`p-3 rounded-xl text-sm ${m.from === "ai" ? "bg-white/10 text-white" : "bg-white/20 text-white ml-6"}`}>
-            {m.from === "ai" && <span className="text-xs text-[#B4ED57]/80 mr-1">⚡</span>}
+          <div
+            key={i}
+            className={`p-3 rounded-xl text-sm ${m.from === "ai" ? "bg-white/10 text-white" : "bg-white/20 text-white ml-6"}`}
+          >
+            {m.from === "ai" && (
+              <span className="text-xs text-[#B4ED57]/80 mr-1">⚡</span>
+            )}
             {m.text}
           </div>
         ))}
+        {loading && (
+          <div className="p-3 rounded-xl text-sm bg-white/10 text-white/60 animate-pulse">
+            ⚡ Gemini is thinking...
+          </div>
+        )}
+        <div ref={messagesEndRef} />
       </div>
       <div className="flex gap-2">
         <input
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && send()}
-          placeholder="Type your answer..."
-          className="flex-1 bg-white/10 border border-white/20 rounded-xl px-4 py-2.5 text-white placeholder-white/40 text-sm focus:outline-none focus:border-white/40"
+          placeholder={
+            isComplete ? "Registration complete!" : "Type your answer..."
+          }
+          disabled={isComplete || loading}
+          className="flex-1 bg-white/10 border border-white/20 rounded-xl px-4 py-2.5 text-white placeholder-white/40 text-sm focus:outline-none focus:border-white/40 disabled:opacity-50"
         />
-        <button onClick={send} className="w-10 h-10 bg-[#B4ED57] hover:bg-[#c5f278] text-black rounded-xl flex items-center justify-center font-bold transition-colors">
+        <button
+          onClick={recording ? stopRecording : startRecording}
+          disabled={isComplete || loading}
+          className={`w-10 h-10 ${recording ? "bg-red-500 hover:bg-red-400" : "bg-white/20 hover:bg-white/30"} text-white rounded-xl flex items-center justify-center font-bold transition-colors disabled:opacity-50`}
+          title={recording ? "Stop recording" : "Start recording"}
+        >
+          🎤
+        </button>
+        <button
+          onClick={send}
+          disabled={isComplete || loading}
+          className="w-10 h-10 bg-[#B4ED57] hover:bg-[#c5f278] text-black rounded-xl flex items-center justify-center font-bold transition-colors disabled:opacity-50"
+        >
           →
         </button>
       </div>

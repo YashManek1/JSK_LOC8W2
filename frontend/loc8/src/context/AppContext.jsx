@@ -1,21 +1,44 @@
-import React, { createContext, useContext, useState } from "react";
+import React, { createContext, useContext, useState, useEffect } from "react";
 
 const AppContext = createContext(null);
 
 export function AppProvider({ children }) {
-  // Navigation: Starts at 'auth' now
-  const [currentPage, setCurrentPage] = useState("auth"); 
+  // Auth: Restore token & user from localStorage on mount
+  const [token, setTokenState] = useState(() =>
+    localStorage.getItem("accessToken"),
+  );
+  const [currentUser, setCurrentUser] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem("currentUser"));
+    } catch {
+      return null;
+    }
+  });
+
+  // Navigation: token → decide page based on profile + voice data state, else auth
+  const [currentPage, setCurrentPage] = useState(() => {
+    const t = localStorage.getItem("accessToken");
+    if (t) {
+      const profileDone = localStorage.getItem("isProfileComplete") === "true";
+      if (profileDone) return "hackathonSelection";
+      // If voice data already collected, go straight to the form
+      const voiceData = localStorage.getItem("voiceExtractedData");
+      return voiceData ? "completeProfile" : "voiceProfile";
+    }
+    return "auth";
+  });
   const [authMode, setAuthMode] = useState("login");
-  const [currentUser, setCurrentUser] = useState(null);
   const [selectedHackathon, setSelectedHackathon] = useState(null);
-  
+
   // Profile and Team States
-  const [isProfileComplete, setIsProfileComplete] = useState(false);
+  const [isProfileComplete, setIsProfileComplete] = useState(
+    () => localStorage.getItem("isProfileComplete") === "true",
+  );
   const [teamId, setTeamId] = useState(null);
   const [teamData, setTeamData] = useState(null);
   const [teamInviteCode, setTeamInviteCode] = useState(null);
   const [isTeamLeader, setIsTeamLeader] = useState(false);
-  
+
   // Hackathon Workflow States
   const [hackathonPhase, setHackathonPhase] = useState("teamFormation");
   const [selectedProblems, setSelectedProblems] = useState([]);
@@ -27,10 +50,30 @@ export function AppProvider({ children }) {
 
   const navigateTo = (page) => setCurrentPage(page);
 
-  const loginUser = (user) => {
+  // Persist token helper
+  const setToken = (t) => {
+    if (t) {
+      localStorage.setItem("accessToken", t);
+    } else {
+      localStorage.removeItem("accessToken");
+    }
+    setTokenState(t);
+  };
+
+  const loginUser = (user, accessToken) => {
+    // Store user & token in state + localStorage
+    if (accessToken) setToken(accessToken);
     setCurrentUser(user);
-    if (user.role === "student") {
-      navigateTo(isProfileComplete ? "hackathonSelection" : "completeProfile");
+    localStorage.setItem("currentUser", JSON.stringify(user));
+
+    if (user.role === "student" || user.role === "Participant") {
+      if (isProfileComplete) {
+        navigateTo("hackathonSelection");
+      } else {
+        // Only send to voice session if they haven't done it yet
+        const voiceData = localStorage.getItem("voiceExtractedData");
+        navigateTo(voiceData ? "completeProfile" : "voiceProfile");
+      }
     } else if (user.role === "admin" || user.role === "organiser") {
       navigateTo("adminHackathons");
     } else if (user.role === "judge") {
@@ -40,6 +83,7 @@ export function AppProvider({ children }) {
 
   const completeProfile = () => {
     setIsProfileComplete(true);
+    localStorage.setItem("isProfileComplete", "true");
     navigateTo("hackathonSelection");
   };
 
@@ -74,7 +118,13 @@ export function AppProvider({ children }) {
   };
 
   const proceedToNextPhase = () => {
-    const phases = ["teamFormation", "problemSelection", "pptRound1", "shortlist", "qrGeneration"];
+    const phases = [
+      "teamFormation",
+      "problemSelection",
+      "pptRound1",
+      "shortlist",
+      "qrGeneration",
+    ];
     const idx = phases.indexOf(hackathonPhase);
     if (idx < phases.length - 1) {
       const nextPhase = phases[idx + 1];
@@ -102,6 +152,10 @@ export function AppProvider({ children }) {
 
   const logout = () => {
     setCurrentUser(null);
+    setToken(null);
+    localStorage.removeItem("currentUser");
+    localStorage.removeItem("isProfileComplete");
+    localStorage.removeItem("voiceExtractedData");
     setSelectedHackathon(null);
     setIsProfileComplete(false);
     setTeamId(null);
@@ -122,6 +176,7 @@ export function AppProvider({ children }) {
         selectedHackathon,
         authMode,
         currentUser,
+        token,
         generatedQR,
         qrScanned,
         isProfileComplete,
@@ -136,6 +191,7 @@ export function AppProvider({ children }) {
         isShortlisted,
         navigateTo,
         setAuthMode,
+        setToken,
         loginUser,
         completeProfile,
         selectHackathon,

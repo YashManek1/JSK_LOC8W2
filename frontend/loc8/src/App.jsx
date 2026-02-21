@@ -13,12 +13,14 @@ import TeamManagementPage from "./pages/TeamManagementPage";
 import ProblemStatementPreferencesPage from "./pages/ProblemStatementPreferencesPage";
 import PPTRound1Page from "./pages/PPTRound1Page";
 import ShortlistAnnouncementPage from "./pages/ShortlistAnnouncementPage";
+import GeminiLivePage from "./pages/GeminiLivePage";
 
 function Router() {
   const { currentPage } = useApp();
 
   const pages = {
     auth: <AuthPage />,
+    voiceProfile: <GeminiLivePage />,
     completeProfile: <CompleteProfilePage />,
     hackathonSelection: <HackathonSelectionPage />,
     teamManagement: <TeamManagementPage />,
