@@ -1,17 +1,31 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { PrismaClient } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import pdfParse from 'pdf-parse';
 import { GeminiService } from '../queue/gemini/gemini.service';
 
+export interface ResumeData {
+  education?: unknown;
+  skills?: string[];
+  projects?: unknown;
+  workExperience?: unknown;
+  achievements?: string[];
+  certifications?: string[];
+}
+
 @Injectable()
 export class ProfileService {
+  private readonly db: PrismaClient;
+
   constructor(
     private prisma: PrismaService,
     private geminiService: GeminiService,
-  ) {}
+  ) {
+    this.db = prisma as PrismaClient;
+  }
 
   async getProfile(userId: string) {
-    const user = await this.prisma.participant.findUnique({
+    const user = await this.db.participant.findUnique({
       where: { id: userId },
       select: {
         id: true,
@@ -22,6 +36,7 @@ export class ProfileService {
         role: true,
         githubUrl: true,
         linkedinUrl: true,
+        portfolioUrl: true,
         primarySkillset: true,
         education: true,
         projects: true,
@@ -31,7 +46,11 @@ export class ProfileService {
         certifications: true,
         socialLinks: true,
         hackathonPreferences: true,
+        motivation: true,
         tagline: true,
+        roleSelection: true,
+        sleepHabits: true,
+        dietaryPref: true,
       },
     });
 
@@ -42,7 +61,7 @@ export class ProfileService {
     return user;
   }
 
-  async updateProfile(userId: string, data: any) {
+  async updateProfile(userId: string, data: Record<string, unknown>) {
     const user = await this.prisma.participant.findUnique({
       where: { id: userId },
     });
@@ -65,7 +84,7 @@ export class ProfileService {
     try {
       const pdfData = await pdfParse(resumeFile.buffer);
       text = pdfData.text;
-    } catch (e) {
+    } catch {
       throw new Error('Failed to parse PDF resume');
     }
 
@@ -85,15 +104,15 @@ export class ProfileService {
 
     const aiResponse = await this.geminiService.generateText(prompt);
 
-    let extractedData: any = {};
+    let extractedData: ResumeData = {};
     try {
       // Clean up markdown formatting if present
       const jsonStr = aiResponse
         .replace(/```json/g, '')
         .replace(/```/g, '')
         .trim();
-      extractedData = JSON.parse(jsonStr);
-    } catch (e) {
+      extractedData = JSON.parse(jsonStr) as ResumeData;
+    } catch {
       console.error('Failed to parse Gemini response:', aiResponse);
       throw new Error('Failed to extract data from resume');
     }
@@ -102,12 +121,12 @@ export class ProfileService {
     await this.prisma.participant.update({
       where: { id: userId },
       data: {
-        education: extractedData.education || [],
-        primarySkillset: extractedData.skills || [],
-        projects: extractedData.projects || [],
-        workExperience: extractedData.workExperience || [],
-        achievements: extractedData.achievements || [],
-        certifications: extractedData.certifications || [],
+        education: extractedData.education ?? undefined,
+        primarySkillset: extractedData.skills ?? [],
+        projects: extractedData.projects ?? undefined,
+        workExperience: extractedData.workExperience ?? undefined,
+        achievements: extractedData.achievements ?? [],
+        certifications: extractedData.certifications ?? [],
       },
     });
 

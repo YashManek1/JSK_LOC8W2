@@ -74,4 +74,27 @@ export class RegistrationController {
     const userId = req.user.userId;
     return this.registrationService.deleteTeam(userId, teamId);
   }
+
+  @Post('invite/:teamId/:userId')
+  async inviteSoloUser(
+    @Req() req: RequestWithUser,
+    @Param('teamId') teamId: string,
+    @Param('userId') targetUserId: string,
+  ) {
+    const leaderId = req.user.userId;
+    return this.registrationService.inviteSoloUser(
+      leaderId,
+      teamId,
+      targetUserId,
+    );
+  }
+
+  @Put('team/finalize/:teamId')
+  async finalizeTeam(
+    @Req() req: RequestWithUser,
+    @Param('teamId') teamId: string,
+  ) {
+    const leaderId = req.user.userId;
+    return this.registrationService.finalizeTeam(leaderId, teamId);
+  }
 }

@@ -48,7 +48,7 @@ model Participant {
   password                 String?
   role                     String   @default("USER") // Can be "USER" or "ADMIN"
   college                  String?
-  education                String[]
+  education                Json?
   githubAccessToken        String?
   githubRefreshToken       String?
   primarySkillset          String[]
@@ -64,6 +64,7 @@ model Participant {
   pastProjects             String[]
   githubUrl                String?
   linkedinUrl              String?
+  portfolioUrl             String?
   roleSelection            String?
   sleepHabits              String?
   dietaryPref              String?
@@ -72,11 +73,12 @@ model Participant {
   updatedAt                DateTime @updatedAt
 
   // Relations
-  chatSessions  ChatSession[]
-  team          Team?          @relation(fields: [teamId], references: [id])
-  hackathons    Hackathon[]    @relation("AdminHackathons") // Hackathons created by this admin
-  leadsTeams    Team[]         @relation("TeamLeader")
-  registrations Registration[]
+  chatSessions      ChatSession[]
+  team              Team?          @relation(fields: [teamId], references: [id])
+  hackathons        Hackathon[]    @relation("AdminHackathons") // Hackathons created by this admin
+  leadsTeams        Team[]         @relation("TeamLeader")
+  registrations     Registration[]
+  pushSubscriptions PushSubscription[]
 }
 
 model Team {
@@ -157,6 +159,8 @@ model Hackathon {
   startDate            DateTime
   endDate              DateTime
   registrationDeadline DateTime? // Deadline for registrations
+  psReleaseDate        DateTime? // When to release Problem Statements
+  psReleasedPushSent   Boolean   @default(false) // Has the cron job sent the notifications?
   location             String
   description          String?
   posterUrl            String? // Frontend uploads to S3/Cloudinary and sends URL
@@ -238,4 +242,14 @@ enum EvaluationStatus {
   PROCESSING
   COMPLETED
   FAILED
+}
+
+model PushSubscription {
+  id            String      @id @default(uuid())
+  participantId String
+  participant   Participant @relation(fields: [participantId], references: [id], onDelete: Cascade)
+  endpoint      String      @unique
+  p256dh        String
+  auth          String
+  createdAt     DateTime    @default(now())
 }

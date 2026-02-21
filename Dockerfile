@@ -26,8 +26,13 @@ RUN rm -rf node_modules/@prisma/engines/*windows* \
 FROM python:3.10-slim AS python-builder
 WORKDIR /app
 
-# Install build dependencies and 'binutils' for the strip command
-RUN apt-get update && apt-get install -y --no-install-recommends gcc g++ binutils && rm -rf /var/lib/apt/lists/*
+# FIX: Added libgl1, libglib2.0-0, and libxcb1 here so OpenCV can import successfully during the build!
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc g++ binutils \
+    libgl1 \
+    libglib2.0-0 \
+    libxcb1 \
+    && rm -rf /var/lib/apt/lists/*
 
 RUN python -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
@@ -35,10 +40,6 @@ ENV PATH="/opt/venv/bin:$PATH"
 COPY identity-service/requirements.txt ./
 
 # MASSIVE SIZE REDUCTION FOR RAILWAY:
-# 1. Force CPU versions for Torch
-# 2. DeepFace/EasyOCR silently pull NVIDIA GPU drivers (~2.5GB). We delete them aggressively.
-# 3. Strip debug symbols from heavy C++ ML libraries (~300MB saved)
-# 4. Delete python bytecode caches (~150MB saved)
 RUN pip install --no-cache-dir --default-timeout=1000 \
     --extra-index-url https://download.pytorch.org/whl/cpu \
     -r requirements.txt \
@@ -52,13 +53,16 @@ RUN pip install --no-cache-dir --default-timeout=1000 \
 # Pre-download ML models at build time to prevent massive startup delays/OOM in Railway
 RUN python -c "import easyocr; easyocr.Reader(['en'], gpu=False); from deepface import DeepFace; DeepFace.build_model('ArcFace')"
 
+
 # ----- Stage 3: Final Production Image -----
 FROM python:3.10-slim
 
 # Install ONLY runtime dependencies, wipe apt caches completely
+# Added libxcb1 here to ensure it runs smoothly in production too
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libgl1 \
     libglib2.0-0 \
+    libxcb1 \
     openssl \
     && apt-get clean && rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*
 

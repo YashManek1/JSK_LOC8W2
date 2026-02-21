@@ -5,6 +5,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { MailService } from '../mail/mail.service';
 import { CreateTeamDto } from './dto/create-team.dto';
 import { JoinTeamDto } from './dto/join-team.dto';
 import { RegisterSoloDto } from './dto/register-solo.dto';
@@ -12,7 +13,10 @@ import { randomBytes } from 'crypto';
 
 @Injectable()
 export class RegistrationService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private mailService: MailService,
+  ) {}
 
   // Helper: Generates a 6-character alphanumeric invite code
   private generateInviteCode(): string {
@@ -178,13 +182,22 @@ export class RegistrationService {
         },
       });
 
-      // 6. If team size reached, update status
+      // 6. If team size reached, update status and send email
       if (updatedTeam.participants.length >= hackathon.teamSize) {
         await tx.team.update({
           where: { id: team.id },
           data: { status: 'REGISTERED' },
         });
         updatedTeam.status = 'REGISTERED';
+
+        // Fire-and-forget: send registration success email to team leader
+        this.mailService
+          .sendTeamRegistrationSuccess(
+            team.leadEmail,
+            team.teamName,
+            hackathon.name,
+          )
+          .catch(() => {}); // never block the response
       }
 
       return { team: updatedTeam, registration };
@@ -297,5 +310,143 @@ export class RegistrationService {
         message: 'Team deleted successfully. Members moved to community pool.',
       };
     });
+  }
+
+  /**
+   * Leader invites a SOLO participant into their team.
+   * Moves the user from SOLO -> IN_TEAM and connects them to the team.
+   */
+  async inviteSoloUser(leaderId: string, teamId: string, targetUserId: string) {
+    // 1. Verify team exists and caller is the leader
+    const team = await this.prisma.team.findUnique({
+      where: { id: teamId },
+      include: { hackathon: true, participants: true },
+    });
+
+    if (!team) throw new NotFoundException('Team not found');
+    if (team.leaderId !== leaderId) {
+      throw new ForbiddenException('Only the team leader can invite members.');
+    }
+    if (!team.hackathonId) {
+      throw new BadRequestException('Team is not linked to a hackathon.');
+    }
+
+    // 2. Check team capacity
+    const hackathon = team.hackathon!;
+    if (team.participants.length >= hackathon.teamSize) {
+      throw new BadRequestException('Team is already full.');
+    }
+
+    // 3. Verify the target user has a SOLO registration for this hackathon
+    const soloRegistration = await this.prisma.registration.findUnique({
+      where: {
+        participantId_hackathonId: {
+          participantId: targetUserId,
+          hackathonId: team.hackathonId,
+        },
+      },
+      include: { participant: true },
+    });
+
+    if (!soloRegistration || soloRegistration.status !== 'SOLO') {
+      throw new BadRequestException(
+        'User is not in the community pool for this hackathon.',
+      );
+    }
+
+    // 4. Move the user into the team
+    return this.prisma.$transaction(async (tx) => {
+      // Update registration status
+      await tx.registration.update({
+        where: { id: soloRegistration.id },
+        data: { status: 'IN_TEAM' },
+      });
+
+      // Connect participant to team
+      const updatedTeam = await tx.team.update({
+        where: { id: teamId },
+        data: {
+          memberEmails: { push: soloRegistration.participant.email },
+          participants: { connect: [{ id: targetUserId }] },
+        },
+        include: { participants: true },
+      });
+
+      // Auto-register if team hits min size
+      if (updatedTeam.participants.length >= hackathon.teamSize) {
+        await tx.team.update({
+          where: { id: teamId },
+          data: { status: 'REGISTERED' },
+        });
+        updatedTeam.status = 'REGISTERED';
+
+        this.mailService
+          .sendTeamRegistrationSuccess(
+            team.leadEmail,
+            team.teamName,
+            hackathon.name,
+          )
+          .catch(() => {});
+      }
+
+      return {
+        message: `${soloRegistration.participant.fullName || soloRegistration.participant.email} has been added to ${team.teamName}`,
+        team: updatedTeam,
+      };
+    });
+  }
+
+  /**
+   * Leader manually finalizes a team.
+   * Checks min team size (defaults to hackathon.teamSize) and marks team as REGISTERED.
+   */
+  async finalizeTeam(leaderId: string, teamId: string) {
+    const team = await this.prisma.team.findUnique({
+      where: { id: teamId },
+      include: { hackathon: true, participants: true },
+    });
+
+    if (!team) throw new NotFoundException('Team not found');
+    if (team.leaderId !== leaderId) {
+      throw new ForbiddenException(
+        'Only the team leader can finalize the team.',
+      );
+    }
+    if (!team.hackathonId || !team.hackathon) {
+      throw new BadRequestException('Team is not linked to a hackathon.');
+    }
+
+    if (team.status === 'REGISTERED') {
+      throw new BadRequestException('Team is already registered.');
+    }
+
+    // Check minimum size — at least teamSize members required
+    const minSize = team.hackathon.teamSize;
+    if (team.participants.length < minSize) {
+      throw new BadRequestException(
+        `Team needs at least ${minSize} members to finalize. Currently has ${team.participants.length}.`,
+      );
+    }
+
+    // Mark as REGISTERED
+    const updatedTeam = await this.prisma.team.update({
+      where: { id: teamId },
+      data: { status: 'REGISTERED' },
+      include: { participants: true },
+    });
+
+    // Send registration email
+    this.mailService
+      .sendTeamRegistrationSuccess(
+        team.leadEmail,
+        team.teamName,
+        team.hackathon.name,
+      )
+      .catch(() => {});
+
+    return {
+      message: `Team "${team.teamName}" is now REGISTERED for ${team.hackathon.name}!`,
+      team: updatedTeam,
+    };
   }
 }

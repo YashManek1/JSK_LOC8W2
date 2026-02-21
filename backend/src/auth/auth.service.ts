@@ -7,6 +7,22 @@ import { PrismaService } from '../prisma/prisma.service';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import { Aes256Service } from '../security/aes256.service';
+import { Participant } from '@prisma/client';
+
+interface SignupData {
+  email: string;
+  password: string;
+  fullName?: string;
+  phone?: string;
+  college?: string;
+  role?: string;
+}
+
+interface LoginData {
+  email: string;
+  password: string;
+  role: string;
+}
 
 @Injectable()
 export class AuthService {
@@ -14,12 +30,12 @@ export class AuthService {
     private prisma: PrismaService,
     private jwtService: JwtService,
     private aes256: Aes256Service,
-  ) { }
+  ) {}
 
   async signup(
-    data: any,
+    data: SignupData,
     aadhaarFile?: Express.Multer.File,
-    idCardFile?: Express.Multer.File,
+    _idCardFile?: Express.Multer.File,
   ) {
     const { email, password, fullName, phone, college, role } = data;
 
@@ -49,7 +65,7 @@ export class AuthService {
 
       const identityServiceUrl =
         process.env.IDENTITY_SERVICE_URL || 'http://127.0.0.1:8000';
-      let ocrResponse;
+      let ocrResponse: Response;
       try {
         ocrResponse = await fetch(`${identityServiceUrl}/ocr/aadhaar`, {
           method: 'POST',
@@ -66,7 +82,9 @@ export class AuthService {
         );
       }
 
-      const ocrResult = (await ocrResponse.json()) as { aadhaarNumber?: string };
+      const ocrResult = (await ocrResponse.json()) as {
+        aadhaarNumber?: string;
+      };
       const aadhaarNumber = ocrResult.aadhaarNumber;
 
       if (!aadhaarNumber) {
@@ -88,7 +106,6 @@ export class AuthService {
         college,
         role: resolvedRole,
         aadhaarEncrypted: encryptedAadhaar,
-        // We can store the ID card URL if we upload it to S3, for now we just process it
       },
     });
 
@@ -107,7 +124,7 @@ export class AuthService {
     };
   }
 
-  async login(data: any) {
+  async login(data: LoginData) {
     const { email, password, role } = data;
 
     const user = await this.prisma.participant.findUnique({ where: { email } });
@@ -138,7 +155,7 @@ export class AuthService {
     };
   }
 
-  async generateTokens(user: any) {
+  generateTokens(user: Pick<Participant, 'email' | 'id' | 'role'>) {
     const payload = { email: user.email, sub: user.id, role: user.role };
     const accessToken = this.jwtService.sign(payload);
     const refreshToken = this.jwtService.sign(payload, { expiresIn: '7d' });
