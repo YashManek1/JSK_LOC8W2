@@ -8,7 +8,7 @@
   "variable": [
     {
       "key": "baseUrl",
-      "value": "http://localhost:3001",
+      "value": "https://jskloc8w2-production.up.railway.app",
       "type": "string"
     },
     {
@@ -424,6 +424,46 @@
               "path": ["shortlist", "ENTRY_ID"]
             },
             "description": "Get a shortlist entry by ID. Participant-safe — does NOT include adminNote."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin — Hackathons",
+      "item": [
+        {
+          "name": "POST /admin/hackathons",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"LOC PREP 2026\",\n  \"startDate\": \"2026-03-01T10:00:00Z\",\n  \"endDate\": \"2026-03-03T18:00:00Z\",\n  \"location\": \"IIIT Pune\",\n  \"teamSize\": 4,\n  \"description\": \"A prestigious hackathon.\",\n  \"domains\": [\n    { \"name\": \"Web3\", \"problems\": [\"Build a DeFi app\", \"NFT Marketplace\"] }\n  ],\n  \"roomsList\": [\n    { \"name\": \"Auditorium\", \"capacity\": \"500\" }\n  ],\n  \"timeline\": [\n    { \"time\": \"10:00 AM\", \"event\": \"Opening Ceremony\" }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/hackathons",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "hackathons"]
+            },
+            "description": "Create a new hackathon. Requires JWT Authentication."
+          }
+        },
+        {
+          "name": "GET /admin/hackathons",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/hackathons",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "hackathons"]
+            },
+            "description": "Get hackathons created by the authenticated admin."
           }
         }
       ]

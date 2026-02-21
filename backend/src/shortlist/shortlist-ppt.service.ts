@@ -52,11 +52,13 @@ export class ShortlistPptService {
       }
     }
 
-        // Vision models are decommissioned by Groq. We no longer extract images
-        // to save massive amounts of Node.js memory.
-        const images: string[] = [];
+    // Vision models are decommissioned by Groq. We no longer extract images
+    // to save massive amounts of Node.js memory.
+    const images: string[] = [];
 
-        this.logger.log(`  📊 Slides: ${slideFiles.length}, Images: Skipped (Vision deprecated)`);
+    this.logger.log(
+      `  📊 Slides: ${slideFiles.length}, Images: Skipped (Vision deprecated)`,
+    );
 
     return {
       text: allText.trim(),
