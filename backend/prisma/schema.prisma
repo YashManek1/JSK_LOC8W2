@@ -1,0 +1,139 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Project {
+  id          String       @id @default(uuid())
+  teamName    String
+  githubUrl   String
+  createdAt   DateTime     @default(now())
+  evaluations Evaluation[]
+}
+
+model Evaluation {
+  id               String           @id @default(uuid())
+  projectId        String
+  score            Int?
+  exaggerations    Json?
+  reality          String?
+  status           EvaluationStatus @default(PENDING)
+  pptContent       String?
+  slideImageCount  Int?
+  githubFileTree   Json?
+  githubReadme     String?
+  promptSent       String?
+  rawAiResponse    String?
+  processingTimeMs Int?
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+  claimsVerified   Json?
+  repoStats        Json?
+  project          Project          @relation(fields: [projectId], references: [id], onDelete: Cascade)
+}
+
+model Participant {
+  id               String        @id @default(uuid())
+  fullName         String?
+  liveSelfieUrl    String?
+  idCardUrl        String?
+  aadhaarEncrypted String?
+  phone            String?
+  faceEmbedding    Json?
+  email            String        @unique
+  primarySkillset  String[]
+  motivation       String?
+  pastProjects     String[]
+  githubUrl        String?
+  linkedinUrl      String?
+  roleSelection    String?
+  sleepHabits      String?
+  dietaryPref      String?
+  teamId           String?
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+  chatSessions     ChatSession[]
+  team             Team?         @relation(fields: [teamId], references: [id])
+}
+
+model Team {
+  id           String        @id @default(uuid())
+  teamName     String
+  leadEmail    String
+  memberEmails String[]
+  createdAt    DateTime      @default(now())
+  participants Participant[]
+}
+
+model ChatSession {
+  id            String      @id @default(uuid())
+  participantId String
+  history       Json        @default("[]")
+  extractedData Json?
+  isComplete    Boolean     @default(false)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  participant   Participant @relation(fields: [participantId], references: [id], onDelete: Cascade)
+}
+
+model RoundConfig {
+  id               String           @id @default(uuid())
+  targetShortlist  Int              @default(10)
+  maxSlides        Int              @default(15)
+  domains          String[]
+  keywords         String[]
+  problemStatement String?
+  /// JSON: { problemRelevance:25, innovation:25, technicalDepth:20, marketImpact:15, slideQuality:15 }
+  scoringWeights   Json?
+  isPublished      Boolean          @default(false)
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+  submissions      ShortlistEntry[]
+}
+
+model ShortlistEntry {
+  id               String      @id @default(uuid())
+  configId         String
+  teamName         String
+  githubUrl        String?
+  pptxPath         String?
+  status           RoundStatus @default(PENDING)
+  slideCount       Int?
+  /// Raw per-criterion scores from Groq (1–10 each) — kept for re-scoring on weight changes
+  pptScores        Json?
+  /// XAI: one-sentence reason per criterion
+  pptXaiReasons    Json?
+  /// Weighted 0–100 score (recomputed from pptScores + config weights)
+  finalScore       Float?
+  rawGroqResponse  String?
+  processingTimeMs Int?
+  /// Admin manual score override
+  adminOverride    Float?
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+  /// Admin-private note — NEVER exposed to participant API
+  adminNote        String?
+  failReason       String?
+  /// Set on publish: 1 = best. Tiebreak: finalScore DESC, createdAt ASC
+  rank             Int?
+  config           RoundConfig @relation(fields: [configId], references: [id])
+}
+
+enum RoundStatus {
+  PENDING
+  PROCESSING
+  EVALUATED
+  ELIMINATED
+  FAILED
+}
+
+enum EvaluationStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}

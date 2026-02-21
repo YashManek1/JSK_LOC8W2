@@ -1,0 +1,17 @@
+{
+  "name": "hackeval",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Hackathon submission scorer — compares PPTX claims against GitHub reality",
+  "scripts": {
+    "dev:backend": "cd backend && npm run start:dev",
+    "dev:frontend": "cd frontend && npm run dev",
+    "install:all": "cd backend && npm install && cd ../frontend && npm install",
+    "build": "cd backend && npm install --include=dev && npx prisma generate && npm run build",
+    "start": "cd backend && npx prisma db push && node dist/main",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down",
+    "db:push": "cd backend && npx prisma db push",
+    "db:generate": "cd backend && npx prisma generate"
+  }
+}
