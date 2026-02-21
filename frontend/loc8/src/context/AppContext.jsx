@@ -100,6 +100,11 @@ export function AppProvider({ children }) {
     navigateTo("studentDashboard");
   };
 
+  const completeIdentityVerification = () => {
+    // After identity verification, proceed to complete profile
+    navigateTo("completeProfile");
+  };
+
   const logout = () => {
     setCurrentUser(null);
     setSelectedHackathon(null);
@@ -138,6 +143,7 @@ export function AppProvider({ children }) {
         setAuthMode,
         loginUser,
         completeProfile,
+        completeIdentityVerification,
         selectHackathon,
         createTeam,
         joinTeamWithCode,
