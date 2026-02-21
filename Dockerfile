@@ -48,8 +48,8 @@ COPY identity-service/requirements.txt ./
 # 🚨 CRITICAL FIX 2: DeepFace forces the 1GB 'tensorflow' GPU package. 
 # We install requirements, explicitly uninstall the GPU bloat, and ensure only 'tensorflow-cpu' remains.
 RUN pip install --no-cache-dir -r requirements.txt \
-    && pip uninstall -y tensorflow \
-    && pip install --no-cache-dir tensorflow-cpu \
+    && pip uninstall -y tensorflow tensorflow-cpu \
+    && pip install --no-cache-dir tensorflow-cpu tf-keras \
     && rm -rf /opt/venv/lib/python3.10/site-packages/nvidia* \
     && rm -rf /opt/venv/lib/python3.10/site-packages/triton* \
     && rm -rf /opt/venv/lib/python3.10/site-packages/tensorboard* \
