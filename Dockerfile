@@ -36,26 +36,28 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libxcb1 \
     && rm -rf /var/lib/apt/lists/*
 
-# 🔥 Pull in the ultra-fast Rust-based 'uv' package manager
+# Pull in the ultra-fast Rust-based 'uv' package manager
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /bin/uv
 
 RUN python -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
-# 🚨 CRITICAL FIX 1: Install CPU-only Torch FIRST using 'uv pip'. 
-# 'uv' resolves and downloads massive packages up to 100x faster than standard pip.
-RUN uv pip install --no-cache torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
+# 🚨 CRITICAL FIX 1: Set the Extra Index globally.
+# This prevents `uv` from secretly upgrading Torch to the 2.5GB GPU version when it reads requirements.txt!
+ENV UV_EXTRA_INDEX_URL="https://download.pytorch.org/whl/cpu"
+
+RUN uv pip install --no-cache torch torchvision torchaudio
 
 COPY identity-service/requirements.txt ./
 
-# 🚨 CRITICAL FIX 2: DeepFace forces the 1GB 'tensorflow' GPU package. 
-# We install requirements, explicitly uninstall the GPU bloat, and ensure only 'tensorflow-cpu' remains.
+# 🚨 CRITICAL FIX 2: Install requirements, strip out GPU TensorFlow, and aggressively delete CUDA/NVIDIA libs
 RUN uv pip install --no-cache -r requirements.txt \
     && uv pip uninstall -y tensorflow tensorflow-cpu \
     && uv pip install --no-cache tensorflow-cpu tf-keras \
     && rm -rf /opt/venv/lib/python3.10/site-packages/nvidia* \
     && rm -rf /opt/venv/lib/python3.10/site-packages/triton* \
     && rm -rf /opt/venv/lib/python3.10/site-packages/tensorboard* \
+    && rm -rf /opt/venv/lib/python3.10/site-packages/torch/lib/libtorch_cuda* \
     && find /opt/venv -name "*.so" -exec strip {} \; || true \
     && find /opt/venv -type d -name "__pycache__" -exec rm -rf {} + \
     && find /opt/venv -name "*.pyc" -delete
