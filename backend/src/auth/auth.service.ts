@@ -34,7 +34,7 @@ export class AuthService {
     const resolvedRole = role || 'Participant';
     const isParticipant = resolvedRole !== 'ADMIN';
 
-    let encryptedAadhaar = null;
+    let encryptedAadhaar: string | null = null;
 
     if (isParticipant && aadhaarFile) {
       // 1. OCR Aadhaar
