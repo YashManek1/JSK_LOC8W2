@@ -16,6 +16,7 @@ import { NotificationModule } from './notification/notification.module';
 import { PsModule } from './ps/ps.module';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { CommunityModule } from './community/community.module';
+import { CheckInModule } from './check-in/check-in.module';
 import * as dotenv from 'dotenv';
 
 dotenv.config();
@@ -47,8 +48,9 @@ const redisUrl = process.env.REDIS_URL ? new URL(process.env.REDIS_URL) : null;
     PsModule,
     DashboardModule,
     CommunityModule,
+    CheckInModule,
   ],
   controllers: [AppController, MockDataController],
   providers: [AppService],
 })
-export class AppModule { }
+export class AppModule {}
