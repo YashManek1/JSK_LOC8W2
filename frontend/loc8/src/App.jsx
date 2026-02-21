@@ -6,20 +6,25 @@ import QRPage from "./pages/QRPage";
 import StudentDashboard from "./pages/StudentDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
 import JudgeDashboard from "./pages/JudgeDashboard";
+// You will create these next:
+import CompleteProfilePage from "./pages/CompleteProfilePage"; 
+import AdminHackathonsPage from "./pages/AdminHackathonsPage";
 
 function Router() {
   const { currentPage } = useApp();
 
   const pages = {
-    landing: <LandingPage />,
     auth: <AuthPage />,
+    completeProfile: <CompleteProfilePage />,
+    landing: <LandingPage />,
     qr: <QRPage />,
     studentDashboard: <StudentDashboard />,
+    adminHackathons: <AdminHackathonsPage />,
     adminDashboard: <AdminDashboard />,
     judgeDashboard: <JudgeDashboard />,
   };
 
-  return pages[currentPage] || <LandingPage />;
+  return pages[currentPage] || <AuthPage />;
 }
 
 export default function App() {

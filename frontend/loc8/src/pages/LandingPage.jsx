@@ -1,81 +1,70 @@
-import React, { useState } from "react";
+import React from "react";
 import { useApp } from "../context/AppContext";
-import { HACKATHONS } from "../data/hackathons";
+import HeroSection from "../components/hackathon/HeroSection";
+import HackathonCard from "../components/hackathon/HackathonCard";
+import StatsBar from "../components/hackathon/StatsBar";
 import Navbar from "../components/layout/Navbar";
 import Footer from "../components/layout/Footer";
-import HeroSection from "../components/hackathon/HeroSection";
-import StatsBar from "../components/hackathon/StatsBar";
-import HackathonCard from "../components/hackathon/HackathonCard";
-import CTABanner from "../components/hackathon/CTABanner";
+import { HACKATHONS } from "../data/hackathons";
 
 export default function LandingPage() {
-  const { selectHackathon } = useApp();
-  const [filter, setFilter] = useState("All");
-  const tags = ["All", "AI/ML", "Web3", "IoT", "Data Science", "HealthTech", "Sustainability"];
+  const { navigateTo, setSelectedHackathon, joinTeam } = useApp();
 
-  const filtered = filter === "All" ? HACKATHONS : HACKATHONS.filter((h) => h.tag === filter);
+  /**
+   * Handles the registration flow for a student.
+   * Sets the active hackathon, simulates team formation, 
+   * and moves the user to the QR entry gate.
+   */
+  const handleHackathonClick = (hackathon) => {
+    setSelectedHackathon(hackathon);
+    // In a real app, this would open a team invitation modal.
+    // Here we trigger the 'teamJoined' state to allow QR generation.
+    joinTeam(); 
+    navigateTo("qr"); 
+  };
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a]">
+    <div className="min-h-screen bg-[#0a0a0a] text-white">
       <Navbar />
-      <HeroSection />
-      <StatsBar />
+      
+      <main>
+        {/* Visual Hero and Global Stats */}
+        <HeroSection />
+        <StatsBar />
+        
+        <div className="max-w-7xl mx-auto px-6 py-20">
+          <div className="flex items-end justify-between mb-12">
+            <div>
+              <h2 className="text-3xl font-black italic mb-2 tracking-tighter text-lime-400">
+                ACTIVE HACKATHONS
+              </h2>
+              <p className="text-white/40 text-sm">
+                Find your next challenge and start building the future.
+              </p>
+            </div>
+            <div className="hidden md:flex gap-2">
+              <span className="px-4 py-2 bg-white/5 border border-white/10 rounded-full text-xs text-white/60">
+                All Categories
+              </span>
+              <span className="px-4 py-2 bg-lime-400/10 border border-lime-400/20 rounded-full text-xs text-lime-400 font-bold">
+                Open Now
+              </span>
+            </div>
+          </div>
 
-      {/* Hackathons Section */}
-      <section className="px-4 md:px-8 max-w-7xl mx-auto pb-8">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <span className="inline-flex items-center gap-2 text-xs text-[#B4ED57] bg-[#B4ED57]/10 border border-[#B4ED57]/20 rounded-full px-3 py-1 mb-4">
-            <span className="w-1.5 h-1.5 bg-[#B4ED57] rounded-full animate-pulse" />
-            Near You
-          </span>
-          <h2 className="text-white text-4xl font-black mb-2" style={{ fontFamily: "'Questrial', sans-serif" }}>
-            Upcoming{" "}
-            <span className="text-[#B4ED57] text-5xl italic" style={{ fontFamily: "'Pixelify Sans', cursive" }}>
-              Hackathons
-            </span>
-          </h2>
-          <p className="text-white/40 text-sm" style={{ fontFamily: "'Fustat', sans-serif" }}>Find and join hackathons happening in Bangalore</p>
+          {/* Hackathon Listing Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {HACKATHONS.map((hackathon) => (
+              <HackathonCard 
+                key={hackathon.id} 
+                hackathon={hackathon} 
+                onClick={() => handleHackathonClick(hackathon)} 
+              />
+            ))}
+          </div>
         </div>
+      </main>
 
-        {/* Filter tabs */}
-        <div className="flex flex-wrap gap-2 justify-center mb-8">
-          {tags.map((tag) => (
-            <button
-              key={tag}
-              onClick={() => setFilter(tag)}
-              className={`px-4 py-1.5 rounded-full text-sm transition-all ${
-                filter === tag
-                  ? "bg-[#B4ED57] text-black font-bold"
-                  : "bg-white/5 text-white/60 hover:text-white border border-white/10"
-              }`}
-              style={{ fontFamily: "'Fustat', sans-serif" }}
-            >
-              {tag}
-            </button>
-          ))}
-        </div>
-
-        {/* Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filtered.map((hackathon) => (
-            <HackathonCard
-              key={hackathon.id}
-              hackathon={hackathon}
-              onClick={() => selectHackathon(hackathon)}
-            />
-          ))}
-        </div>
-
-        {/* View All */}
-        <div className="text-center mt-10">
-          <button className="px-8 py-3 bg-white/5 hover:bg-white/10 text-white border border-white/15 rounded-full text-sm transition-all" style={{ fontFamily: "'Fustat', sans-serif" }}>
-            View All Hackathons
-          </button>
-        </div>
-      </section>
-
-      <CTABanner />
       <Footer />
     </div>
   );

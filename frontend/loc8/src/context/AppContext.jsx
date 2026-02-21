@@ -3,45 +3,55 @@ import React, { createContext, useContext, useState } from "react";
 const AppContext = createContext(null);
 
 export function AppProvider({ children }) {
-  const [currentPage, setCurrentPage] = useState("landing");
-  const [selectedHackathon, setSelectedHackathon] = useState(null);
-  const [authMode, setAuthMode] = useState("login"); // login | signup
+  // Navigation: Starts at 'auth' now
+  const [currentPage, setCurrentPage] = useState("auth"); 
+  const [authMode, setAuthMode] = useState("login");
   const [currentUser, setCurrentUser] = useState(null);
-  const [generatedQR, setGeneratedQR] = useState(null);
+  const [selectedHackathon, setSelectedHackathon] = useState(null);
+  
+  // New States for your workflow
+  const [isProfileComplete, setIsProfileComplete] = useState(false);
+  const [teamJoined, setTeamJoined] = useState(false);
   const [qrScanned, setQrScanned] = useState(false);
+  const [generatedQR, setGeneratedQR] = useState(null);
 
   const navigateTo = (page) => setCurrentPage(page);
-
-  const selectHackathon = (hackathon) => {
-    setSelectedHackathon(hackathon);
-    setCurrentPage("auth");
-  };
 
   const loginUser = (user) => {
     setCurrentUser(user);
     if (user.role === "student") {
-      // Generate QR for student
-      const qr = `HACKOS-${user.hackathonId}-${user.id}-${Date.now()}`;
-      setGeneratedQR(qr);
-      setCurrentPage("qr");
+      // Check if profile is complete (simulated)
+      navigateTo(isProfileComplete ? "landing" : "completeProfile");
     } else if (user.role === "admin" || user.role === "organiser") {
-      setCurrentPage("adminDashboard");
+      navigateTo("adminHackathons"); // New landing for admins
     } else if (user.role === "judge") {
-      setCurrentPage("judgeDashboard");
+      navigateTo("judgeDashboard");
     }
+  };
+
+  const completeProfile = () => {
+    setIsProfileComplete(true);
+    navigateTo("landing");
+  };
+
+  const joinTeam = () => {
+    setTeamJoined(true);
+    // Only generate QR once team is ready
+    setGeneratedQR(`HACKOS-TEAM-READY-${Date.now()}`);
   };
 
   const scanQR = () => {
     setQrScanned(true);
-    setCurrentPage("studentDashboard");
+    navigateTo("studentDashboard");
   };
 
   const logout = () => {
     setCurrentUser(null);
-    setGeneratedQR(null);
-    setQrScanned(false);
     setSelectedHackathon(null);
-    setCurrentPage("landing");
+    setIsProfileComplete(false);
+    setTeamJoined(false);
+    setQrScanned(false);
+    setCurrentPage("auth");
   };
 
   return (
@@ -53,13 +63,17 @@ export function AppProvider({ children }) {
         currentUser,
         generatedQR,
         qrScanned,
+        isProfileComplete,
+        teamJoined,
         navigateTo,
-        selectHackathon,
         setAuthMode,
         loginUser,
+        completeProfile,
+        joinTeam,
         scanQR,
         logout,
         setSelectedHackathon,
+        setCurrentUser,
       }}
     >
       {children}
