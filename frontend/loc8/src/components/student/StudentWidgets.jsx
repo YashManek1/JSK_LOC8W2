@@ -20,17 +20,17 @@ export function CountdownWidget() {
   const pad = (n) => String(n).padStart(2, "0");
 
   return (
-    <div className="bg-[#111] border border-white/10 rounded-2xl p-6 space-y-4" style={{ fontFamily: "'Questrial', sans-serif" }}>
-      <h3 className="text-white font-semibold">Countdown & Alerts</h3>
+    <div className="bg-[#111] border border-white/10 rounded-2xl p-6 space-y-4" style={{ fontFamily: "'Fustat', sans-serif" }}>
+      <h3 className="text-white font-semibold" style={{ fontFamily: "'Questrial', sans-serif" }}>Countdown & Alerts</h3>
       <div className="bg-[#0a0a0a] rounded-xl p-4">
         <div className="text-white/40 text-xs mb-1">Current Time</div>
-        <div className="text-white font-mono text-2xl font-bold" style={{ fontFamily: "'Jersey 15 Charted', cursive" }}>
+        <div className="text-white text-2xl font-bold" style={{ fontFamily: "'Questrial', sans-serif" }}>
           {pad(13)}:{pad(28)}:{pad(50)}
         </div>
       </div>
       <div className="bg-[#161616] rounded-xl p-4">
         <div className="text-white/40 text-xs mb-1">Remaining</div>
-        <div className="text-[#B4ED57] font-mono text-xl font-bold" style={{ fontFamily: "'Jersey 15 Charted', cursive" }}>
+        <div className="text-[#B4ED57] text-xl font-bold italic" style={{ fontFamily: "'Pixelify Sans', cursive" }}>
           {pad(time.h)}h {pad(time.m)}m remaining
         </div>
       </div>
@@ -55,8 +55,8 @@ export function PPTScoreWidget() {
   ];
 
   return (
-    <div className="bg-[#111] border border-white/10 rounded-2xl p-6" style={{ fontFamily: "'Questrial', sans-serif" }}>
-      <h3 className="text-white font-semibold mb-4">Your PPT Score · AI Transparency Breakdown</h3>
+    <div className="bg-[#111] border border-white/10 rounded-2xl p-6" style={{ fontFamily: "'Fustat', sans-serif" }}>
+      <h3 className="text-white font-semibold mb-4" style={{ fontFamily: "'Questrial', sans-serif" }}>Your PPT Score · AI Transparency Breakdown</h3>
       <div className="rounded-xl overflow-hidden border border-white/10">
         <div className="grid grid-cols-3 text-white/40 text-xs px-4 py-2 border-b border-white/10 bg-white/5">
           <span>Criteria</span>
@@ -66,7 +66,7 @@ export function PPTScoreWidget() {
         {scores.map((s) => (
           <div key={s.label} className="grid grid-cols-3 items-center px-4 py-3 border-b border-white/5 last:border-0">
             <span className="text-white/80 text-sm">{s.label}</span>
-            <span className="text-[#B4ED57] font-bold text-right" style={{ fontFamily: "'Jersey 15 Charted', cursive" }}>{s.score}</span>
+            <span className="text-[#B4ED57] font-bold text-right" style={{ fontFamily: "'Questrial', sans-serif" }}>{s.score}</span>
             <span className="text-white/40 text-sm text-right">/{s.max}</span>
           </div>
         ))}
@@ -95,8 +95,8 @@ export function MealQRWidget() {
   };
 
   return (
-    <div className="bg-[#111] border border-white/10 rounded-2xl p-6" style={{ fontFamily: "'Questrial', sans-serif" }}>
-      <h3 className="text-white font-semibold mb-4">Meal QRs</h3>
+    <div className="bg-[#111] border border-white/10 rounded-2xl p-6" style={{ fontFamily: "'Fustat', sans-serif" }}>
+      <h3 className="text-white font-semibold mb-4" style={{ fontFamily: "'Questrial', sans-serif" }}>Meal QRs</h3>
       <div className="space-y-2">
         {meals.map((meal) => (
           <div
@@ -135,12 +135,12 @@ export function TeamCommitsWidget({ teamName }) {
   const total = members.reduce((s, m) => s + m.commits, 0);
 
   return (
-    <div className="bg-[#111] border border-white/10 rounded-2xl p-6" style={{ fontFamily: "'Questrial', sans-serif" }}>
+    <div className="bg-[#111] border border-white/10 rounded-2xl p-6" style={{ fontFamily: "'Fustat', sans-serif" }}>
       <div className="flex items-center justify-between mb-1">
-        <h3 className="text-white font-semibold">Team Commits · {teamName || "404 Found"}</h3>
+        <h3 className="text-white font-semibold" style={{ fontFamily: "'Questrial', sans-serif" }}>Team Commits · {teamName || "404 Found"}</h3>
         <button className="text-[#B4ED57] text-xs hover:underline">View details →</button>
       </div>
-      <p className="text-white/40 text-xs mb-4">Total: <span style={{ fontFamily: "'Jersey 15 Charted', cursive" }}>{total}</span> commits</p>
+      <p className="text-white/40 text-xs mb-4">Total: <span style={{ fontFamily: "'Questrial', sans-serif" }} className="font-bold text-white/70">{total}</span> commits</p>
       <div className="space-y-3">
         {members.map((m) => (
           <div key={m.name} className="space-y-1.5">
@@ -155,7 +155,7 @@ export function TeamCommitsWidget({ teamName }) {
                   {m.badge && <span className="text-xs ml-1">{m.badge}</span>}
                 </span>
               </div>
-              <span className="text-white font-bold text-sm" style={{ fontFamily: "'Jersey 15 Charted', cursive" }}>{m.commits}</span>
+              <span className="text-white font-bold text-sm" style={{ fontFamily: "'Questrial', sans-serif" }}>{m.commits}</span>
             </div>
             <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
               <div
@@ -179,8 +179,8 @@ export function HackerCockpitWidget() {
   ];
 
   return (
-    <div className="bg-[#B4ED57] rounded-2xl p-6" style={{ fontFamily: "'Questrial', sans-serif" }}>
-      <h3 className="text-black font-bold mb-4">Hacker Cockpit</h3>
+    <div className="bg-[#B4ED57] rounded-2xl p-6" style={{ fontFamily: "'Fustat', sans-serif" }}>
+      <h3 className="text-black font-bold mb-4" style={{ fontFamily: "'Questrial', sans-serif" }}>Hacker Cockpit</h3>
       <div className="grid grid-cols-2 gap-3 mb-4">
         {stats.map((s) => (
           <div key={s.label} className="bg-black/10 rounded-xl p-3">
@@ -188,7 +188,7 @@ export function HackerCockpitWidget() {
               <span>{s.icon}</span>
               <span>{s.label}</span>
             </div>
-            <div className="text-black font-bold text-xl mb-2" style={{ fontFamily: "'Jersey 15 Charted', cursive" }}>{s.value}%</div>
+            <div className="text-black font-bold text-xl mb-2" style={{ fontFamily: "'Questrial', sans-serif" }}>{s.value}%</div>
             <div className="h-1.5 bg-black/20 rounded-full overflow-hidden">
               <div
                 className={`h-full rounded-full ${s.warn ? "bg-red-600" : "bg-black/50"}`}
@@ -230,11 +230,11 @@ export function VoiceAssistantWidget() {
   };
 
   return (
-    <div className="bg-[#4D58D4] rounded-2xl p-6 flex flex-col gap-4" style={{ fontFamily: "'Questrial', sans-serif" }}>
+    <div className="bg-[#4D58D4] rounded-2xl p-6 flex flex-col gap-4" style={{ fontFamily: "'Fustat', sans-serif" }}>
       <div className="flex items-center gap-3">
         <span className="text-2xl">⚡</span>
         <div>
-          <h3 className="text-white font-semibold text-sm">Voice Assistant Profile Completion AI</h3>
+          <h3 className="text-white font-semibold text-sm" style={{ fontFamily: "'Questrial', sans-serif" }}>Voice Assistant Profile Completion AI</h3>
           <div className="flex items-center gap-2 text-white/50 text-xs">
             <span>Model: PersonaPlex-7b</span>
             <span className="w-1.5 h-1.5 bg-[#B4ED57] rounded-full animate-pulse" />

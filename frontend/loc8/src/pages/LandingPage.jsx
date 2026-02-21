@@ -31,7 +31,7 @@ export default function LandingPage() {
           </span>
           <h2 className="text-white text-4xl font-black mb-2" style={{ fontFamily: "'Questrial', sans-serif" }}>
             Upcoming{" "}
-            <span className="text-[#B4ED57] text-5xl" style={{ fontFamily: "'Jersey 15', cursive" }}>
+            <span className="text-[#B4ED57] text-5xl italic" style={{ fontFamily: "'Pixelify Sans', cursive" }}>
               Hackathons
             </span>
           </h2>

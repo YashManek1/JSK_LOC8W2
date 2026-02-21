@@ -26,7 +26,7 @@ export default function HeroSection() {
         </h1>
         <span
           className="text-[#B4ED57] text-7xl md:text-[10rem] leading-none block -my-2"
-          style={{ fontFamily: "'Jersey 15', cursive" }}
+          style={{ fontFamily: "'Pixelify Sans', cursive", fontStyle: 'italic' }}
         >
           Hackathon
         </span>

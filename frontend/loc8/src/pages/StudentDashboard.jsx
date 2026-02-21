@@ -53,20 +53,20 @@ export default function StudentDashboard() {
         {/* Welcome */}
         <div className="flex items-start justify-between mb-8">
           <div>
-            <h1 className="text-white text-3xl font-black" style={{ fontFamily: "'Figtree', sans-serif" }}>
+            <h1 className="text-white text-3xl font-black" style={{ fontFamily: "'Questrial', sans-serif" }}>
               Welcome back,{" "}
-              <span className="text-[#B4ED57] italic" style={{ fontFamily: "'Figtree', sans-serif" }}>{currentUser?.name?.split(" ")[0] || "Hacker"}</span>
+              <span className="text-[#B4ED57] italic" style={{ fontFamily: "'Pixelify Sans', cursive" }}>{currentUser?.name?.split(" ")[0] || "Hacker"}</span>
             </h1>
-            <div className="flex items-center gap-3 mt-1 text-white/40 text-sm" style={{ fontFamily: "'Questrial', sans-serif" }}>
+            <div className="flex items-center gap-3 mt-1 text-white/40 text-sm" style={{ fontFamily: "'Fustat', sans-serif" }}>
               <span>Team: <span className="text-white/70">{currentUser?.teamName || "404 Found"}</span></span>
               <span>·</span>
               <span>Project: <span className="text-white/70">HealthTrack ML</span></span>
               <span>·</span>
-              <span>Current Rank: <span className="text-[#B4ED57] font-bold" style={{ fontFamily: "'Jersey 15 Charted', cursive" }}>#1</span></span>
+              <span>Current Rank: <span className="text-[#B4ED57] font-bold italic" style={{ fontFamily: "'Pixelify Sans', cursive" }}>#1</span></span>
             </div>
           </div>
           <div className="flex flex-col gap-2">
-            <button className="px-4 py-2 bg-[#B4ED57]/10 border border-[#B4ED57]/30 text-[#B4ED57] text-xs font-semibold rounded-xl hover:bg-[#B4ED57]/20 transition-colors" style={{ fontFamily: "'Jersey 15 Charted', cursive" }}>
+            <button className="px-4 py-2 bg-[#B4ED57]/10 border border-[#B4ED57]/30 text-[#B4ED57] text-xs font-semibold italic rounded-xl hover:bg-[#B4ED57]/20 transition-colors" style={{ fontFamily: "'Pixelify Sans', cursive" }}>
               🏆 Rank #1
             </button>
             <div className="flex gap-2">
@@ -85,9 +85,9 @@ export default function StudentDashboard() {
           <CountdownWidget />
           <VoiceAssistantWidget />
           {/* Entry QR */}
-          <div className="bg-[#111] border border-white/10 rounded-2xl p-6" style={{ fontFamily: "'Questrial', sans-serif" }}>
+          <div className="bg-[#111] border border-white/10 rounded-2xl p-6" style={{ fontFamily: "'Fustat', sans-serif" }}>
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-white font-semibold">Your Entry QR</h3>
+              <h3 className="text-white font-semibold" style={{ fontFamily: "'Questrial', sans-serif" }}>Your Entry QR</h3>
               <button className="text-white/30 hover:text-white transition-colors text-sm">↻</button>
             </div>
             <div className="flex justify-center mb-4">

@@ -10,7 +10,7 @@ export default function CTABanner() {
         <h2 className="text-white text-4xl font-black mb-3" style={{ fontFamily: "'Questrial', sans-serif" }}>
           Ready to Join the
           <br />
-          <span className="text-[#B4ED57] text-5xl" style={{ fontFamily: "'Jersey 15', cursive" }}>
+          <span className="text-[#B4ED57] text-5xl italic" style={{ fontFamily: "'Pixelify Sans', cursive" }}>
             Next Hackathon?
           </span>
         </h2>
