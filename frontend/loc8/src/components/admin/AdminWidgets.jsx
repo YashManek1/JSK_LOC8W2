@@ -10,9 +10,9 @@ export function ParticipantsTable() {
   ];
 
   return (
-    <div className="bg-[#111] border border-white/10 rounded-2xl overflow-hidden">
+    <div className="bg-[#111] border border-white/10 rounded-2xl overflow-hidden" style={{ fontFamily: "'Fustat', sans-serif" }}>
       <div className="p-5 border-b border-white/10 flex items-center justify-between">
-        <h3 className="text-white font-semibold">Participants</h3>
+        <h3 className="text-white font-semibold" style={{ fontFamily: "'Questrial', sans-serif" }}>Participants</h3>
         <span className="text-white/40 text-sm">{participants.length} registered</span>
       </div>
       <div className="overflow-x-auto">
@@ -47,7 +47,7 @@ export function ParticipantsTable() {
                   </span>
                 </td>
                 <td className="px-5 py-3">
-                  <span className={`text-sm font-bold ${p.rank <= 3 ? "text-[#B4ED57]" : "text-white/60"}`}>
+                  <span className={`text-sm font-bold ${p.rank <= 3 ? "text-[#B4ED57]" : "text-white/60"}`} style={{ fontFamily: "'Questrial', sans-serif" }}>
                     #{p.rank}
                   </span>
                 </td>
@@ -85,10 +85,10 @@ export function CreateJudgeWidget() {
   const inputCls = "w-full bg-white/5 border border-white/15 rounded-xl px-4 py-2.5 text-white placeholder-white/30 text-sm focus:outline-none focus:border-[#B4ED57]/60 transition-colors";
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-5" style={{ fontFamily: "'Fustat', sans-serif" }}>
       {/* Create Form */}
       <div className="bg-[#111] border border-white/10 rounded-2xl p-6">
-        <h3 className="text-white font-semibold mb-4">Create Judge Credentials</h3>
+        <h3 className="text-white font-semibold mb-4" style={{ fontFamily: "'Questrial', sans-serif" }}>Create Judge Credentials</h3>
         <form onSubmit={handleCreate} className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-white/40 text-xs mb-1.5">Full Name</label>
@@ -118,7 +118,7 @@ export function CreateJudgeWidget() {
       {/* Judge List */}
       <div className="bg-[#111] border border-white/10 rounded-2xl overflow-hidden">
         <div className="p-5 border-b border-white/10">
-          <h3 className="text-white font-semibold">Active Judges ({judges.length})</h3>
+          <h3 className="text-white font-semibold" style={{ fontFamily: "'Questrial', sans-serif" }}>Active Judges ({judges.length})</h3>
         </div>
         <div className="divide-y divide-white/5">
           {judges.map((j) => (
@@ -155,14 +155,14 @@ export function AdminStatsBar({ hackathon }) {
   ];
 
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6" style={{ fontFamily: "'Fustat', sans-serif" }}>
       {stats.map((s) => (
         <div key={s.label} className="bg-[#111] border border-white/10 rounded-2xl p-5">
           <div className="flex items-center justify-between mb-2">
             <span className="text-xl">{s.icon}</span>
             <span className="text-[#B4ED57] text-xs">{s.delta}</span>
           </div>
-          <div className="text-white text-2xl font-black">{s.value}</div>
+          <div className="text-white text-2xl font-black" style={{ fontFamily: "'Questrial', sans-serif" }}>{s.value}</div>
           <div className="text-white/40 text-xs mt-0.5">{s.label}</div>
         </div>
       ))}

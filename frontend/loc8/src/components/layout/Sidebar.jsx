@@ -14,7 +14,8 @@ const adminNav = [
   { icon: "👥", label: "Participants", key: "participants" },
   { icon: "⚖️", label: "Judges", key: "judges" },
   { icon: "📊", label: "Submissions", key: "submissions" },
-  { icon: "📢", label: "Announcements", key: "announcements" },
+  { icon: "", label: "Timeline", key: "timeline" },
+  { icon: "�📢", label: "Announcements", key: "announcements" },
 ];
 
 const judgeNav = [
@@ -24,9 +25,173 @@ const judgeNav = [
   { icon: "📊", label: "Results", key: "results" },
 ];
 
+/* ── SVG Icons for admin sidebar ── */
+function AdminIcon({ name, active }) {
+  const props = {
+    width: 20, height: 20, viewBox: "0 0 24 24",
+    fill: "none", stroke: active ? "#111" : "currentColor",
+    strokeWidth: 1.8, strokeLinecap: "round", strokeLinejoin: "round",
+  };
+  switch (name) {
+    case "overview":
+      return (
+        <svg {...props}>
+          <rect x="3" y="3" width="7" height="7" rx="1.5" />
+          <rect x="14" y="3" width="7" height="7" rx="1.5" />
+          <rect x="3" y="14" width="7" height="7" rx="1.5" />
+          <rect x="14" y="14" width="7" height="7" rx="1.5" />
+        </svg>
+      );
+    case "participants":
+      return (
+        <svg {...props}>
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+          <path d="M9 12l2 2 4-4" />
+        </svg>
+      );
+    case "judges":
+      return (
+        <svg {...props}>
+          <rect x="2" y="2" width="8" height="8" rx="1" />
+          <rect x="14" y="2" width="8" height="8" rx="1" />
+          <rect x="2" y="14" width="8" height="8" rx="1" />
+          <rect x="14.5" y="14.5" width="3" height="3" rx=".5" />
+          <rect x="18.5" y="14.5" width="3" height="3" rx=".5" />
+          <rect x="14.5" y="18.5" width="3" height="3" rx=".5" />
+          <rect x="18.5" y="18.5" width="3" height="3" rx=".5" />
+        </svg>
+      );
+    case "submissions":
+      return (
+        <svg {...props}>
+          <path d="M6 2l-3 4v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z" />
+          <line x1="3" y1="6" x2="21" y2="6" />
+          <path d="M16 10a4 4 0 01-8 0" />
+        </svg>
+      );
+    case "timeline":
+      return (
+        <svg {...props}>
+          <circle cx="12" cy="12" r="10" />
+          <polyline points="12 6 12 12 16 14" />
+        </svg>
+      );
+    case "announcements":
+      return (
+        <svg {...props}>
+          <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9" />
+          <path d="M13.73 21a2 2 0 01-3.46 0" />
+        </svg>
+      );
+    case "profile":
+      return (
+        <svg {...props}>
+          <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
+          <circle cx="12" cy="7" r="4" />
+        </svg>
+      );
+    case "logout":
+      return (
+        <svg {...props}>
+          <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" />
+          <polyline points="16 17 21 12 16 7" />
+          <line x1="21" y1="12" x2="9" y2="12" />
+        </svg>
+      );
+    default:
+      return null;
+  }
+}
+
 export default function Sidebar({ activeSection, setActiveSection, variant = "student" }) {
   const { logout, currentUser } = useApp();
-  const navItems = variant === "admin" ? adminNav : variant === "judge" ? judgeNav : studentNav;
+
+  /* ═══════════ ADMIN: Hover-expandable sidebar ═══════════ */
+  if (variant === "admin") {
+    return (
+      <aside
+        className="group w-16 hover:w-64 h-screen fixed left-0 top-0 bg-[#181820] flex flex-col z-40 transition-all duration-300 ease-in-out overflow-hidden"
+        style={{ fontFamily: "'Fustat', sans-serif" }}
+      >
+        {/* Logo */}
+        <div className="px-2 pt-5 pb-4 flex items-center">
+          <div className="w-12 flex items-center justify-center shrink-0">
+            <div className="w-10 h-10 rounded-xl bg-[#B4ED57] flex items-center justify-center">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="#111" stroke="none">
+                <path d="M12 2l2.12 6.36L21 12l-6.88 3.64L12 22l-2.12-6.36L3 12l6.88-3.64L12 2z" />
+                <circle cx="18.5" cy="5" r="1.2" />
+                <circle cx="20.5" cy="3" r=".7" />
+              </svg>
+            </div>
+          </div>
+          <div className="whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 ml-1">
+            <div className="text-white font-black text-sm tracking-widest leading-none" style={{ fontFamily: "'Questrial', sans-serif" }}>
+              HACK<span className="text-white/80">OS</span>
+            </div>
+            <div className="text-white/40 text-[10px] mt-0.5">Hackathon Portal</div>
+          </div>
+        </div>
+
+        {/* MAIN label */}
+        <div className="px-5 pt-2 pb-2">
+          <span className="text-white/30 text-[10px] font-semibold uppercase tracking-widest whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+            MAIN
+          </span>
+        </div>
+
+        {/* Nav */}
+        <nav className="flex-1 px-2 space-y-1">
+          {adminNav.map((item) => {
+            const isActive = activeSection === item.key;
+            return (
+              <button
+                key={item.key}
+                onClick={() => setActiveSection(item.key)}
+                className={`w-full flex items-center rounded-xl transition-all duration-200 ${
+                  isActive
+                    ? "bg-[#B4ED57] text-black font-bold shadow-lg shadow-[#B4ED57]/20"
+                    : "text-white/50 hover:text-white hover:bg-white/5"
+                }`}
+              >
+                <span className="w-12 h-10 flex items-center justify-center shrink-0">
+                  <AdminIcon name={item.key} active={isActive} />
+                </span>
+                <span className="whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 text-sm">
+                  {item.label}
+                </span>
+              </button>
+            );
+          })}
+        </nav>
+
+        {/* Bottom: Profile + Logout */}
+        <div className="px-2 pb-4 space-y-1">
+          <button className="w-full flex items-center rounded-xl text-white/50 hover:text-white hover:bg-white/5 transition-all duration-200">
+            <span className="w-12 h-10 flex items-center justify-center shrink-0">
+              <AdminIcon name="profile" />
+            </span>
+            <span className="whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 text-sm">
+              Profile
+            </span>
+          </button>
+          <button
+            onClick={logout}
+            className="w-full flex items-center rounded-xl text-white/50 hover:text-white hover:bg-white/5 transition-all duration-200"
+          >
+            <span className="w-12 h-10 flex items-center justify-center shrink-0">
+              <AdminIcon name="logout" />
+            </span>
+            <span className="whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 text-sm">
+              Logout
+            </span>
+          </button>
+        </div>
+      </aside>
+    );
+  }
+
+  /* ═══════════ STUDENT / JUDGE: existing sidebar ═══════════ */
+  const navItems = variant === "judge" ? judgeNav : studentNav;
 
   return (
     <aside className="w-16 md:w-64 h-screen fixed left-0 top-0 bg-[#0f0f0f] border-r border-white/10 flex flex-col" style={{ fontFamily: "'Questrial', sans-serif" }}>
