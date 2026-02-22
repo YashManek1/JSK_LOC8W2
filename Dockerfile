@@ -13,8 +13,8 @@ COPY backend ./
 RUN npx prisma generate
 RUN npm run build
 
-# Prune dev dependencies
-RUN npm prune --omit=dev && npm cache clean --force
+# Prune dev dependencies AND aggressively clean npm caches
+RUN npm prune --omit=dev && npm cache clean --force && rm -rf ~/.npm
 
 # MEGA STRIP: Safely remove unused Prisma engines WITHOUT breaking other packages like nodemailer
 RUN find node_modules/@prisma node_modules/.prisma -type f -name "*windows*" -delete 2>/dev/null || true \
@@ -22,14 +22,14 @@ RUN find node_modules/@prisma node_modules/.prisma -type f -name "*windows*" -de
     && find node_modules/@prisma node_modules/.prisma -type f -name "*musl*" -delete 2>/dev/null || true \
     && find node_modules/@prisma node_modules/.prisma -type f -name "*rhel*" -delete 2>/dev/null || true \
     && find node_modules/@prisma node_modules/.prisma -type f -name "*linux-arm64*" -delete 2>/dev/null || true \
-    && find node_modules/@prisma node_modules/.prisma -type f -name "*debian-10*" -delete 2>/dev/null || true
+    && find node_modules/@prisma node_modules/.prisma -type f -name "*debian-10*" -delete 2>/dev/null || true \
+    && find node_modules/@prisma node_modules/.prisma -type f -name "*macos*" -delete 2>/dev/null || true
 
 
 # ----- Stage 2: Build Python Dependencies -----
 FROM python:3.10-slim AS python-builder
 WORKDIR /app
 
-# Swapped curl for 'wget' which has much better native download resuming functionality
 RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc g++ binutils \
     libgl1 \
@@ -44,30 +44,27 @@ COPY --from=ghcr.io/astral-sh/uv:latest /uv /bin/uv
 RUN python -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
-# Set the Extra Index globally.
-ENV UV_EXTRA_INDEX_URL="https://download.pytorch.org/whl/cpu"
-
 COPY identity-service/requirements.txt ./
 
-# 🚨 THE ULTIMATE ANTI-BLOAT & TF-CRASH FIX:
-# 1. Install CPU torch.
-# 2. Install requirements.
-# 3. Deep uninstall ALL tensorflow/keras packages to clear the broken C++ registry.
-# 4. Install stable `tensorflow-cpu<2.16` to BYPASS the double-registration bug entirely.
-RUN uv pip install --no-cache torch torchvision torchaudio \
-    && uv pip install --no-cache -r requirements.txt --extra-index-url https://pypi.org/simple \
-    && uv pip uninstall -y tensorflow tensorflow-cpu keras tf-keras tensorboard tensorboard-data-server tensorflow-io-gcs-filesystem \
-    && rm -rf /opt/venv/lib/python3.10/site-packages/tensorflow* \
-    && rm -rf /opt/venv/lib/python3.10/site-packages/keras* \
-    && rm -rf /opt/venv/lib/python3.10/site-packages/tensorboard* \
-    && rm -rf /opt/venv/lib/python3.10/site-packages/nvidia* \
-    && rm -rf /opt/venv/lib/python3.10/site-packages/triton* \
-    && uv pip install --no-cache "tensorflow-cpu<2.16" \
+# 🚨 THE ULTIMATE ANTI-BLOAT SOLUTION 🚨
+# 1. Swap heavy OpenCV for lightweight OpenCV-Headless.
+# 2. Install CPU PyTorch FIRST.
+# 3. Use bash pipes to dynamically hunt down and DESTROY all NVIDIA, Triton, and GPU TensorFlow packages.
+# 4. Strip C++ debug symbols from remaining libraries to squeeze out the last drops of space.
+RUN sed -i 's/opencv-python/opencv-python-headless/g' requirements.txt || true \
+    && uv pip install --no-cache torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu \
+    && uv pip install --no-cache -r requirements.txt --extra-index-url https://download.pytorch.org/whl/cpu \
+    && uv pip freeze | grep -i "nvidia" | cut -d= -f1 | xargs -r uv pip uninstall -y \
+    && uv pip freeze | grep -i "triton" | cut -d= -f1 | xargs -r uv pip uninstall -y \
+    && uv pip freeze | grep -i "tensorflow" | cut -d= -f1 | xargs -r uv pip uninstall -y \
+    && uv pip freeze | grep -i "keras" | cut -d= -f1 | xargs -r uv pip uninstall -y \
+    && uv pip freeze | grep -i "tensorboard" | cut -d= -f1 | xargs -r uv pip uninstall -y \
+    && uv pip install --no-cache "tensorflow-cpu<2.16" tf-keras \
     && find /opt/venv -name "*.so" -exec strip --strip-unneeded {} \; || true \
     && find /opt/venv -type d -name "__pycache__" -exec rm -rf {} + \
     && find /opt/venv -name "*.pyc" -delete
 
-# 🚨 FIX: Using `wget -c` (continue). If connection drops, it will safely resume right where it left off.
+# Pre-download ArcFace Model using a robust wget resume loop
 RUN mkdir -p /root/.deepface/weights \
     && for i in 1 2 3 4 5 6 7 8 9 10; do \
          wget -c -O /root/.deepface/weights/arcface_weights.h5 https://github.com/serengil/deepface_models/releases/download/v1.0/arcface_weights.h5 && break || sleep 2; \
@@ -77,6 +74,9 @@ RUN mkdir -p /root/.deepface/weights \
 
 # ----- Stage 3: Final Production Image -----
 FROM python:3.10-slim
+
+# Set NODE_ENV to production to signal NestJS to run optimally
+ENV NODE_ENV=production
 
 # Install ONLY runtime dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
