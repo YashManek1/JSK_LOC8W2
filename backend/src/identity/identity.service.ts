@@ -1,68 +1,34 @@
 import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
-import { PrismaService } from '../prisma/prisma.service';
-import { firstValueFrom } from 'rxjs';
-import * as FormData from 'form-data';
-import * as fs from 'fs';
+import { lastValueFrom } from 'rxjs';
+// FIX 1: Use 'require' to bypass the TS construct signature error for FormData
+const FormData = require('form-data');
 
 @Injectable()
 export class IdentityService {
-    private readonly PYTHON_SERVICE_URL = process.env.IDENTITY_SERVICE_URL || 'http://localhost:8000';
+    constructor(private readonly httpService: HttpService) { }
 
-    constructor(
-        private httpService: HttpService,
-        private prisma: PrismaService,
-    ) { }
-
-    async verifyAndSaveIdentity(userId: string, idCardPath: string, selfiePath: string) {
+    async verifyIdentity(selfie: Express.Multer.File, document: Express.Multer.File) {
+        // FIX 2: Explicitly type 'error' as 'any' so we can read its properties safely
         try {
-            // 1. Read the newly saved physical files from the hard drive
-            const idCardStream = fs.createReadStream(idCardPath);
-            const selfieStream = fs.createReadStream(selfiePath);
-
-            // 2. Prepare Form Data for Python Microservice
             const formData = new FormData();
-            formData.append('document', idCardStream);
-            formData.append('selfie', selfieStream);
+            formData.append('selfie', selfie.buffer, { filename: selfie.originalname });
+            formData.append('document', document.buffer, { filename: document.originalname });
 
-            // 3. Call your Python `/verify/face` endpoint
-            const response = await firstValueFrom(
-                this.httpService.post(`${this.PYTHON_SERVICE_URL}/verify/face`, formData, {
-                    headers: { ...formData.getHeaders() },
-                }),
-            );
-
-            const { isMatch, distance, faceEmbedding } = response.data;
-
-            // If faces don't match, reject it (and optionally delete the uploaded files)
-            if (!isMatch) {
-                fs.unlinkSync(idCardPath);
-                fs.unlinkSync(selfiePath);
-                throw new HttpException('Face verification failed. Faces do not match.', HttpStatus.BAD_REQUEST);
-            }
-
-            // 4. THE FIX: Update Prisma with the local file URLs AND the faceEmbedding JSON
-            const updatedUser = await this.prisma.participant.update({
-                where: { id: userId },
-                data: {
-                    idCardUrl: `/${idCardPath}`,       // The URL to serve the ID card to Admin
-                    liveSelfieUrl: `/${selfiePath}`,   // The URL to serve the selfie to Admin
-                    faceEmbedding: faceEmbedding,      // The JSON array from Python for future fast check-ins!
-                    isProfileComplete: true,           // Mark as verified
-                },
+            const request = this.httpService.post('http://127.0.0.1:8000/verify/face', formData, {
+                headers: formData.getHeaders(),
             });
 
-            return {
-                success: true,
-                message: 'Identity verified successfully',
-                distance: distance,
-                profileComplete: updatedUser.isProfileComplete
-            };
+            // FIX 3: Cast the response to 'any' to bypass the 'unknown' object error
+            const response = await lastValueFrom(request) as any;
+            const { isMatch, distance, faceEmbedding } = response.data;
 
-        } catch (error) {
+            return { isMatch, distance, faceEmbedding };
+
+        } catch (error: any) {
             throw new HttpException(
                 error.response?.data?.detail || 'Identity verification service error',
-                HttpStatus.INTERNAL_SERVER_ERROR,
+                error.response?.status || HttpStatus.INTERNAL_SERVER_ERROR,
             );
         }
     }
