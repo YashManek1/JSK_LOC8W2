@@ -47,10 +47,13 @@ export default function LoginForm() {
       }
 
       // Normal login via backend API
+      const roleMap = { student: "Participant", mentor: "Mentor", organiser: "Organiser" };
+      const mappedRoleToSend = roleMap[role] || "Participant";
+
       const res = await fetch(`${API_BASE_URL}/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password, role }),
+        body: JSON.stringify({ email, password, role: mappedRoleToSend }),
       });
       const data = await res.json();
 
