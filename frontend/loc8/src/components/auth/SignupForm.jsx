@@ -30,15 +30,15 @@ export default function SignupForm() {
       performAadhaarOCR(files[0]);
       return;
     }
-    
+
     if (files && files[0]) {
       const file = files[0];
-      
+
       // File validation logic from friend's code
       const maxSize = 5 * 1024 * 1024; // 5MB
       const validImageTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
       const validPdfTypes = ['application/pdf'];
-      
+
       if (name === 'aadhar') {
         if (!validImageTypes.includes(file.type) && !validPdfTypes.includes(file.type)) {
           setOtpError("Aadhaar: Please upload a valid image or PDF file");
@@ -49,7 +49,7 @@ export default function SignupForm() {
           return;
         }
       }
-      
+
       if (name === 'collegeId') {
         if (!validImageTypes.includes(file.type)) {
           setOtpError("College ID: Please upload a valid image file (JPG, PNG)");
@@ -60,10 +60,10 @@ export default function SignupForm() {
           return;
         }
       }
-      
+
       setOtpError("");
       setForm((prev) => ({ ...prev, [name]: file }));
-      
+
       // Log file upload (simulated backend)
       console.log(`[FILE UPLOAD] ${name}:`, file.name, `(${(file.size / 1024).toFixed(2)} KB)`);
     } else {
@@ -84,11 +84,14 @@ export default function SignupForm() {
         body: fd,
       });
       const data = await res.json();
-      if (res.ok && data.aadhaarNumber) {
-        setAadhaarNumber(data.aadhaarNumber);
+      console.log("[Aadhaar OCR] Status:", res.status, "Response:", data);
+      // Backend may return the number under different field names
+      const extractedNumber = data.aadhaarNumber || data.aadhaar_number || data.aadhaar || data.number || null;
+      if (res.ok && extractedNumber) {
+        setAadhaarNumber(extractedNumber);
       } else {
         setAadhaarError(
-          "Could not read Aadhaar number. Please try a clearer image.",
+          data.message || data.error || "Could not read Aadhaar number. Please try a clearer image.",
         );
       }
     } catch {

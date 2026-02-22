@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { useApp } from "../context/AppContext";
 import Navbar from "../components/layout/Navbar";
 import Footer from "../components/layout/Footer";
@@ -26,8 +26,8 @@ function SkillBadge({ skill, matched }) {
     return (
         <span
             className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${matched
-                    ? "bg-[#B4ED57]/15 border-[#B4ED57]/30 text-[#B4ED57]"
-                    : "bg-white/5 border-white/10 text-white/40"
+                ? "bg-[#B4ED57]/15 border-[#B4ED57]/30 text-[#B4ED57]"
+                : "bg-white/5 border-white/10 text-white/40"
                 }`}
         >
             {skill}
@@ -135,8 +135,8 @@ function FindTeamTab({ userSkills }) {
                             )
                         }
                         className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${selectedSkillFilter.includes(skill)
-                                ? "bg-[#B4ED57]/15 border-[#B4ED57]/30 text-[#B4ED57]"
-                                : "bg-white/5 border-white/10 text-white/40 hover:border-white/30 hover:text-white/60"
+                            ? "bg-[#B4ED57]/15 border-[#B4ED57]/30 text-[#B4ED57]"
+                            : "bg-white/5 border-white/10 text-white/40 hover:border-white/30 hover:text-white/60"
                             }`}
                     >
                         {skill}
@@ -193,8 +193,8 @@ function FindTeamTab({ userSkills }) {
                                     </div>
                                     <span
                                         className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${team.status === "Urgent"
-                                                ? "bg-red-500/20 text-red-400 border border-red-500/30"
-                                                : "bg-[#B4ED57]/15 text-[#B4ED57] border border-[#B4ED57]/30"
+                                            ? "bg-red-500/20 text-red-400 border border-red-500/30"
+                                            : "bg-[#B4ED57]/15 text-[#B4ED57] border border-[#B4ED57]/30"
                                             }`}
                                     >
                                         {team.status}
@@ -236,8 +236,8 @@ function FindTeamTab({ userSkills }) {
                                     <button
                                         onClick={() => !hasApplied && setAppliedTeams((prev) => [...prev, team.id])}
                                         className={`px-4 py-2 text-xs font-bold rounded-xl transition-all flex items-center gap-1.5 ${hasApplied
-                                                ? "bg-[#B4ED57]/10 text-[#B4ED57] border border-[#B4ED57]/30 cursor-default"
-                                                : "bg-[#B4ED57] hover:bg-[#c5f278] text-black hover:scale-105 active:scale-95"
+                                            ? "bg-[#B4ED57]/10 text-[#B4ED57] border border-[#B4ED57]/30 cursor-default"
+                                            : "bg-[#B4ED57] hover:bg-[#c5f278] text-black hover:scale-105 active:scale-95"
                                             }`}
                                     >
                                         {hasApplied ? (
@@ -270,12 +270,34 @@ function FindTeamTab({ userSkills }) {
 /* ═══════════════════════════════════════════════════ */
 /*  TAB: FIND A TEAMMATE                              */
 /* ═══════════════════════════════════════════════════ */
-function FindTeammateTab({ userSkills }) {
+function FindTeammateTab({ userSkills, communityPool, inviteSoloToTeam, isTeamLeader }) {
     const [searchQuery, setSearchQuery] = useState("");
     const [invitedPeople, setInvitedPeople] = useState([]);
 
+    // Map API community pool (items have nested .participant) + mock data
+    const allPeople = useMemo(() => {
+        const apiPeople = (communityPool || []).map((entry, i) => {
+            const p = entry.participant || entry;
+            return {
+                id: p.id || entry.id || `api_${i}`,
+                participantId: p.id,
+                name: p.fullName || p.name || p.email || "Hacker",
+                avatar: (p.fullName || p.name || "H")[0]?.toUpperCase(),
+                university: p.college || p.university || "",
+                tagline: p.tagline || "Looking for a team",
+                lookingFor: "A team to join",
+                skills: p.primarySkillset || p.skills || [],
+                preferredRoles: p.preferredRoles || [],
+                experienceLevel: p.experienceLevel || "Beginner",
+                postedAt: "Recently",
+                githubUrl: p.githubUrl || "",
+            };
+        });
+        return apiPeople.length > 0 ? [...apiPeople, ...MOCK_TEAMMATE_LISTINGS] : MOCK_TEAMMATE_LISTINGS;
+    }, [communityPool]);
+
     const filtered = useMemo(() => {
-        return MOCK_TEAMMATE_LISTINGS.filter(
+        return allPeople.filter(
             (person) =>
                 !searchQuery ||
                 person.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -284,7 +306,7 @@ function FindTeammateTab({ userSkills }) {
                 ) ||
                 person.tagline.toLowerCase().includes(searchQuery.toLowerCase())
         );
-    }, [searchQuery]);
+    }, [searchQuery, allPeople]);
 
     return (
         <div>
@@ -338,8 +360,8 @@ function FindTeammateTab({ userSkills }) {
                                         </p>
                                         <span
                                             className={`inline-block mt-1 text-[9px] font-bold uppercase px-2 py-0.5 rounded-full ${person.experienceLevel === "Advanced"
-                                                    ? "bg-[#B4ED57]/15 text-[#B4ED57] border border-[#B4ED57]/30"
-                                                    : "bg-[#4D58D4]/15 text-[#4D58D4] border border-[#4D58D4]/30"
+                                                ? "bg-[#B4ED57]/15 text-[#B4ED57] border border-[#B4ED57]/30"
+                                                : "bg-[#4D58D4]/15 text-[#4D58D4] border border-[#4D58D4]/30"
                                                 }`}
                                         >
                                             {person.experienceLevel}
@@ -389,13 +411,22 @@ function FindTeammateTab({ userSkills }) {
                                 {/* Action */}
                                 <div className="flex items-center gap-2 pt-3 border-t border-white/10">
                                     <button
-                                        onClick={() =>
-                                            !hasInvited &&
-                                            setInvitedPeople((prev) => [...prev, person.id])
-                                        }
+                                        onClick={async () => {
+                                            if (hasInvited) return;
+                                            if (person.participantId && isTeamLeader && inviteSoloToTeam) {
+                                                const result = await inviteSoloToTeam(person.participantId);
+                                                if (result?.success) {
+                                                    setInvitedPeople((prev) => [...prev, person.id]);
+                                                } else {
+                                                    alert(result?.message || "Failed to invite");
+                                                }
+                                            } else {
+                                                setInvitedPeople((prev) => [...prev, person.id]);
+                                            }
+                                        }}
                                         className={`flex-1 py-2.5 text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-1.5 ${hasInvited
-                                                ? "bg-[#4D58D4]/10 text-[#4D58D4] border border-[#4D58D4]/30 cursor-default"
-                                                : "bg-[#B4ED57] hover:bg-[#c5f278] text-black hover:scale-[1.02] active:scale-95"
+                                            ? "bg-[#4D58D4]/10 text-[#4D58D4] border border-[#4D58D4]/30 cursor-default"
+                                            : "bg-[#B4ED57] hover:bg-[#c5f278] text-black hover:scale-[1.02] active:scale-95"
                                             }`}
                                     >
                                         {hasInvited ? (
@@ -571,8 +602,8 @@ function RequestsTab({ userSkills }) {
                                 </div>
                                 <span
                                     className={`text-[10px] font-bold uppercase px-3 py-1 rounded-full ${req.status === "accepted"
-                                            ? "bg-[#B4ED57]/15 text-[#B4ED57] border border-[#B4ED57]/30"
-                                            : "bg-red-500/10 text-red-400 border border-red-500/30"
+                                        ? "bg-[#B4ED57]/15 text-[#B4ED57] border border-[#B4ED57]/30"
+                                        : "bg-red-500/10 text-red-400 border border-red-500/30"
                                         }`}
                                 >
                                     {req.status}
@@ -672,8 +703,8 @@ function DiscussionTab() {
                             <div
                                 key={post.id}
                                 className={`bg-[#111] border rounded-2xl p-5 transition-all hover:border-white/20 ${post.isPinned
-                                        ? "border-[#B4ED57]/20 shadow-lg shadow-[#B4ED57]/5"
-                                        : "border-white/10"
+                                    ? "border-[#B4ED57]/20 shadow-lg shadow-[#B4ED57]/5"
+                                    : "border-white/10"
                                     }`}
                                 style={{ fontFamily: "'Fustat', sans-serif" }}
                             >
@@ -729,8 +760,8 @@ function DiscussionTab() {
                                     <button
                                         onClick={() => toggleLike(post.id)}
                                         className={`flex items-center gap-1.5 text-xs transition-all ${isLiked
-                                                ? "text-red-400 font-bold"
-                                                : "text-white/30 hover:text-red-400"
+                                            ? "text-red-400 font-bold"
+                                            : "text-white/30 hover:text-red-400"
                                             }`}
                                     >
                                         <Heart size={14} fill={isLiked ? "currentColor" : "none"} />
@@ -753,8 +784,29 @@ function DiscussionTab() {
 /*  MAIN: COMMUNITY PAGE                              */
 /* ═══════════════════════════════════════════════════ */
 export default function CommunityPage() {
-    const { currentUser, navigateTo } = useApp();
+    const { currentUser, navigateTo, registerSolo, fetchCommunityPool, selectedHackathon, inviteSoloToTeam, isTeamLeader } = useApp();
     const [activeTab, setActiveTab] = useState("findTeam");
+    const [communityPool, setCommunityPool] = useState([]);
+    const [soloRegistered, setSoloRegistered] = useState(false);
+    const [soloLoading, setSoloLoading] = useState(false);
+
+    // Fetch community pool on mount
+    useEffect(() => {
+        if (selectedHackathon?.id) {
+            fetchCommunityPool(selectedHackathon.id).then(setCommunityPool);
+        }
+    }, [selectedHackathon?.id]);
+
+    const handleRegisterSolo = async () => {
+        setSoloLoading(true);
+        const result = await registerSolo({});
+        if (result?.success) {
+            setSoloRegistered(true);
+        } else {
+            alert(result?.message || "Failed to register as solo");
+        }
+        setSoloLoading(false);
+    };
 
     // Retrieve user skills from profile (mirror CompleteProfilePage logic)
     const userKey = currentUser?.slug || currentUser?.name || "hacker";
@@ -845,6 +897,20 @@ export default function CommunityPage() {
                             >
                                 Find Teammates
                             </button>
+                            {!soloRegistered ? (
+                                <button
+                                    onClick={handleRegisterSolo}
+                                    disabled={soloLoading}
+                                    className="px-8 py-3.5 bg-white/5 hover:bg-white/10 text-white/70 font-medium rounded-full transition-all border border-white/15 backdrop-blur-sm text-base disabled:opacity-50"
+                                    style={{ fontFamily: "'Fustat', sans-serif" }}
+                                >
+                                    {soloLoading ? "Registering..." : "Go Solo 🎯"}
+                                </button>
+                            ) : (
+                                <span className="px-8 py-3.5 bg-[#B4ED57]/10 text-[#B4ED57] font-bold rounded-full border border-[#B4ED57]/30 text-base">
+                                    ✓ Solo Registered
+                                </span>
+                            )}
                         </div>
                     </div>
                 </section>
@@ -881,8 +947,8 @@ export default function CommunityPage() {
                                 key={tab.key}
                                 onClick={() => setActiveTab(tab.key)}
                                 className={`flex items-center gap-2 px-5 py-3 rounded-full text-sm font-semibold transition-all whitespace-nowrap ${activeTab === tab.key
-                                        ? "bg-[#B4ED57] text-black shadow-lg shadow-[#B4ED57]/20"
-                                        : "bg-white/5 border border-white/10 text-white/50 hover:text-white hover:border-white/30"
+                                    ? "bg-[#B4ED57] text-black shadow-lg shadow-[#B4ED57]/20"
+                                    : "bg-white/5 border border-white/10 text-white/50 hover:text-white hover:border-white/30"
                                     }`}
                                 style={{ fontFamily: "'Fustat', sans-serif" }}
                             >
@@ -891,8 +957,8 @@ export default function CommunityPage() {
                                 {tab.badge && (
                                     <span
                                         className={`ml-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold ${activeTab === tab.key
-                                                ? "bg-black/20 text-black"
-                                                : "bg-red-500/20 text-red-400"
+                                            ? "bg-black/20 text-black"
+                                            : "bg-red-500/20 text-red-400"
                                             }`}
                                     >
                                         {tab.badge}
@@ -943,7 +1009,7 @@ export default function CommunityPage() {
 
                     {/* Tab Content */}
                     {activeTab === "findTeam" && <FindTeamTab userSkills={userSkills} />}
-                    {activeTab === "findTeammate" && <FindTeammateTab userSkills={userSkills} />}
+                    {activeTab === "findTeammate" && <FindTeammateTab userSkills={userSkills} communityPool={communityPool} inviteSoloToTeam={inviteSoloToTeam} isTeamLeader={isTeamLeader} />}
                     {activeTab === "requests" && <RequestsTab userSkills={userSkills} />}
                     {activeTab === "discussion" && <DiscussionTab />}
                 </div>

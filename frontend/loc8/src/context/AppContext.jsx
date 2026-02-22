@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
+import { API_BASE_URL } from "../api";
 
 const AppContext = createContext(null);
 
@@ -83,29 +84,252 @@ export function AppProvider({ children }) {
     navigateTo("teamManagement");
   };
 
-  const createTeam = (teamName, members = []) => {
-    const code = Math.random().toString(36).substring(2, 8).toUpperCase();
-    setTeamData({
-      id: `team_${Date.now()}`,
-      name: teamName,
-      leader: currentUser,
-      members: [currentUser, ...members],
-      createdAt: new Date(),
-    });
-    setTeamInviteCode(code);
-    setIsTeamLeader(true);
-    setTeamId(`team_${Date.now()}`);
-    console.log(`[SIMULATED EMAIL] Team created with code: ${code}`);
-    navigateTo("teamManagement");
+  const createTeam = async (teamName, dynamicAnswers = {}) => {
+    if (!selectedHackathon?.id) {
+      alert("No hackathon selected");
+      return;
+    }
+    try {
+      const res = await fetch(`${API_BASE_URL}/registration/team`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          hackathonId: selectedHackathon.id,
+          teamName,
+          dynamicAnswers,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        const team = data.team;
+        setTeamData({
+          id: team.id,
+          name: team.teamName,
+          leader: currentUser,
+          members: team.participants || [currentUser],
+          memberEmails: team.memberEmails || [],
+          status: team.status || "INCOMPLETE",
+          inviteCode: team.inviteCode,
+        });
+        setTeamInviteCode(team.inviteCode);
+        setIsTeamLeader(true);
+        setTeamId(team.id);
+      } else {
+        alert(data.message || "Failed to create team");
+      }
+    } catch {
+      alert("Network error creating team");
+    }
   };
 
-  const joinTeamWithCode = (code) => {
-    setTeamData((prev) => ({
-      ...prev,
-      members: [...(prev?.members || []), currentUser],
-    }));
-    console.log(`[SIMULATED EMAIL] Team is complete and ready to proceed!`);
-    navigateTo("teamManagement");
+  const joinTeamWithCode = async (code, dynamicAnswers = {}) => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/registration/join`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          inviteCode: code,
+          dynamicAnswers,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        const team = data.team;
+        setTeamData({
+          id: team.id,
+          name: team.teamName,
+          leader: team.participants?.[0] || null,
+          members: team.participants || [],
+          memberEmails: team.memberEmails || [],
+          status: team.status || "REGISTERED",
+          inviteCode: team.inviteCode,
+        });
+        setTeamId(team.id);
+        setTeamInviteCode(team.inviteCode || code);
+        setIsTeamLeader(false);
+      } else {
+        alert(data.message || "Failed to join team");
+      }
+    } catch {
+      alert("Network error joining team");
+    }
+  };
+
+  const registerSolo = async (dynamicAnswers = {}) => {
+    if (!selectedHackathon?.id) return;
+    try {
+      const res = await fetch(`${API_BASE_URL}/registration/solo`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          hackathonId: selectedHackathon.id,
+          dynamicAnswers,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        return { success: true, data };
+      } else {
+        return { success: false, message: data.message || "Failed to register solo" };
+      }
+    } catch {
+      return { success: false, message: "Network error" };
+    }
+  };
+
+  const fetchCommunityPool = async (hackathonId) => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/registration/community/${hackathonId}`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      const data = await res.json();
+      if (res.ok) {
+        // API returns array of { id, status, participant: { id, fullName, ... } }
+        return Array.isArray(data) ? data : [];
+      }
+      return [];
+    } catch {
+      return [];
+    }
+  };
+
+  const updateTeamName = async (newName) => {
+    if (!teamId) return;
+    try {
+      const res = await fetch(`${API_BASE_URL}/registration/team/${teamId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ teamName: newName }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setTeamData((prev) => ({ ...prev, name: newName }));
+        return { success: true };
+      } else {
+        return { success: false, message: data.message || "Failed to update" };
+      }
+    } catch {
+      return { success: false, message: "Network error" };
+    }
+  };
+
+  const deleteTeam = async () => {
+    if (!teamId) return;
+    try {
+      const res = await fetch(`${API_BASE_URL}/registration/team/${teamId}`, {
+        method: "DELETE",
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      if (res.ok) {
+        setTeamData(null);
+        setTeamId(null);
+        setTeamInviteCode(null);
+        setIsTeamLeader(false);
+        return { success: true };
+      } else {
+        const data = await res.json();
+        return { success: false, message: data.message || "Failed to delete" };
+      }
+    } catch {
+      return { success: false, message: "Network error" };
+    }
+  };
+
+  const inviteSoloToTeam = async (userId) => {
+    if (!teamId) return { success: false, message: "No team found" };
+    try {
+      const res = await fetch(`${API_BASE_URL}/registration/invite/${teamId}/${userId}`, {
+        method: "POST",
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      const data = await res.json();
+      if (res.ok) {
+        const team = data.team;
+        if (team) {
+          setTeamData((prev) => ({
+            ...prev,
+            members: team.participants || prev.members,
+            status: team.status || prev.status,
+          }));
+        }
+        return { success: true, message: data.message };
+      } else {
+        return { success: false, message: data.message || "Failed to invite" };
+      }
+    } catch {
+      return { success: false, message: "Network error" };
+    }
+  };
+
+  const finalizeTeam = async () => {
+    if (!teamId) return { success: false, message: "No team found" };
+    try {
+      const res = await fetch(`${API_BASE_URL}/registration/team/finalize/${teamId}`, {
+        method: "PUT",
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      const data = await res.json();
+      if (res.ok) {
+        const team = data.team;
+        if (team) {
+          setTeamData((prev) => ({
+            ...prev,
+            status: team.status || "REGISTERED",
+            members: team.participants || prev.members,
+          }));
+        }
+        return { success: true, message: data.message };
+      } else {
+        return { success: false, message: data.message || "Failed to finalize" };
+      }
+    } catch {
+      return { success: false, message: "Network error" };
+    }
+  };
+
+  const fetchProblemStatements = async (hackathonId) => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/ps/${hackathonId}`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      const data = await res.json();
+      if (res.ok) {
+        return { success: true, data };
+      } else {
+        return { success: false, message: data.message || "Cannot access problem statements" };
+      }
+    } catch {
+      return { success: false, message: "Network error" };
+    }
+  };
+
+  const subscribePush = async (subscription) => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/notifications/subscribe`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify(subscription),
+      });
+      const data = await res.json();
+      return res.ok ? { success: true } : { success: false, message: data.message };
+    } catch {
+      return { success: false, message: "Network error" };
+    }
   };
 
   const proceedToNextPhase = () => {
@@ -194,6 +418,14 @@ export function AppProvider({ children }) {
         selectHackathon,
         createTeam,
         joinTeamWithCode,
+        registerSolo,
+        fetchCommunityPool,
+        updateTeamName,
+        deleteTeam,
+        inviteSoloToTeam,
+        finalizeTeam,
+        fetchProblemStatements,
+        subscribePush,
         proceedToNextPhase,
         saveProblemsPreference,
         setPptScore,

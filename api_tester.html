@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LOC_PREP API Tester</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', system-ui, sans-serif; background: #0a0a0a; color: #e0e0e0; padding: 20px; }
+    h1 { color: #B4ED57; margin-bottom: 8px; font-size: 28px; }
+    .subtitle { color: #888; margin-bottom: 30px; font-size: 14px; }
+    .config { background: #111; border: 1px solid #333; border-radius: 12px; padding: 16px; margin-bottom: 24px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+    .config label { color: #B4ED57; font-size: 12px; font-weight: 600; text-transform: uppercase; }
+    .config input { background: #1a1a1a; border: 1px solid #333; color: #fff; padding: 8px 12px; border-radius: 8px; font-size: 13px; width: 400px; }
+    .section { margin-bottom: 32px; }
+    .section-title { color: #B4ED57; font-size: 18px; font-weight: 700; border-bottom: 1px solid #222; padding-bottom: 8px; margin-bottom: 16px; }
+    .card { background: #111; border: 1px solid #222; border-radius: 12px; padding: 16px; margin-bottom: 12px; }
+    .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .card-title { font-weight: 700; font-size: 15px; }
+    .method { font-size: 11px; font-weight: 800; padding: 3px 10px; border-radius: 6px; }
+    .method.POST { background: #2d4a1a; color: #B4ED57; }
+    .method.GET { background: #1a2d4a; color: #57b4ed; }
+    .method.PUT { background: #4a3a1a; color: #edc457; }
+    .endpoint { color: #888; font-size: 12px; font-family: monospace; margin-bottom: 10px; }
+    .fields { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+    .field label { display: block; color: #888; font-size: 11px; margin-bottom: 2px; }
+    .field input, .field textarea, .field select { width: 100%; background: #1a1a1a; border: 1px solid #333; color: #fff; padding: 7px 10px; border-radius: 6px; font-size: 12px; font-family: monospace; }
+    .field textarea { min-height: 80px; resize: vertical; grid-column: span 2; }
+    .field.full { grid-column: span 2; }
+    button.send { background: #B4ED57; color: #000; border: none; padding: 8px 20px; border-radius: 8px; font-weight: 700; font-size: 13px; cursor: pointer; }
+    button.send:hover { background: #c5f278; }
+    button.send:disabled { opacity: 0.5; cursor: not-allowed; }
+    .response-box { margin-top: 12px; background: #0d0d0d; border: 1px solid #222; border-radius: 8px; padding: 12px; font-family: monospace; font-size: 12px; white-space: pre-wrap; max-height: 300px; overflow-y: auto; display: none; }
+    .response-box.visible { display: block; }
+    .status-badge { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 4px; margin-right: 8px; }
+    .status-badge.ok { background: #1a3a1a; color: #4caf50; }
+    .status-badge.err { background: #3a1a1a; color: #f44336; }
+    .status-badge.pending { background: #3a3a1a; color: #ff9800; }
+    .integration-status { font-size: 11px; padding: 3px 8px; border-radius: 4px; font-weight: 600; }
+    .integration-status.integrated { background: #1a3a1a; color: #4caf50; }
+    .integration-status.missing { background: #3a1a1a; color: #f44336; }
+    .integration-status.partial { background: #3a3a1a; color: #ff9800; }
+    .note { color: #ff9800; font-size: 11px; margin-top: 4px; font-style: italic; }
+  </style>
+</head>
+<body>
+  <h1>⚡ LOC_PREP Backend API Tester</h1>
+  <p class="subtitle">Test all endpoints. Responses shown inline. Base URL is configurable below.</p>
+
+  <div class="config">
+    <div>
+      <label>Base URL</label><br>
+      <input id="baseUrl" value="https://jskloc8w2-production.up.railway.app" />
+    </div>
+    <div>
+      <label>User ID (for profile)</label><br>
+      <input id="userId" placeholder="Paste user ID from login response" style="width:260px" />
+    </div>
+    <div>
+      <label>Session ID (for chat)</label><br>
+      <input id="sessionId" placeholder="Paste session ID from chat/start" style="width:260px" />
+    </div>
+  </div>
+
+  <!-- ============ AUTH ============ -->
+  <div class="section">
+    <div class="section-title">🔐 Auth</div>
+
+    <!-- Signup -->
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <span class="method POST">POST</span>
+          <span class="card-title">Signup (multipart with Aadhaar + ID Card)</span>
+          <span class="integration-status integrated">✓ Integrated</span>
+        </div>
+      </div>
+      <div class="endpoint">/auth/signup</div>
+      <div class="fields">
+        <div class="field"><label>Full Name</label><input id="s-name" value="Yash Sharma" /></div>
+        <div class="field"><label>Email</label><input id="s-email" value="yash@example.com" /></div>
+        <div class="field"><label>Password</label><input id="s-pass" value="StrongPass123" /></div>
+        <div class="field"><label>Role</label>
+          <select id="s-role"><option value="Participant">Participant</option><option value="Mentor">Mentor</option><option value="ADMIN">Admin</option></select>
+        </div>
+        <div class="field"><label>Phone</label><input id="s-phone" value="+919876543210" /></div>
+        <div class="field"><label>College</label><input id="s-college" value="IIT Bangalore" /></div>
+        <div class="field"><label>Aadhaar (file)</label><input id="s-aadhaar" type="file" accept=".jpg,.jpeg,.png,.pdf" /></div>
+        <div class="field"><label>ID Card (file)</label><input id="s-idcard" type="file" accept=".jpg,.jpeg,.png" /></div>
+      </div>
+      <button class="send" onclick="doSignup()">Send Request</button>
+      <div class="response-box" id="res-signup"></div>
+    </div>
+
+    <!-- Login -->
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <span class="method POST">POST</span>
+          <span class="card-title">Login</span>
+          <span class="integration-status integrated">✓ Integrated</span>
+        </div>
+      </div>
+      <div class="endpoint">/auth/login</div>
+      <div class="fields">
+        <div class="field"><label>Email</label><input id="l-email" value="yash@example.com" /></div>
+        <div class="field"><label>Password</label><input id="l-pass" value="StrongPass123" /></div>
+        <div class="field"><label>Role</label>
+          <select id="l-role"><option value="Participant">Participant</option><option value="Mentor">Mentor</option><option value="ADMIN">Admin</option><option value="judge">Judge</option></select>
+        </div>
+      </div>
+      <button class="send" onclick="doLogin()">Send Request</button>
+      <div class="response-box" id="res-login"></div>
+    </div>
+
+    <!-- GitHub OAuth -->
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <span class="method GET">GET</span>
+          <span class="card-title">GitHub OAuth (Browser Redirect)</span>
+          <span class="integration-status missing">✗ NOT Integrated</span>
+        </div>
+      </div>
+      <div class="endpoint">/auth/github</div>
+      <p class="note">This is a browser redirect — opens in a new tab.</p>
+      <button class="send" onclick="window.open(document.getElementById('baseUrl').value + '/auth/github', '_blank')">Open in New Tab</button>
+      <div class="response-box" id="res-github"></div>
+    </div>
+  </div>
+
+  <!-- ============ PROFILE ============ -->
+  <div class="section">
+    <div class="section-title">👤 Profile</div>
+
+    <!-- Get Profile -->
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <span class="method GET">GET</span>
+          <span class="card-title">Get Profile by ID</span>
+          <span class="integration-status missing">✗ NOT Integrated</span>
+        </div>
+      </div>
+      <div class="endpoint">/profile/:id</div>
+      <p class="note">Frontend never fetches the profile via GET. It only writes via PUT.</p>
+      <button class="send" onclick="doGetProfile()">Send Request</button>
+      <div class="response-box" id="res-getprofile"></div>
+    </div>
+
+    <!-- Update Profile -->
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <span class="method PUT">PUT</span>
+          <span class="card-title">Update Profile</span>
+          <span class="integration-status integrated">✓ Integrated</span>
+        </div>
+      </div>
+      <div class="endpoint">PUT /profile/:id</div>
+      <div class="fields">
+        <div class="field full">
+          <label>Profile JSON</label>
+          <textarea id="up-body">{
+  "tagline": "Fullstack dev passionate about AI",
+  "college": "IIT Bangalore",
+  "primarySkillset": ["React", "Node.js", "Python"],
+  "githubUrl": "https://github.com/yash",
+  "linkedinUrl": "https://linkedin.com/in/yash",
+  "socialLinks": { "portfolio": "https://yash.dev" },
+  "hackathonPreferences": {
+    "preferredRoles": ["Frontend", "Fullstack"],
+    "domainInterests": ["AI", "FinTech"],
+    "experienceLevel": "Intermediate"
+  },
+  "education": [{ "institution": "IIT Bangalore", "degree": "B.Tech CS", "year": "2026" }]
+}</textarea>
+        </div>
+      </div>
+      <button class="send" onclick="doUpdateProfile()">Send Request</button>
+      <div class="response-box" id="res-updateprofile"></div>
+    </div>
+
+    <!-- Upload Resume -->
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <span class="method POST">POST</span>
+          <span class="card-title">Upload Resume (Gemini AI Parse)</span>
+          <span class="integration-status integrated">✓ Integrated</span>
+        </div>
+      </div>
+      <div class="endpoint">/profile/:id/resume</div>
+      <div class="fields">
+        <div class="field"><label>Resume File</label><input id="r-file" type="file" accept=".pdf,.doc,.docx" /></div>
+      </div>
+      <button class="send" onclick="doUploadResume()">Send Request</button>
+      <div class="response-box" id="res-resume"></div>
+    </div>
+  </div>
+
+  <!-- ============ VOICE CHAT ============ -->
+  <div class="section">
+    <div class="section-title">🎙️ Voice Chat (AI Registration)</div>
+
+    <!-- Start Chat -->
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <span class="method POST">POST</span>
+          <span class="card-title">Start Chat Session</span>
+          <span class="integration-status integrated">✓ Integrated</span>
+        </div>
+      </div>
+      <div class="endpoint">/api/chat/start</div>
+      <div class="fields">
+        <div class="field"><label>Email</label><input id="cs-email" value="yash@example.com" /></div>
+      </div>
+      <button class="send" onclick="doChatStart()">Send Request</button>
+      <div class="response-box" id="res-chatstart"></div>
+    </div>
+
+    <!-- Send Message -->
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <span class="method POST">POST</span>
+          <span class="card-title">Send Text Message</span>
+          <span class="integration-status integrated">✓ Integrated</span>
+        </div>
+      </div>
+      <div class="endpoint">/api/chat/message</div>
+      <div class="fields">
+        <div class="field"><label>Session ID</label><input id="cm-sid" placeholder="Auto-filled from Start" /></div>
+        <div class="field"><label>Message</label><input id="cm-msg" value="My name is Yash Sharma" /></div>
+      </div>
+      <button class="send" onclick="doChatMessage()">Send Request</button>
+      <div class="response-box" id="res-chatmsg"></div>
+    </div>
+
+    <!-- Send Voice -->
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <span class="method POST">POST</span>
+          <span class="card-title">Send Voice Audio</span>
+          <span class="integration-status integrated">✓ Integrated</span>
+        </div>
+      </div>
+      <div class="endpoint">/api/chat/voice</div>
+      <div class="fields">
+        <div class="field"><label>Session ID</label><input id="cv-sid" placeholder="Auto-filled from Start" /></div>
+        <div class="field"><label>Audio File</label><input id="cv-audio" type="file" accept="audio/*" /></div>
+      </div>
+      <button class="send" onclick="doChatVoice()">Send Request</button>
+      <div class="response-box" id="res-chatvoice"></div>
+    </div>
+
+    <!-- Get Session -->
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <span class="method GET">GET</span>
+          <span class="card-title">Get Session Details</span>
+          <span class="integration-status missing">✗ NOT Integrated</span>
+        </div>
+      </div>
+      <div class="endpoint">/api/chat/:sessionId</div>
+      <button class="send" onclick="doGetSession()">Send Request</button>
+      <div class="response-box" id="res-getsession"></div>
+    </div>
+
+    <!-- Verify Identity -->
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <span class="method POST">POST</span>
+          <span class="card-title">Verify Identity (Aadhaar + ID + Selfie)</span>
+          <span class="integration-status missing">✗ NOT Integrated</span>
+        </div>
+      </div>
+      <div class="endpoint">/api/chat/verify-identity</div>
+      <div class="fields">
+        <div class="field"><label>Email</label><input id="vi-email" value="yash@example.com" /></div>
+        <div class="field"><label>Aadhaar (file)</label><input id="vi-aadhaar" type="file" /></div>
+        <div class="field"><label>ID Card (file)</label><input id="vi-idcard" type="file" /></div>
+        <div class="field"><label>Selfie (file)</label><input id="vi-selfie" type="file" /></div>
+      </div>
+      <button class="send" onclick="doVerifyIdentity()">Send Request</button>
+      <div class="response-box" id="res-verify"></div>
+    </div>
+  </div>
+
+  <!-- ============ EVALUATE ============ -->
+  <div class="section">
+    <div class="section-title">📊 Evaluate</div>
+
+    <!-- Submit Evaluation -->
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <span class="method POST">POST</span>
+          <span class="card-title">Submit Evaluation (PPTX / PDF)</span>
+          <span class="integration-status missing">✗ NOT Integrated</span>
+        </div>
+      </div>
+      <div class="endpoint">/api/evaluate</div>
+      <div class="fields">
+        <div class="field"><label>Team Name</label><input id="ev-team" value="Hackathon Team" /></div>
+        <div class="field"><label>GitHub URL</label><input id="ev-github" value="https://github.com/facebook/react" /></div>
+        <div class="field"><label>PPTX File</label><input id="ev-pptx" type="file" accept=".pptx,.pdf" /></div>
+      </div>
+      <button class="send" onclick="doEvaluate()">Send Request</button>
+      <div class="response-box" id="res-evaluate"></div>
+    </div>
+
+    <!-- Get Evaluation Status -->
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <span class="method GET">GET</span>
+          <span class="card-title">Get Evaluation Status (Polling)</span>
+          <span class="integration-status missing">✗ NOT Integrated</span>
+        </div>
+      </div>
+      <div class="endpoint">/api/evaluate/:id</div>
+      <div class="fields">
+        <div class="field"><label>Evaluation ID</label><input id="ev-id" placeholder="Paste from submit response" /></div>
+      </div>
+      <button class="send" onclick="doGetEvaluation()">Send Request</button>
+      <div class="response-box" id="res-geteval"></div>
+    </div>
+  </div>
+
+  <script>
+    const base = () => document.getElementById('baseUrl').value;
+    const uid = () => document.getElementById('userId').value;
+    const sid = () => document.getElementById('sessionId').value;
+
+    async function showRes(id, res) {
+      const box = document.getElementById(id);
+      box.classList.add('visible');
+      try {
+        const status = res.status;
+        const data = await res.json();
+        const badge = status >= 200 && status < 300 ? 'ok' : 'err';
+        box.innerHTML = `<span class="status-badge ${badge}">HTTP ${status}</span>\n${JSON.stringify(data, null, 2)}`;
+        return data;
+      } catch (e) {
+        box.innerHTML = `<span class="status-badge err">Error</span>\n${e.message}`;
+        return null;
+      }
+    }
+
+    function showErr(id, msg) {
+      const box = document.getElementById(id);
+      box.classList.add('visible');
+      box.innerHTML = `<span class="status-badge err">Error</span>\n${msg}`;
+    }
+
+    // ---- AUTH ----
+    async function doSignup() {
+      const fd = new FormData();
+      fd.append('fullName', document.getElementById('s-name').value);
+      fd.append('email', document.getElementById('s-email').value);
+      fd.append('password', document.getElementById('s-pass').value);
+      fd.append('role', document.getElementById('s-role').value);
+      fd.append('phone', document.getElementById('s-phone').value);
+      fd.append('college', document.getElementById('s-college').value);
+      const aadhaar = document.getElementById('s-aadhaar').files[0];
+      if (aadhaar) fd.append('aadhaar', aadhaar);
+      const idcard = document.getElementById('s-idcard').files[0];
+      if (idcard) fd.append('idCard', idcard);
+      try {
+        const res = await fetch(`${base()}/auth/signup`, { method: 'POST', body: fd });
+        const data = await showRes('res-signup', res);
+        if (data?.user?.id) document.getElementById('userId').value = data.user.id;
+      } catch (e) { showErr('res-signup', e.message); }
+    }
+
+    async function doLogin() {
+      try {
+        const res = await fetch(`${base()}/auth/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: document.getElementById('l-email').value,
+            password: document.getElementById('l-pass').value,
+            role: document.getElementById('l-role').value,
+          }),
+        });
+        const data = await showRes('res-login', res);
+        if (data?.user?.id) document.getElementById('userId').value = data.user.id;
+      } catch (e) { showErr('res-login', e.message); }
+    }
+
+    // ---- PROFILE ----
+    async function doGetProfile() {
+      if (!uid()) return showErr('res-getprofile', 'Enter User ID above first');
+      try {
+        const res = await fetch(`${base()}/profile/${uid()}`);
+        await showRes('res-getprofile', res);
+      } catch (e) { showErr('res-getprofile', e.message); }
+    }
+
+    async function doUpdateProfile() {
+      if (!uid()) return showErr('res-updateprofile', 'Enter User ID above first');
+      try {
+        const res = await fetch(`${base()}/profile/${uid()}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: document.getElementById('up-body').value,
+        });
+        await showRes('res-updateprofile', res);
+      } catch (e) { showErr('res-updateprofile', e.message); }
+    }
+
+    async function doUploadResume() {
+      if (!uid()) return showErr('res-resume', 'Enter User ID above first');
+      const file = document.getElementById('r-file').files[0];
+      if (!file) return showErr('res-resume', 'Select a resume file');
+      const fd = new FormData();
+      fd.append('resume', file);
+      try {
+        const res = await fetch(`${base()}/profile/${uid()}/resume`, { method: 'POST', body: fd });
+        await showRes('res-resume', res);
+      } catch (e) { showErr('res-resume', e.message); }
+    }
+
+    // ---- VOICE CHAT ----
+    async function doChatStart() {
+      try {
+        const res = await fetch(`${base()}/api/chat/start`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: document.getElementById('cs-email').value }),
+        });
+        const data = await showRes('res-chatstart', res);
+        if (data?.sessionId) {
+          document.getElementById('sessionId').value = data.sessionId;
+          document.getElementById('cm-sid').value = data.sessionId;
+          document.getElementById('cv-sid').value = data.sessionId;
+        }
+      } catch (e) { showErr('res-chatstart', e.message); }
+    }
+
+    async function doChatMessage() {
+      const sessionId = document.getElementById('cm-sid').value || sid();
+      if (!sessionId) return showErr('res-chatmsg', 'Start a chat session first');
+      try {
+        const res = await fetch(`${base()}/api/chat/message`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            sessionId,
+            message: document.getElementById('cm-msg').value,
+          }),
+        });
+        await showRes('res-chatmsg', res);
+      } catch (e) { showErr('res-chatmsg', e.message); }
+    }
+
+    async function doChatVoice() {
+      const sessionId = document.getElementById('cv-sid').value || sid();
+      if (!sessionId) return showErr('res-chatvoice', 'Start a chat session first');
+      const file = document.getElementById('cv-audio').files[0];
+      if (!file) return showErr('res-chatvoice', 'Select an audio file');
+      const fd = new FormData();
+      fd.append('sessionId', sessionId);
+      fd.append('audio', file);
+      try {
+        const res = await fetch(`${base()}/api/chat/voice`, { method: 'POST', body: fd });
+        await showRes('res-chatvoice', res);
+      } catch (e) { showErr('res-chatvoice', e.message); }
+    }
+
+    async function doGetSession() {
+      const sessionId = sid();
+      if (!sessionId) return showErr('res-getsession', 'Enter Session ID above first');
+      try {
+        const res = await fetch(`${base()}/api/chat/${sessionId}`);
+        await showRes('res-getsession', res);
+      } catch (e) { showErr('res-getsession', e.message); }
+    }
+
+    async function doVerifyIdentity() {
+      const fd = new FormData();
+      fd.append('email', document.getElementById('vi-email').value);
+      const aadhaar = document.getElementById('vi-aadhaar').files[0];
+      const idcard = document.getElementById('vi-idcard').files[0];
+      const selfie = document.getElementById('vi-selfie').files[0];
+      if (aadhaar) fd.append('aadhaar', aadhaar);
+      if (idcard) fd.append('idCard', idcard);
+      if (selfie) fd.append('selfie', selfie);
+      try {
+        const res = await fetch(`${base()}/api/chat/verify-identity`, { method: 'POST', body: fd });
+        await showRes('res-verify', res);
+      } catch (e) { showErr('res-verify', e.message); }
+    }
+
+    // ---- EVALUATE ----
+    async function doEvaluate() {
+      const fd = new FormData();
+      fd.append('teamName', document.getElementById('ev-team').value);
+      fd.append('githubUrl', document.getElementById('ev-github').value);
+      const pptx = document.getElementById('ev-pptx').files[0];
+      if (pptx) fd.append('pptx', pptx);
+      try {
+        const res = await fetch(`${base()}/api/evaluate`, { method: 'POST', body: fd });
+        await showRes('res-evaluate', res);
+      } catch (e) { showErr('res-evaluate', e.message); }
+    }
+
+    async function doGetEvaluation() {
+      const id = document.getElementById('ev-id').value;
+      if (!id) return showErr('res-geteval', 'Enter Evaluation ID first');
+      try {
+        const res = await fetch(`${base()}/api/evaluate/${id}`);
+        await showRes('res-geteval', res);
+      } catch (e) { showErr('res-geteval', e.message); }
+    }
+  </script>
+</body>
+</html>
