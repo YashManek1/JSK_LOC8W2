@@ -5,6 +5,7 @@ import Sidebar from "../components/layout/Sidebar";
 import { ParticipantsTable, CreateJudgeWidget, AdminStatsBar } from "../components/admin/AdminWidgets";
 import TeamsTab from "../components/admin/TeamsTab";
 import AdminOverview from "../components/admin/AdminOverview";
+import ShortlistManagement from "../components/admin/ShortlistManagement";
 
 /* ── Animation variants ── */
 const pageTransition = {
@@ -19,6 +20,8 @@ const sections = {
   overview: "Overview",
   teams: "Teams",
   ppt: "PPT Evaluation",
+  screening: "Screening",
+  shortlist: "Shortlist",
   qr: "QR Management",
   credentials: "Credential Management",
   allocations: "Allocations",
@@ -167,90 +170,74 @@ export default function AdminDashboard() {
         {/* Content with page transitions */}
         <AnimatePresence mode="wait">
           <motion.div key={activeSection} {...pageTransition}>
-        {activeSection === "overview" && <AdminOverview />}
+            {activeSection === "overview" && <AdminOverview />}
 
-        {activeSection === "teams" && <TeamsTab />}
+            {activeSection === "teams" && <TeamsTab />}
 
-        {activeSection === "ppt" && (
-          <motion.div
-            className={`rounded-2xl p-8 text-center ${glassStyle}`}
-            whileHover={{ borderColor: "rgba(180,237,87,0.2)" }}
-          >
-            <motion.span
-              className="text-5xl block mb-4"
-              animate={{ y: [0, -8, 0] }}
-              transition={{ duration: 2, repeat: Infinity }}
-            >{"\ud83d\udcca"}</motion.span>
-            <h3 className="text-white font-bold text-xl mb-2" style={{ fontFamily: "'Questrial', sans-serif" }}>PPT Evaluation</h3>
-            <p className="text-white/40 text-sm">Evaluate and score team presentations</p>
-          </motion.div>
-        )}
+        {activeSection === "ppt" && <ShortlistManagement />}
 
-        {activeSection === "qr" && (
-          <div className="space-y-5">
-            {/* Tabs */}
-            <div className="flex gap-2">
-              {["food", "entry"].map((tab) => (
-                <motion.button
-                  key={tab}
-                  onClick={() => setQrTab(tab)}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className={`px-5 py-2.5 rounded-xl text-sm font-bold transition-all ${
-                    qrTab === tab
-                      ? "bg-[#B4ED57] text-black shadow-lg shadow-[#B4ED57]/20"
-                      : "bg-white/5 border border-white/10 text-white/50 hover:text-white hover:bg-white/10"
-                  }`}
-                >
-                  {tab === "food" ? "\ud83c\udf7d  Food" : "\ud83d\udeaa  Entry"}
-                </motion.button>
-              ))}
-            </div>
-            {/* Tab content */}
-            <AnimatePresence mode="wait">
+            {activeSection === "qr" && (
+              <div className="space-y-5">
+                {/* Tabs */}
+                <div className="flex gap-2">
+                  {["food", "entry"].map((tab) => (
+                    <motion.button
+                      key={tab}
+                      onClick={() => setQrTab(tab)}
+                      className={`px-5 py-2.5 rounded-xl text-sm font-bold transition-all ${qrTab === tab
+                          ? "bg-[#B4ED57] text-black shadow-lg shadow-[#B4ED57]/20"
+                          : "bg-white/5 border border-white/10 text-white/50 hover:text-white hover:bg-white/10"
+                        }`}
+                    >
+                      {tab === "food" ? "\ud83c\udf7d  Food" : "\ud83d\udeaa  Entry"}
+                    </motion.button>
+                  ))}
+                </div>
+                {/* Tab content */}
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={qrTab}
+                    className={`rounded-2xl p-8 text-center ${glassStyle}`}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.3 }}
+                    whileHover={{ borderColor: "rgba(180,237,87,0.2)" }}
+                  >
+                    <motion.span
+                      className="text-5xl block mb-4"
+                      animate={{ y: [0, -8, 0] }}
+                      transition={{ duration: 2, repeat: Infinity }}
+                    >{qrTab === "food" ? "\ud83c\udf7d" : "\ud83d\udeaa"}</motion.span>
+                    <h3 className="text-white font-bold text-xl mb-2" style={{ fontFamily: "'Questrial', sans-serif" }}>
+                      {qrTab === "food" ? "Food QR Management" : "Entry QR Management"}
+                    </h3>
+                    <p className="text-white/40 text-sm">
+                      {qrTab === "food"
+                        ? "Manage meal QR codes for participants"
+                        : "Manage entry/exit QR scanning for venue check-in"}
+                    </p>
+                  </motion.div>
+                </AnimatePresence>
+              </div>
+            )}
+
+            {activeSection === "credentials" && <CreateJudgeWidget />}
+
+            {activeSection === "allocations" && (
               <motion.div
-                key={qrTab}
                 className={`rounded-2xl p-8 text-center ${glassStyle}`}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.3 }}
                 whileHover={{ borderColor: "rgba(180,237,87,0.2)" }}
               >
                 <motion.span
                   className="text-5xl block mb-4"
                   animate={{ y: [0, -8, 0] }}
                   transition={{ duration: 2, repeat: Infinity }}
-                >{qrTab === "food" ? "\ud83c\udf7d" : "\ud83d\udeaa"}</motion.span>
-                <h3 className="text-white font-bold text-xl mb-2" style={{ fontFamily: "'Questrial', sans-serif" }}>
-                  {qrTab === "food" ? "Food QR Management" : "Entry QR Management"}
-                </h3>
-                <p className="text-white/40 text-sm">
-                  {qrTab === "food"
-                    ? "Manage meal QR codes for participants"
-                    : "Manage entry/exit QR scanning for venue check-in"}
-                </p>
+                >{"\ud83d\udce6"}</motion.span>
+                <h3 className="text-white font-bold text-xl mb-2" style={{ fontFamily: "'Questrial', sans-serif" }}>Allocations</h3>
+                <p className="text-white/40 text-sm">Manage room, lab & seating allocations for teams</p>
               </motion.div>
-            </AnimatePresence>
-          </div>
-        )}
-
-        {activeSection === "credentials" && <CreateJudgeWidget />}
-
-        {activeSection === "allocations" && (
-          <motion.div
-            className={`rounded-2xl p-8 text-center ${glassStyle}`}
-            whileHover={{ borderColor: "rgba(180,237,87,0.2)" }}
-          >
-            <motion.span
-              className="text-5xl block mb-4"
-              animate={{ y: [0, -8, 0] }}
-              transition={{ duration: 2, repeat: Infinity }}
-            >{"\ud83d\udce6"}</motion.span>
-            <h3 className="text-white font-bold text-xl mb-2" style={{ fontFamily: "'Questrial', sans-serif" }}>Allocations</h3>
-            <p className="text-white/40 text-sm">Manage room, lab & seating allocations for teams</p>
-          </motion.div>
-        )}
+            )}
           </motion.div>
         </AnimatePresence>
       </main>

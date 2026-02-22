@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useApp } from "../context/AppContext";
 import Sidebar from "../components/layout/Sidebar";
 import QRCodeDisplay from "../components/ui/QRCodeDisplay";
+import GitHubAnalytics from "../components/student/GitHubAnalytics";
 import {
   CountdownWidget,
   PPTScoreWidget,
@@ -127,69 +128,115 @@ export default function StudentDashboard() {
         </div>
 
         {/* Dashboard Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 mb-5">
-          <CountdownWidget />
-          <VoiceAssistantWidget userEmail={currentUser?.email} />
-          {/* Entry QR */}
-          <div
-            className="bg-[#111] border border-white/10 rounded-2xl p-6"
-            style={{ fontFamily: "'Fustat', sans-serif" }}
-          >
-            <div className="flex items-center justify-between mb-4">
-              <h3
-                className="text-white font-semibold"
-                style={{ fontFamily: "'Questrial', sans-serif" }}
+        {activeSection === "dashboard" && (
+          <>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 mb-5">
+              <CountdownWidget />
+              <VoiceAssistantWidget userEmail={currentUser?.email} />
+              {/* Entry QR */}
+              <div
+                className="bg-[#111] border border-white/10 rounded-2xl p-6"
+                style={{ fontFamily: "'Fustat', sans-serif" }}
               >
-                Your Entry QR
-              </h3>
-              <button className="text-white/30 hover:text-white transition-colors text-sm">
-                ↻
-              </button>
-            </div>
-            <div className="flex justify-center mb-4">
-              <div className="p-3 bg-white rounded-xl">
-                <QRCodeDisplay
-                  data={generatedQR || "HACKOS-STUDENT"}
-                  size={140}
-                />
+                <div className="flex items-center justify-between mb-4">
+                  <h3
+                    className="text-white font-semibold"
+                    style={{ fontFamily: "'Questrial', sans-serif" }}
+                  >
+                    Your Entry QR
+                  </h3>
+                  <button className="text-white/30 hover:text-white transition-colors text-sm">
+                    ↻
+                  </button>
+                </div>
+                <div className="flex justify-center mb-4">
+                  <div className="p-3 bg-white rounded-xl">
+                    <QRCodeDisplay
+                      data={generatedQR || "HACKOS-STUDENT"}
+                      size={140}
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2 text-xs">
+                  <div className="flex justify-between">
+                    <span className="text-white/40">Code Prefix</span>
+                    <span className="text-white font-mono">H</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-white/40">QR ID</span>
+                    <span className="text-white font-mono">HACKOS-2025-...</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-white/40">Status</span>
+                    <span className="text-[#B4ED57] font-semibold">
+                      Entry Granted
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-white/40">Type</span>
+                    <span className="text-white/60">
+                      Dynamic · refreshes every 60s
+                    </span>
+                  </div>
+                </div>
               </div>
             </div>
-            <div className="space-y-2 text-xs">
-              <div className="flex justify-between">
-                <span className="text-white/40">Code Prefix</span>
-                <span className="text-white font-mono">H</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-white/40">QR ID</span>
-                <span className="text-white font-mono">HACKOS-2025-...</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-white/40">Status</span>
-                <span className="text-[#B4ED57] font-semibold">
-                  Entry Granted
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-white/40">Type</span>
-                <span className="text-white/60">
-                  Dynamic · refreshes every 60s
-                </span>
-              </div>
+
+            {/* Second Row */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-5">
+              <PPTScoreWidget />
+              <MealQRWidget />
             </div>
+
+            {/* Third Row */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+              <TeamCommitsWidget teamName={currentUser?.teamName} />
+              <HackerCockpitWidget />
+            </div>
+          </>
+        )}
+
+        {/* GitHub Analytics Section */}
+        {activeSection === "submissions" && (
+          <div>
+            <h2 className="text-white text-2xl font-bold mb-6" style={{ fontFamily: "'Questrial', sans-serif" }}>
+              GitHub Repository Analytics
+            </h2>
+            <GitHubAnalytics teamName={currentUser?.teamName} />
           </div>
-        </div>
+        )}
 
-        {/* Second Row */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-5">
-          <PPTScoreWidget />
-          <MealQRWidget />
-        </div>
+        {/* Other sections can be added here */}
+        {activeSection === "leaderboard" && (
+          <div className="backdrop-blur-xl bg-white/[0.03] border border-white/[0.08] rounded-2xl p-8">
+            <h2 className="text-white text-2xl font-bold mb-4" style={{ fontFamily: "'Questrial', sans-serif" }}>
+              Leaderboard
+            </h2>
+            <p className="text-white/60" style={{ fontFamily: "'Fustat', sans-serif" }}>
+              Coming soon... Track your team's ranking and compete with other teams!
+            </p>
+          </div>
+        )}
 
-        {/* Third Row */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-          <TeamCommitsWidget teamName={currentUser?.teamName} />
-          <HackerCockpitWidget />
-        </div>
+        {activeSection === "team" && (
+          <div className="backdrop-blur-xl bg-white/[0.03] border border-white/[0.08] rounded-2xl p-8">
+            <h2 className="text-white text-2xl font-bold mb-4" style={{ fontFamily: "'Questrial', sans-serif" }}>
+              My Team
+            </h2>
+            <p className="text-white/60" style={{ fontFamily: "'Fustat', sans-serif" }}>
+              View your team members, roles, and contributions.
+            </p>
+          </div>
+        )}
+
+        {activeSection === "meal" && (
+          <div>
+            <h2 className="text-white text-2xl font-bold mb-6" style={{ fontFamily: "'Questrial', sans-serif" }}>
+              Meal QR Code
+            </h2>
+            <MealQRWidget fullScreen={true} />
+          </div>
+        )}
       </main>
     </div>
   );

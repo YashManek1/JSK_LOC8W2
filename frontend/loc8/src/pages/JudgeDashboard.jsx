@@ -555,96 +555,96 @@ export default function JudgeDashboard() {
                 </div>
               </motion.div>
 
-              {/* ── 2. Countdown Timer ── */}
-              <CountdownTimer />
+                  {/* ── 2. Countdown Timer ── */}
+                  <CountdownTimer />
 
-              {/* ── 3. Score Average Card ── */}
-              <motion.div
-                className="rounded-2xl p-5 relative overflow-hidden group bg-[#4D58D4]/8 border border-[#4D58D4]/25 backdrop-blur-xl shadow-[0_8px_32px_rgba(0,0,0,0.3)]"
-                variants={staggerItem}
-                whileHover={{ scale: 1.03, y: -5, borderColor: "rgba(180,237,87,0.3)", boxShadow: "0 12px 40px rgba(77,88,212,0.15)" }}
-                transition={{ type: "spring", stiffness: 300, damping: 20 }}
-              >
-                <div className="relative z-10">
-                  <div className="flex items-start justify-between mb-4">
-                    <svg className="w-7 h-7 text-[#B4ED57]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-                    </svg>
-                    <motion.span
-                      className="text-[#B4ED57] text-xs font-medium flex items-center gap-1"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ delay: 1 }}
-                    >
-                      <span>↑</span> trending
-                    </motion.span>
-                  </div>
-                  <div className="flex items-baseline gap-2">
-                    <AnimatedCounter
-                      value={scored.length > 0 ? Math.round(scored.reduce((s, t) => s + totalScore(t.scores), 0) / scored.length) : 0}
-                      className="text-white text-4xl font-black"
-                      style={{ fontFamily: "'Questrial', sans-serif" }}
-                    />
-                    <span className="text-white/30 text-lg" style={{ fontFamily: "'Questrial', sans-serif" }}>/100</span>
-                  </div>
-                  <div className="text-white/40 text-sm mt-1 mb-3">Avg Score</div>
-                  {/* Mini breakdown */}
-                  <div className="grid grid-cols-5 gap-1">
-                    {CRITERIA.map((c) => {
-                      const avg = scored.length > 0 ? Math.round(scored.reduce((s, t) => s + t.scores[c.key], 0) / scored.length) : 0;
-                      return (
-                        <div key={c.key} className="text-center">
-                          <div className="w-full h-1 bg-white/5 rounded-full overflow-hidden mb-1">
-                            <motion.div
-                              className="h-full rounded-full bg-gradient-to-r from-[#4D58D4] to-[#B4ED57]"
-                              initial={{ width: 0 }}
-                              animate={{ width: `${c.max > 0 ? (avg / c.max) * 100 : 0}%` }}
-                              transition={{ duration: 1, delay: 0.8 }}
-                            />
-                          </div>
-                          <span className="text-white/25 text-[9px]">{c.label.split(" ")[0]}</span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              </motion.div>
-            </motion.div>
-            {/* Quick overview of teams */}
-            <motion.div
-              className="rounded-2xl p-6 bg-[#4D58D4]/8 border border-[#4D58D4]/25 backdrop-blur-xl shadow-[0_8px_32px_rgba(0,0,0,0.3)]"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3, duration: 0.5 }}
-              whileHover={{ borderColor: "rgba(180,237,87,0.3)", boxShadow: "0 12px 40px rgba(77,88,212,0.15)" }}
-            >
-              <h3 className="text-white font-bold mb-4" style={{ fontFamily: "'Questrial', sans-serif" }}>Recent Teams</h3>
-              <div className="space-y-2">
-                {teams.slice(0, 4).map((t, i) => (
+                  {/* ── 3. Score Average Card ── */}
                   <motion.div
-                    key={t.id}
-                    className="flex items-center justify-between p-3 bg-white/[0.02] rounded-xl border border-white/5"
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.4 + i * 0.08 }}
-                    whileHover={{ backgroundColor: "rgba(255,255,255,0.04)" }}
+                    className="rounded-2xl p-5 relative overflow-hidden group bg-[#4D58D4]/8 border border-[#4D58D4]/25 backdrop-blur-xl shadow-[0_8px_32px_rgba(0,0,0,0.3)]"
+                    variants={staggerItem}
+                    whileHover={{ scale: 1.03, y: -5, borderColor: "rgba(180,237,87,0.3)", boxShadow: "0 12px 40px rgba(77,88,212,0.15)" }}
+                    transition={{ type: "spring", stiffness: 300, damping: 20 }}
                   >
-                    <div>
-                      <span className="text-white text-sm font-semibold">{t.name}</span>
-                      <span className="text-white/30 text-xs ml-2">{t.project}</span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <span className="text-xs px-2 py-0.5 rounded-full bg-white/5 text-white/40">{t.track}</span>
-                      <span className={`text-sm font-bold ${totalScore(t.scores) > 0 ? "text-[#B4ED57]" : "text-white/20"}`}>
-                        {totalScore(t.scores)}/100
-                      </span>
+                    <div className="relative z-10">
+                      <div className="flex items-start justify-between mb-4">
+                        <svg className="w-7 h-7 text-[#B4ED57]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                        </svg>
+                        <motion.span
+                          className="text-[#B4ED57] text-xs font-medium flex items-center gap-1"
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          transition={{ delay: 1 }}
+                        >
+                          <span>↑</span> trending
+                        </motion.span>
+                      </div>
+                      <div className="flex items-baseline gap-2">
+                        <AnimatedCounter
+                          value={scored.length > 0 ? Math.round(scored.reduce((s, t) => s + totalScore(t.scores), 0) / scored.length) : 0}
+                          className="text-white text-4xl font-black"
+                          style={{ fontFamily: "'Questrial', sans-serif" }}
+                        />
+                        <span className="text-white/30 text-lg" style={{ fontFamily: "'Questrial', sans-serif" }}>/100</span>
+                      </div>
+                      <div className="text-white/40 text-sm mt-1 mb-3">Avg Score</div>
+                      {/* Mini breakdown */}
+                      <div className="grid grid-cols-5 gap-1">
+                        {CRITERIA.map((c) => {
+                          const avg = scored.length > 0 ? Math.round(scored.reduce((s, t) => s + t.scores[c.key], 0) / scored.length) : 0;
+                          return (
+                            <div key={c.key} className="text-center">
+                              <div className="w-full h-1 bg-white/5 rounded-full overflow-hidden mb-1">
+                                <motion.div
+                                  className="h-full rounded-full bg-gradient-to-r from-[#4D58D4] to-[#B4ED57]"
+                                  initial={{ width: 0 }}
+                                  animate={{ width: `${c.max > 0 ? (avg / c.max) * 100 : 0}%` }}
+                                  transition={{ duration: 1, delay: 0.8 }}
+                                />
+                              </div>
+                              <span className="text-white/25 text-[9px]">{c.label.split(" ")[0]}</span>
+                            </div>
+                          );
+                        })}
+                      </div>
                     </div>
                   </motion.div>
-                ))}
+                </motion.div>
+                {/* Quick overview of teams */}
+                <motion.div
+                  className="rounded-2xl p-6 bg-[#4D58D4]/8 border border-[#4D58D4]/25 backdrop-blur-xl shadow-[0_8px_32px_rgba(0,0,0,0.3)]"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3, duration: 0.5 }}
+                  whileHover={{ borderColor: "rgba(180,237,87,0.3)", boxShadow: "0 12px 40px rgba(77,88,212,0.15)" }}
+                >
+                  <h3 className="text-white font-bold mb-4" style={{ fontFamily: "'Questrial', sans-serif" }}>Recent Teams</h3>
+                  <div className="space-y-2">
+                    {teams.slice(0, 4).map((t, i) => (
+                      <motion.div
+                        key={t.id}
+                        className="flex items-center justify-between p-3 bg-white/[0.02] rounded-xl border border-white/5"
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.4 + i * 0.08 }}
+                        whileHover={{ backgroundColor: "rgba(255,255,255,0.04)" }}
+                      >
+                        <div>
+                          <span className="text-white text-sm font-semibold">{t.name}</span>
+                          <span className="text-white/30 text-xs ml-2">{t.project}</span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <span className="text-xs px-2 py-0.5 rounded-full bg-white/5 text-white/40">{t.track}</span>
+                          <span className={`text-sm font-bold ${totalScore(t.scores) > 0 ? "text-[#B4ED57]" : "text-white/20"}`}>
+                            {totalScore(t.scores)}/100
+                          </span>
+                        </div>
+                      </motion.div>
+                    ))}
+                  </div>
+                </motion.div>
               </div>
-            </motion.div>
-          </div>
-        )}
+            )}
 
         {/* ═══════════ ASSIGNED TEAMS ═══════════ */}
         {activeSection === "assignedTeams" && (
@@ -813,410 +813,408 @@ export default function JudgeDashboard() {
           </motion.div>
         )}
 
-        {/* ═══════════ LEADERBOARD ═══════════ */}
-        {activeSection === "leaderboard" && (
-          <div className="space-y-6">
-            {ranked.length === 0 ? (
+            {/* ═══════════ LEADERBOARD ═══════════ */}
+            {activeSection === "leaderboard" && (
+              <div className="space-y-6">
+                {ranked.length === 0 ? (
+                  <motion.div
+                    className="rounded-2xl p-6 bg-[#4D58D4]/8 border border-[#4D58D4]/25 backdrop-blur-xl shadow-[0_8px_32px_rgba(0,0,0,0.3)]"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5 }}
+                  >
+                    <div className="text-center py-16">
+                      <motion.span
+                        className="text-6xl block mb-4"
+                        animate={{ y: [0, -12, 0], rotate: [0, 5, -5, 0] }}
+                        transition={{ duration: 3, repeat: Infinity }}
+                      >🏆</motion.span>
+                      <h3 className="text-white text-xl font-bold mb-2" style={{ fontFamily: "'Questrial', sans-serif" }}>No Rankings Yet</h3>
+                      <p className="text-white/40 text-sm">Start evaluating teams to see them climb the leaderboard!</p>
+                    </div>
+                  </motion.div>
+                ) : (
+                  <>
+                    {/* ── Podium Section ── */}
+                    <motion.div
+                      className="rounded-3xl p-8 bg-gradient-to-b from-[#4D58D4]/15 via-[#4D58D4]/8 to-transparent border border-[#4D58D4]/20 backdrop-blur-xl shadow-[0_8px_32px_rgba(0,0,0,0.4)] relative overflow-hidden"
+                      initial={{ opacity: 0, y: 30, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      transition={{ duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] }}
+                    >
+                      {/* Background glow effects */}
+                      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-80 h-80 bg-[#4D58D4]/10 rounded-full blur-[100px] pointer-events-none" />
+                      <div className="absolute top-10 left-1/2 -translate-x-1/2 w-40 h-40 bg-[#B4ED57]/5 rounded-full blur-[80px] pointer-events-none" />
+
+                      {/* Podium top 3 */}
+                      <div className="relative z-10 flex items-end justify-center gap-4 md:gap-8 pt-4 pb-6 mb-6">
+                        {/* 2nd Place - Left */}
+                        {ranked.length > 1 && (() => {
+                          const t = ranked[1];
+                          const score = totalScore(t.scores);
+                          return (
+                            <motion.div
+                              className="flex flex-col items-center"
+                              initial={{ opacity: 0, y: 40 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              transition={{ delay: 0.4, duration: 0.5, ease: "easeOut" }}
+                            >
+                              <motion.div
+                                className="relative mb-3"
+                                whileHover={{ scale: 1.1, y: -5 }}
+                                transition={{ type: "spring", stiffness: 300 }}
+                              >
+                                <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-gradient-to-br from-[#C0C0C0] to-[#8a8a8a] flex items-center justify-center text-white font-black text-xl md:text-2xl shadow-lg shadow-white/10 border-2 border-white/20" style={{ fontFamily: "'Questrial', sans-serif" }}>
+                                  {t.name[0]}
+                                </div>
+                                <div className="absolute -bottom-1 -right-1 w-7 h-7 bg-[#C0C0C0] rounded-full flex items-center justify-center text-xs font-black shadow-md border-2 border-[#0a0a0a]">2</div>
+                              </motion.div>
+                              <span className="text-white font-bold text-xs md:text-sm text-center max-w-[90px] truncate">{t.name}</span>
+                              <span className="text-white/40 text-[10px] md:text-xs mt-0.5">{score} pts</span>
+                              {/* Podium bar */}
+                              <motion.div
+                                className="w-20 md:w-28 h-20 md:h-24 bg-gradient-to-t from-[#4D58D4]/30 to-[#4D58D4]/15 rounded-t-2xl mt-3 border border-b-0 border-[#4D58D4]/30 flex items-center justify-center"
+                                initial={{ height: 0, opacity: 0 }}
+                                animate={{ height: "auto", opacity: 1 }}
+                                transition={{ delay: 0.6, duration: 0.5, ease: "easeOut" }}
+                              >
+                                <span className="text-3xl">🥈</span>
+                              </motion.div>
+                            </motion.div>
+                          );
+                        })()}
+
+                        {/* 1st Place - Center (tallest) */}
+                        {ranked.length > 0 && (() => {
+                          const t = ranked[0];
+                          const score = totalScore(t.scores);
+                          return (
+                            <motion.div
+                              className="flex flex-col items-center -mt-4"
+                              initial={{ opacity: 0, y: 50 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              transition={{ delay: 0.2, duration: 0.6, ease: "easeOut" }}
+                            >
+                              {/* Crown */}
+                              <motion.span
+                                className="text-3xl mb-1"
+                                animate={{ y: [0, -6, 0], rotate: [0, 5, -5, 0] }}
+                                transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
+                              >👑</motion.span>
+                              <motion.div
+                                className="relative mb-3"
+                                whileHover={{ scale: 1.1, y: -5 }}
+                                transition={{ type: "spring", stiffness: 300 }}
+                              >
+                                <div className="w-20 h-20 md:w-24 md:h-24 rounded-full bg-gradient-to-br from-[#B4ED57] to-[#7cb832] flex items-center justify-center text-black font-black text-2xl md:text-3xl shadow-lg shadow-[#B4ED57]/30 border-3 border-[#B4ED57]/50" style={{ fontFamily: "'Questrial', sans-serif" }}>
+                                  {t.name[0]}
+                                </div>
+                                <motion.div
+                                  className="absolute -bottom-1 -right-1 w-8 h-8 bg-[#B4ED57] rounded-full flex items-center justify-center text-sm font-black text-black shadow-md shadow-[#B4ED57]/30 border-2 border-[#0a0a0a]"
+                                  animate={{ boxShadow: ["0 0 0px rgba(180,237,87,0)", "0 0 16px rgba(180,237,87,0.5)", "0 0 0px rgba(180,237,87,0)"] }}
+                                  transition={{ duration: 2, repeat: Infinity }}
+                                >1</motion.div>
+                              </motion.div>
+                              <span className="text-white font-bold text-sm md:text-base text-center max-w-[100px] truncate">{t.name}</span>
+                              <motion.span
+                                className="text-[#B4ED57] font-black text-sm md:text-base mt-0.5"
+                                style={{ fontFamily: "'Questrial', sans-serif" }}
+                                animate={{ scale: [1, 1.05, 1] }}
+                                transition={{ duration: 2, repeat: Infinity }}
+                              >{score} pts</motion.span>
+                              {/* Podium bar */}
+                              <motion.div
+                                className="w-24 md:w-32 h-28 md:h-36 bg-gradient-to-t from-[#B4ED57]/20 to-[#B4ED57]/8 rounded-t-2xl mt-3 border border-b-0 border-[#B4ED57]/30 flex items-center justify-center relative"
+                                initial={{ height: 0, opacity: 0 }}
+                                animate={{ height: "auto", opacity: 1 }}
+                                transition={{ delay: 0.4, duration: 0.5, ease: "easeOut" }}
+                              >
+                                <motion.span
+                                  className="text-4xl"
+                                  animate={{ scale: [1, 1.15, 1] }}
+                                  transition={{ duration: 2, repeat: Infinity }}
+                                >🏆</motion.span>
+                              </motion.div>
+                            </motion.div>
+                          );
+                        })()}
+
+                        {/* 3rd Place - Right */}
+                        {ranked.length > 2 && (() => {
+                          const t = ranked[2];
+                          const score = totalScore(t.scores);
+                          return (
+                            <motion.div
+                              className="flex flex-col items-center"
+                              initial={{ opacity: 0, y: 40 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              transition={{ delay: 0.5, duration: 0.5, ease: "easeOut" }}
+                            >
+                              <motion.div
+                                className="relative mb-3"
+                                whileHover={{ scale: 1.1, y: -5 }}
+                                transition={{ type: "spring", stiffness: 300 }}
+                              >
+                                <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-gradient-to-br from-[#CD7F32] to-[#8B5A2B] flex items-center justify-center text-white font-black text-xl md:text-2xl shadow-lg shadow-orange-500/10 border-2 border-orange-400/30" style={{ fontFamily: "'Questrial', sans-serif" }}>
+                                  {t.name[0]}
+                                </div>
+                                <div className="absolute -bottom-1 -right-1 w-7 h-7 bg-[#CD7F32] rounded-full flex items-center justify-center text-xs font-black shadow-md border-2 border-[#0a0a0a]">3</div>
+                              </motion.div>
+                              <span className="text-white font-bold text-xs md:text-sm text-center max-w-[90px] truncate">{t.name}</span>
+                              <span className="text-white/40 text-[10px] md:text-xs mt-0.5">{score} pts</span>
+                              {/* Podium bar */}
+                              <motion.div
+                                className="w-20 md:w-28 h-16 md:h-20 bg-gradient-to-t from-[#CD7F32]/20 to-[#CD7F32]/8 rounded-t-2xl mt-3 border border-b-0 border-[#CD7F32]/25 flex items-center justify-center"
+                                initial={{ height: 0, opacity: 0 }}
+                                animate={{ height: "auto", opacity: 1 }}
+                                transition={{ delay: 0.7, duration: 0.5, ease: "easeOut" }}
+                              >
+                                <span className="text-3xl">🥉</span>
+                              </motion.div>
+                            </motion.div>
+                          );
+                        })()}
+                      </div>
+
+                      {/* Podium base line */}
+                      <div className="relative z-10 h-px bg-gradient-to-r from-transparent via-white/15 to-transparent" />
+                    </motion.div>
+
+                    {/* ── Full Rankings List ── */}
+                    <motion.div
+                      className="rounded-2xl p-6 bg-[#4D58D4]/8 border border-[#4D58D4]/25 backdrop-blur-xl shadow-[0_8px_32px_rgba(0,0,0,0.3)]"
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.5, duration: 0.5 }}
+                    >
+                      <div className="flex items-center justify-between mb-5">
+                        <h3 className="text-white font-bold text-lg" style={{ fontFamily: "'Questrial', sans-serif" }}>
+                          Full Rankings
+                        </h3>
+                        <span className="text-[10px] font-bold px-3 py-1 rounded-full bg-[#B4ED57]/10 text-[#B4ED57] border border-[#B4ED57]/20 uppercase tracking-widest">
+                          {ranked.length} scored
+                        </span>
+                      </div>
+                      <motion.div
+                        className="space-y-2"
+                        variants={staggerContainer}
+                        initial="initial"
+                        animate="animate"
+                      >
+                        {ranked.map((t, i) => {
+                          const score = totalScore(t.scores);
+                          const podiumColors = [
+                            "bg-[#B4ED57]/10 border-[#B4ED57]/30",
+                            "bg-white/[0.05] border-white/15",
+                            "bg-[#CD7F32]/8 border-[#CD7F32]/20",
+                          ];
+                          const rankBadgeColors = [
+                            "bg-[#B4ED57] text-black",
+                            "bg-[#C0C0C0] text-black",
+                            "bg-[#CD7F32] text-black",
+                          ];
+                          return (
+                            <motion.div
+                              key={t.id}
+                              className={`flex items-center gap-4 p-4 rounded-2xl border transition-all ${i < 3 ? podiumColors[i] : "bg-white/[0.02] border-white/[0.06]"}`}
+                              variants={staggerItem}
+                              whileHover={{ scale: 1.01, backgroundColor: i < 3 ? undefined : "rgba(255,255,255,0.04)" }}
+                            >
+                              {/* Rank badge */}
+                              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-black shrink-0 ${i < 3 ? rankBadgeColors[i] : "bg-white/5 text-white/30"}`}>
+                                {i + 1}
+                              </div>
+                              {/* Avatar */}
+                              <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold shrink-0 ${i === 0 ? "bg-gradient-to-br from-[#B4ED57] to-[#7cb832] text-black" :
+                                  i === 1 ? "bg-gradient-to-br from-[#C0C0C0] to-[#8a8a8a] text-white" :
+                                    i === 2 ? "bg-gradient-to-br from-[#CD7F32] to-[#8B5A2B] text-white" :
+                                      "bg-[#4D58D4]/20 text-white/60"
+                                }`} style={{ fontFamily: "'Questrial', sans-serif" }}>
+                                {t.name[0]}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center justify-between">
+                                  <div>
+                                    <span className="text-white font-semibold text-sm">{t.name}</span>
+                                    <span className="text-white/30 text-xs ml-2 hidden sm:inline">{t.project}</span>
+                                  </div>
+                                  <span className={`font-black text-lg ml-3 shrink-0 ${i === 0 ? "text-[#B4ED57]" : "text-white/70"}`} style={{ fontFamily: "'Questrial', sans-serif" }}>
+                                    {score}<span className="text-white/20 text-sm">/100</span>
+                                  </span>
+                                </div>
+                                <div className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden mt-2">
+                                  <motion.div
+                                    className={`h-full rounded-full ${i === 0 ? "bg-gradient-to-r from-[#B4ED57]/80 to-[#B4ED57]" : i === 1 ? "bg-gradient-to-r from-[#C0C0C0]/60 to-[#C0C0C0]" : i === 2 ? "bg-gradient-to-r from-[#CD7F32]/60 to-[#CD7F32]" : "bg-gradient-to-r from-[#4D58D4] to-[#B4ED57]"}`}
+                                    initial={{ width: 0 }}
+                                    animate={{ width: `${score}%` }}
+                                    transition={{ duration: 0.8, delay: 0.6 + i * 0.1, ease: "easeOut" }}
+                                  />
+                                </div>
+                              </div>
+                              <span className="text-xs px-2.5 py-1 bg-white/5 rounded-full text-white/40 shrink-0 hidden sm:block">{t.track}</span>
+                            </motion.div>
+                          );
+                        })}
+                      </motion.div>
+                    </motion.div>
+                  </>
+                )}
+
+                {/* Unscored teams */}
+                {teams.length - scored.length > 0 && (
+                  <motion.div
+                    className="rounded-2xl p-5 bg-white/[0.02] border border-white/[0.06] backdrop-blur-xl"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.7, duration: 0.4 }}
+                  >
+                    <p className="text-white/30 text-xs mb-3 uppercase tracking-wider">Awaiting Evaluation</p>
+                    <div className="space-y-2">
+                      {teams.filter((t) => totalScore(t.scores) === 0).map((t, i) => (
+                        <motion.div
+                          key={t.id}
+                          className="flex items-center justify-between p-3 bg-white/[0.02] rounded-xl border border-white/[0.05]"
+                          initial={{ opacity: 0, x: -10 }}
+                          animate={{ opacity: 0.5, x: 0 }}
+                          transition={{ delay: 0.8 + i * 0.05 }}
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-white/20 text-xs font-bold" style={{ fontFamily: "'Questrial', sans-serif" }}>{t.name[0]}</div>
+                            <span className="text-white text-sm">{t.name} <span className="text-white/30 text-xs">— {t.project}</span></span>
+                          </div>
+                          <span className="text-white/20 text-sm font-bold">—/100</span>
+                        </motion.div>
+                      ))}
+                    </div>
+                  </motion.div>
+                )}
+              </div>
+            )}
+
+            {/* ═══════════ RECRUITMENT (sponsor only) ═══════════ */}
+            {activeSection === "recruitment" && isSponsor && (
               <motion.div
-                className="rounded-2xl p-6 bg-[#4D58D4]/8 border border-[#4D58D4]/25 backdrop-blur-xl shadow-[0_8px_32px_rgba(0,0,0,0.3)]"
+                className="space-y-4"
+                variants={staggerContainer}
+                initial="initial"
+                animate="animate"
+              >
+                <motion.div
+                  className={`rounded-2xl p-4 flex items-center gap-3 backdrop-blur-xl bg-[#4D58D4]/10 border border-[#4D58D4]/20 shadow-[0_8px_32px_rgba(0,0,0,0.3)]`}
+                  variants={staggerItem}
+                >
+                  <motion.span
+                    className="text-2xl"
+                    animate={{ y: [0, -4, 0] }}
+                    transition={{ duration: 2, repeat: Infinity }}
+                  >💼</motion.span>
+                  <div>
+                    <p className="text-white text-sm font-semibold">Sponsor Recruitment Mode</p>
+                    <p className="text-white/40 text-xs">Shortlist promising talent from participating teams.</p>
+                  </div>
+                </motion.div>
+
+                {candidates.map((c) => (
+                  <motion.div
+                    key={c.id}
+                    className="rounded-2xl p-5 bg-[#4D58D4]/8 border border-[#4D58D4]/25 backdrop-blur-xl shadow-[0_8px_32px_rgba(0,0,0,0.3)]"
+                    variants={staggerItem}
+                    whileHover={{ scale: 1.01, borderColor: "rgba(180,237,87,0.3)", boxShadow: "0 12px 40px rgba(77,88,212,0.15)" }}
+                  >
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <motion.div
+                            className="w-9 h-9 rounded-full bg-gradient-to-br from-[#4D58D4] to-[#B4ED57] flex items-center justify-center text-white font-bold text-xs"
+                            whileHover={{ scale: 1.1, rotate: 10 }}
+                          >{c.name.split(" ").map((n) => n[0]).join("")}</motion.div>
+                          <div>
+                            <h4 className="text-white font-semibold text-sm">{c.name}</h4>
+                            <p className="text-white/40 text-xs">{c.team} · {c.role}</p>
+                          </div>
+                        </div>
+                        <div className="flex gap-2 mt-3">
+                          {c.skills.map((s) => (
+                            <span key={s} className="text-xs bg-white/5 border border-white/10 px-2 py-1 rounded-lg text-white/50">{s}</span>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="text-right shrink-0">
+                        <div className="text-[#B4ED57] text-sm font-bold mb-2">★ {c.rating}</div>
+                        <motion.button
+                          onClick={() => toggleShortlist(c.id)}
+                          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${c.shortlisted
+                              ? "bg-[#B4ED57] text-black shadow-lg shadow-[#B4ED57]/20"
+                              : "bg-white/5 border border-white/10 text-white/50 hover:text-white hover:bg-white/10"
+                            }`}
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                        >
+                          {c.shortlisted ? "✓ Shortlisted" : "Shortlist"}
+                        </motion.button>
+                      </div>
+                    </div>
+                  </motion.div>
+                ))}
+              </motion.div>
+            )}
+
+            {/* ═══════════ PROFILE & SETTINGS ═══════════ */}
+            {activeSection === "settings" && (
+              <motion.div
+                className="space-y-5"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5 }}
               >
-                <div className="text-center py-16">
-                  <motion.span
-                    className="text-6xl block mb-4"
-                    animate={{ y: [0, -12, 0], rotate: [0, 5, -5, 0] }}
-                    transition={{ duration: 3, repeat: Infinity }}
-                  >🏆</motion.span>
-                  <h3 className="text-white text-xl font-bold mb-2" style={{ fontFamily: "'Questrial', sans-serif" }}>No Rankings Yet</h3>
-                  <p className="text-white/40 text-sm">Start evaluating teams to see them climb the leaderboard!</p>
-                </div>
-              </motion.div>
-            ) : (
-              <>
-                {/* ── Podium Section ── */}
-                <motion.div
-                  className="rounded-3xl p-8 bg-gradient-to-b from-[#4D58D4]/15 via-[#4D58D4]/8 to-transparent border border-[#4D58D4]/20 backdrop-blur-xl shadow-[0_8px_32px_rgba(0,0,0,0.4)] relative overflow-hidden"
-                  initial={{ opacity: 0, y: 30, scale: 0.95 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  transition={{ duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] }}
-                >
-                  {/* Background glow effects */}
-                  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-80 h-80 bg-[#4D58D4]/10 rounded-full blur-[100px] pointer-events-none" />
-                  <div className="absolute top-10 left-1/2 -translate-x-1/2 w-40 h-40 bg-[#B4ED57]/5 rounded-full blur-[80px] pointer-events-none" />
-
-                  {/* Podium top 3 */}
-                  <div className="relative z-10 flex items-end justify-center gap-4 md:gap-8 pt-4 pb-6 mb-6">
-                    {/* 2nd Place - Left */}
-                    {ranked.length > 1 && (() => {
-                      const t = ranked[1];
-                      const score = totalScore(t.scores);
-                      return (
-                        <motion.div
-                          className="flex flex-col items-center"
-                          initial={{ opacity: 0, y: 40 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: 0.4, duration: 0.5, ease: "easeOut" }}
-                        >
-                          <motion.div
-                            className="relative mb-3"
-                            whileHover={{ scale: 1.1, y: -5 }}
-                            transition={{ type: "spring", stiffness: 300 }}
-                          >
-                            <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-gradient-to-br from-[#C0C0C0] to-[#8a8a8a] flex items-center justify-center text-white font-black text-xl md:text-2xl shadow-lg shadow-white/10 border-2 border-white/20" style={{ fontFamily: "'Questrial', sans-serif" }}>
-                              {t.name[0]}
-                            </div>
-                            <div className="absolute -bottom-1 -right-1 w-7 h-7 bg-[#C0C0C0] rounded-full flex items-center justify-center text-xs font-black shadow-md border-2 border-[#0a0a0a]">2</div>
-                          </motion.div>
-                          <span className="text-white font-bold text-xs md:text-sm text-center max-w-[90px] truncate">{t.name}</span>
-                          <span className="text-white/40 text-[10px] md:text-xs mt-0.5">{score} pts</span>
-                          {/* Podium bar */}
-                          <motion.div
-                            className="w-20 md:w-28 h-20 md:h-24 bg-gradient-to-t from-[#4D58D4]/30 to-[#4D58D4]/15 rounded-t-2xl mt-3 border border-b-0 border-[#4D58D4]/30 flex items-center justify-center"
-                            initial={{ height: 0, opacity: 0 }}
-                            animate={{ height: "auto", opacity: 1 }}
-                            transition={{ delay: 0.6, duration: 0.5, ease: "easeOut" }}
-                          >
-                            <span className="text-3xl">🥈</span>
-                          </motion.div>
-                        </motion.div>
-                      );
-                    })()}
-
-                    {/* 1st Place - Center (tallest) */}
-                    {ranked.length > 0 && (() => {
-                      const t = ranked[0];
-                      const score = totalScore(t.scores);
-                      return (
-                        <motion.div
-                          className="flex flex-col items-center -mt-4"
-                          initial={{ opacity: 0, y: 50 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: 0.2, duration: 0.6, ease: "easeOut" }}
-                        >
-                          {/* Crown */}
-                          <motion.span
-                            className="text-3xl mb-1"
-                            animate={{ y: [0, -6, 0], rotate: [0, 5, -5, 0] }}
-                            transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
-                          >👑</motion.span>
-                          <motion.div
-                            className="relative mb-3"
-                            whileHover={{ scale: 1.1, y: -5 }}
-                            transition={{ type: "spring", stiffness: 300 }}
-                          >
-                            <div className="w-20 h-20 md:w-24 md:h-24 rounded-full bg-gradient-to-br from-[#B4ED57] to-[#7cb832] flex items-center justify-center text-black font-black text-2xl md:text-3xl shadow-lg shadow-[#B4ED57]/30 border-3 border-[#B4ED57]/50" style={{ fontFamily: "'Questrial', sans-serif" }}>
-                              {t.name[0]}
-                            </div>
-                            <motion.div
-                              className="absolute -bottom-1 -right-1 w-8 h-8 bg-[#B4ED57] rounded-full flex items-center justify-center text-sm font-black text-black shadow-md shadow-[#B4ED57]/30 border-2 border-[#0a0a0a]"
-                              animate={{ boxShadow: ["0 0 0px rgba(180,237,87,0)", "0 0 16px rgba(180,237,87,0.5)", "0 0 0px rgba(180,237,87,0)"] }}
-                              transition={{ duration: 2, repeat: Infinity }}
-                            >1</motion.div>
-                          </motion.div>
-                          <span className="text-white font-bold text-sm md:text-base text-center max-w-[100px] truncate">{t.name}</span>
-                          <motion.span
-                            className="text-[#B4ED57] font-black text-sm md:text-base mt-0.5"
-                            style={{ fontFamily: "'Questrial', sans-serif" }}
-                            animate={{ scale: [1, 1.05, 1] }}
-                            transition={{ duration: 2, repeat: Infinity }}
-                          >{score} pts</motion.span>
-                          {/* Podium bar */}
-                          <motion.div
-                            className="w-24 md:w-32 h-28 md:h-36 bg-gradient-to-t from-[#B4ED57]/20 to-[#B4ED57]/8 rounded-t-2xl mt-3 border border-b-0 border-[#B4ED57]/30 flex items-center justify-center relative"
-                            initial={{ height: 0, opacity: 0 }}
-                            animate={{ height: "auto", opacity: 1 }}
-                            transition={{ delay: 0.4, duration: 0.5, ease: "easeOut" }}
-                          >
-                            <motion.span
-                              className="text-4xl"
-                              animate={{ scale: [1, 1.15, 1] }}
-                              transition={{ duration: 2, repeat: Infinity }}
-                            >🏆</motion.span>
-                          </motion.div>
-                        </motion.div>
-                      );
-                    })()}
-
-                    {/* 3rd Place - Right */}
-                    {ranked.length > 2 && (() => {
-                      const t = ranked[2];
-                      const score = totalScore(t.scores);
-                      return (
-                        <motion.div
-                          className="flex flex-col items-center"
-                          initial={{ opacity: 0, y: 40 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: 0.5, duration: 0.5, ease: "easeOut" }}
-                        >
-                          <motion.div
-                            className="relative mb-3"
-                            whileHover={{ scale: 1.1, y: -5 }}
-                            transition={{ type: "spring", stiffness: 300 }}
-                          >
-                            <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-gradient-to-br from-[#CD7F32] to-[#8B5A2B] flex items-center justify-center text-white font-black text-xl md:text-2xl shadow-lg shadow-orange-500/10 border-2 border-orange-400/30" style={{ fontFamily: "'Questrial', sans-serif" }}>
-                              {t.name[0]}
-                            </div>
-                            <div className="absolute -bottom-1 -right-1 w-7 h-7 bg-[#CD7F32] rounded-full flex items-center justify-center text-xs font-black shadow-md border-2 border-[#0a0a0a]">3</div>
-                          </motion.div>
-                          <span className="text-white font-bold text-xs md:text-sm text-center max-w-[90px] truncate">{t.name}</span>
-                          <span className="text-white/40 text-[10px] md:text-xs mt-0.5">{score} pts</span>
-                          {/* Podium bar */}
-                          <motion.div
-                            className="w-20 md:w-28 h-16 md:h-20 bg-gradient-to-t from-[#CD7F32]/20 to-[#CD7F32]/8 rounded-t-2xl mt-3 border border-b-0 border-[#CD7F32]/25 flex items-center justify-center"
-                            initial={{ height: 0, opacity: 0 }}
-                            animate={{ height: "auto", opacity: 1 }}
-                            transition={{ delay: 0.7, duration: 0.5, ease: "easeOut" }}
-                          >
-                            <span className="text-3xl">🥉</span>
-                          </motion.div>
-                        </motion.div>
-                      );
-                    })()}
-                  </div>
-
-                  {/* Podium base line */}
-                  <div className="relative z-10 h-px bg-gradient-to-r from-transparent via-white/15 to-transparent" />
-                </motion.div>
-
-                {/* ── Full Rankings List ── */}
                 <motion.div
                   className="rounded-2xl p-6 bg-[#4D58D4]/8 border border-[#4D58D4]/25 backdrop-blur-xl shadow-[0_8px_32px_rgba(0,0,0,0.3)]"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.5, duration: 0.5 }}
+                  whileHover={{ borderColor: "rgba(180,237,87,0.3)", boxShadow: "0 12px 40px rgba(77,88,212,0.15)" }}
                 >
-                  <div className="flex items-center justify-between mb-5">
-                    <h3 className="text-white font-bold text-lg" style={{ fontFamily: "'Questrial', sans-serif" }}>
-                      Full Rankings
-                    </h3>
-                    <span className="text-[10px] font-bold px-3 py-1 rounded-full bg-[#B4ED57]/10 text-[#B4ED57] border border-[#B4ED57]/20 uppercase tracking-widest">
-                      {ranked.length} scored
-                    </span>
-                  </div>
-                  <motion.div
-                    className="space-y-2"
-                    variants={staggerContainer}
-                    initial="initial"
-                    animate="animate"
-                  >
-                    {ranked.map((t, i) => {
-                      const score = totalScore(t.scores);
-                      const podiumColors = [
-                        "bg-[#B4ED57]/10 border-[#B4ED57]/30",
-                        "bg-white/[0.05] border-white/15",
-                        "bg-[#CD7F32]/8 border-[#CD7F32]/20",
-                      ];
-                      const rankBadgeColors = [
-                        "bg-[#B4ED57] text-black",
-                        "bg-[#C0C0C0] text-black",
-                        "bg-[#CD7F32] text-black",
-                      ];
-                      return (
-                        <motion.div
-                          key={t.id}
-                          className={`flex items-center gap-4 p-4 rounded-2xl border transition-all ${i < 3 ? podiumColors[i] : "bg-white/[0.02] border-white/[0.06]"}`}
-                          variants={staggerItem}
-                          whileHover={{ scale: 1.01, backgroundColor: i < 3 ? undefined : "rgba(255,255,255,0.04)" }}
-                        >
-                          {/* Rank badge */}
-                          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-black shrink-0 ${i < 3 ? rankBadgeColors[i] : "bg-white/5 text-white/30"}`}>
-                            {i + 1}
-                          </div>
-                          {/* Avatar */}
-                          <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold shrink-0 ${
-                            i === 0 ? "bg-gradient-to-br from-[#B4ED57] to-[#7cb832] text-black" :
-                            i === 1 ? "bg-gradient-to-br from-[#C0C0C0] to-[#8a8a8a] text-white" :
-                            i === 2 ? "bg-gradient-to-br from-[#CD7F32] to-[#8B5A2B] text-white" :
-                            "bg-[#4D58D4]/20 text-white/60"
-                          }`} style={{ fontFamily: "'Questrial', sans-serif" }}>
-                            {t.name[0]}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center justify-between">
-                              <div>
-                                <span className="text-white font-semibold text-sm">{t.name}</span>
-                                <span className="text-white/30 text-xs ml-2 hidden sm:inline">{t.project}</span>
-                              </div>
-                              <span className={`font-black text-lg ml-3 shrink-0 ${i === 0 ? "text-[#B4ED57]" : "text-white/70"}`} style={{ fontFamily: "'Questrial', sans-serif" }}>
-                                {score}<span className="text-white/20 text-sm">/100</span>
-                              </span>
-                            </div>
-                            <div className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden mt-2">
-                              <motion.div
-                                className={`h-full rounded-full ${i === 0 ? "bg-gradient-to-r from-[#B4ED57]/80 to-[#B4ED57]" : i === 1 ? "bg-gradient-to-r from-[#C0C0C0]/60 to-[#C0C0C0]" : i === 2 ? "bg-gradient-to-r from-[#CD7F32]/60 to-[#CD7F32]" : "bg-gradient-to-r from-[#4D58D4] to-[#B4ED57]"}`}
-                                initial={{ width: 0 }}
-                                animate={{ width: `${score}%` }}
-                                transition={{ duration: 0.8, delay: 0.6 + i * 0.1, ease: "easeOut" }}
-                              />
-                            </div>
-                          </div>
-                          <span className="text-xs px-2.5 py-1 bg-white/5 rounded-full text-white/40 shrink-0 hidden sm:block">{t.track}</span>
-                        </motion.div>
-                      );
-                    })}
-                  </motion.div>
-                </motion.div>
-              </>
-            )}
-
-            {/* Unscored teams */}
-            {teams.length - scored.length > 0 && (
-              <motion.div
-                className="rounded-2xl p-5 bg-white/[0.02] border border-white/[0.06] backdrop-blur-xl"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.7, duration: 0.4 }}
-              >
-                <p className="text-white/30 text-xs mb-3 uppercase tracking-wider">Awaiting Evaluation</p>
-                <div className="space-y-2">
-                  {teams.filter((t) => totalScore(t.scores) === 0).map((t, i) => (
+                  <div className="flex items-center gap-4 mb-6">
                     <motion.div
-                      key={t.id}
-                      className="flex items-center justify-between p-3 bg-white/[0.02] rounded-xl border border-white/[0.05]"
-                      initial={{ opacity: 0, x: -10 }}
-                      animate={{ opacity: 0.5, x: 0 }}
-                      transition={{ delay: 0.8 + i * 0.05 }}
+                      className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#4D58D4] to-[#B4ED57] flex items-center justify-center text-white font-black text-xl"
+                      style={{ fontFamily: "'Questrial', sans-serif" }}
+                      whileHover={{ scale: 1.1, rotate: 5 }}
                     >
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-white/20 text-xs font-bold" style={{ fontFamily: "'Questrial', sans-serif" }}>{t.name[0]}</div>
-                        <span className="text-white text-sm">{t.name} <span className="text-white/30 text-xs">— {t.project}</span></span>
-                      </div>
-                      <span className="text-white/20 text-sm font-bold">—/100</span>
+                      {currentUser?.name?.[0] || "J"}
                     </motion.div>
-                  ))}
-                </div>
+                    <div>
+                      <h3 className="text-white text-lg font-bold">{currentUser?.name || "Judge"}</h3>
+                      <p className="text-white/40 text-sm">{currentUser?.email || "judge@hackos.com"}</p>
+                      <div className="flex gap-2 mt-1">
+                        <span className="text-xs px-2 py-0.5 rounded-full bg-[#4D58D4]/15 text-[#8B93F0]">Judge</span>
+                        {isSponsor && <span className="text-xs px-2 py-0.5 rounded-full bg-[#B4ED57]/15 text-[#B4ED57]">Sponsor</span>}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div>
+                      <label className="text-white/40 text-xs uppercase tracking-wider mb-1.5 block">Hackathon</label>
+                      <div className="bg-white/5 border border-white/10 rounded-xl p-3 text-white text-sm">{selectedHackathon?.name || "HackOS 2026"}</div>
+                    </div>
+                    <div>
+                      <label className="text-white/40 text-xs uppercase tracking-wider mb-1.5 block">Role Access</label>
+                      <div className="bg-white/5 border border-white/10 rounded-xl p-3 text-white text-sm">{isSponsor ? "Judge + Sponsor (Recruitment enabled)" : "Judge only"}</div>
+                    </div>
+                    <div>
+                      <label className="text-white/40 text-xs uppercase tracking-wider mb-1.5 block">Teams Assigned</label>
+                      <div className="bg-white/5 border border-white/10 rounded-xl p-3 text-white text-sm">{teams.length} teams</div>
+                    </div>
+                  </div>
+                </motion.div>
+
+                <motion.button
+                  onClick={logout}
+                  className="w-full py-3 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 font-bold rounded-xl transition-all text-sm"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  ↩ Logout
+                </motion.button>
               </motion.div>
             )}
-          </div>
-        )}
-
-        {/* ═══════════ RECRUITMENT (sponsor only) ═══════════ */}
-        {activeSection === "recruitment" && isSponsor && (
-          <motion.div
-            className="space-y-4"
-            variants={staggerContainer}
-            initial="initial"
-            animate="animate"
-          >
-            <motion.div
-              className={`rounded-2xl p-4 flex items-center gap-3 backdrop-blur-xl bg-[#4D58D4]/10 border border-[#4D58D4]/20 shadow-[0_8px_32px_rgba(0,0,0,0.3)]`}
-              variants={staggerItem}
-            >
-              <motion.span
-                className="text-2xl"
-                animate={{ y: [0, -4, 0] }}
-                transition={{ duration: 2, repeat: Infinity }}
-              >💼</motion.span>
-              <div>
-                <p className="text-white text-sm font-semibold">Sponsor Recruitment Mode</p>
-                <p className="text-white/40 text-xs">Shortlist promising talent from participating teams.</p>
-              </div>
-            </motion.div>
-
-            {candidates.map((c) => (
-              <motion.div
-                key={c.id}
-                className="rounded-2xl p-5 bg-[#4D58D4]/8 border border-[#4D58D4]/25 backdrop-blur-xl shadow-[0_8px_32px_rgba(0,0,0,0.3)]"
-                variants={staggerItem}
-                whileHover={{ scale: 1.01, borderColor: "rgba(180,237,87,0.3)", boxShadow: "0 12px 40px rgba(77,88,212,0.15)" }}
-              >
-                <div className="flex items-start justify-between">
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <motion.div
-                        className="w-9 h-9 rounded-full bg-gradient-to-br from-[#4D58D4] to-[#B4ED57] flex items-center justify-center text-white font-bold text-xs"
-                        whileHover={{ scale: 1.1, rotate: 10 }}
-                      >{c.name.split(" ").map((n) => n[0]).join("")}</motion.div>
-                      <div>
-                        <h4 className="text-white font-semibold text-sm">{c.name}</h4>
-                        <p className="text-white/40 text-xs">{c.team} · {c.role}</p>
-                      </div>
-                    </div>
-                    <div className="flex gap-2 mt-3">
-                      {c.skills.map((s) => (
-                        <span key={s} className="text-xs bg-white/5 border border-white/10 px-2 py-1 rounded-lg text-white/50">{s}</span>
-                      ))}
-                    </div>
-                  </div>
-                  <div className="text-right shrink-0">
-                    <div className="text-[#B4ED57] text-sm font-bold mb-2">★ {c.rating}</div>
-                    <motion.button
-                      onClick={() => toggleShortlist(c.id)}
-                      className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
-                        c.shortlisted
-                          ? "bg-[#B4ED57] text-black shadow-lg shadow-[#B4ED57]/20"
-                          : "bg-white/5 border border-white/10 text-white/50 hover:text-white hover:bg-white/10"
-                      }`}
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                    >
-                      {c.shortlisted ? "✓ Shortlisted" : "Shortlist"}
-                    </motion.button>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-          </motion.div>
-        )}
-
-        {/* ═══════════ PROFILE & SETTINGS ═══════════ */}
-        {activeSection === "settings" && (
-          <motion.div
-            className="space-y-5"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-          >
-            <motion.div
-              className="rounded-2xl p-6 bg-[#4D58D4]/8 border border-[#4D58D4]/25 backdrop-blur-xl shadow-[0_8px_32px_rgba(0,0,0,0.3)]"
-              whileHover={{ borderColor: "rgba(180,237,87,0.3)", boxShadow: "0 12px 40px rgba(77,88,212,0.15)" }}
-            >
-              <div className="flex items-center gap-4 mb-6">
-                <motion.div
-                  className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#4D58D4] to-[#B4ED57] flex items-center justify-center text-white font-black text-xl"
-                  style={{ fontFamily: "'Questrial', sans-serif" }}
-                  whileHover={{ scale: 1.1, rotate: 5 }}
-                >
-                  {currentUser?.name?.[0] || "J"}
-                </motion.div>
-                <div>
-                  <h3 className="text-white text-lg font-bold">{currentUser?.name || "Judge"}</h3>
-                  <p className="text-white/40 text-sm">{currentUser?.email || "judge@hackos.com"}</p>
-                  <div className="flex gap-2 mt-1">
-                    <span className="text-xs px-2 py-0.5 rounded-full bg-[#4D58D4]/15 text-[#8B93F0]">Judge</span>
-                    {isSponsor && <span className="text-xs px-2 py-0.5 rounded-full bg-[#B4ED57]/15 text-[#B4ED57]">Sponsor</span>}
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <div>
-                  <label className="text-white/40 text-xs uppercase tracking-wider mb-1.5 block">Hackathon</label>
-                  <div className="bg-white/5 border border-white/10 rounded-xl p-3 text-white text-sm">{selectedHackathon?.name || "HackOS 2026"}</div>
-                </div>
-                <div>
-                  <label className="text-white/40 text-xs uppercase tracking-wider mb-1.5 block">Role Access</label>
-                  <div className="bg-white/5 border border-white/10 rounded-xl p-3 text-white text-sm">{isSponsor ? "Judge + Sponsor (Recruitment enabled)" : "Judge only"}</div>
-                </div>
-                <div>
-                  <label className="text-white/40 text-xs uppercase tracking-wider mb-1.5 block">Teams Assigned</label>
-                  <div className="bg-white/5 border border-white/10 rounded-xl p-3 text-white text-sm">{teams.length} teams</div>
-                </div>
-              </div>
-            </motion.div>
-
-            <motion.button
-              onClick={logout}
-              className="w-full py-3 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 font-bold rounded-xl transition-all text-sm"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              ↩ Logout
-            </motion.button>
-          </motion.div>
-        )}
 
           </motion.div>
         </AnimatePresence>

@@ -1,16 +1,3 @@
-// import React, { useState } from "react";
-// import { useApp } from "../context/AppContext";
-// import QRCodeDisplay from "../components/ui/QRCodeDisplay";
-
-// export default function QRPage() {
-//   const { currentUser, generatedQR, scanQR, selectedHackathon } = useApp();
-//   const [scanning, setScanning] = useState(false);
-
-//   const handleScan = () => {
-//     setScanning(true);
-//     setTimeout(() => {
-//       setScanning(false);
-//       scanQR();
 import React, { useState, useRef, useCallback, useEffect } from "react";
 import { useApp } from "../context/AppContext";
 import QRCodeDisplay from "../components/ui/QRCodeDisplay";
@@ -25,7 +12,7 @@ export default function QRPage() {
   const [verificationResult, setVerificationResult] = useState(null);
   const [verificationError, setVerificationError] = useState(null);
   const [isVerifying, setIsVerifying] = useState(false);
-  
+
   const webcamRef = useRef(null);
 
   // Capture selfie using react-webcam
@@ -33,7 +20,7 @@ export default function QRPage() {
     const imageSrc = webcamRef.current?.getScreenshot();
     if (imageSrc) {
       setSelfieImageSrc(imageSrc);
-      
+
       // Convert data URL to File (same logic as friend's code)
       fetch(imageSrc)
         .then((res) => res.blob())
@@ -41,7 +28,7 @@ export default function QRPage() {
           const file = new File([blob], "selfie.jpg", { type: "image/jpeg" });
           setSelfieFile(file);
         });
-      
+
       setCameraActive(false);
     }
   }, [webcamRef]);
@@ -84,7 +71,7 @@ export default function QRPage() {
 
       // Simulated verification result with relevance/match score
       const matchConfidence = 0.85 + Math.random() * 0.15; // 85-100% match
-      
+
       const result = {
         message: "Identity Verified Successfully",
         aadhaarStatus: "✓ Verified",
@@ -94,7 +81,7 @@ export default function QRPage() {
       };
 
       setVerificationResult(result);
-      
+
       // Log verification details (simulated backend call)
       console.log("[IDENTITY VERIFICATION]");
       console.log("User:", currentUser?.name);
@@ -181,7 +168,7 @@ export default function QRPage() {
 
               <div className="bg-white/5 rounded-xl p-4">
                 <h3 className="text-white font-bold text-sm mb-3">Identity — Selfie Verification</h3>
-                
+
                 {verificationError && (
                   <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-3 mb-3 text-red-500 text-xs">
                     {verificationError}
@@ -226,14 +213,14 @@ export default function QRPage() {
                     <img src={selfieImageSrc} alt="Selfie" className="w-full h-36 object-cover rounded-lg" />
                     <div className="absolute top-2 right-2 bg-[#B4ED57] text-black text-xs px-2 py-0.5 rounded-full font-semibold">✓ Captured</div>
                     <div className="flex gap-2 pt-2">
-                      <button 
+                      <button
                         onClick={retake}
                         disabled={isVerifying}
                         className="flex-1 px-4 py-2 bg-white/5 hover:bg-white/10 rounded-xl text-sm disabled:opacity-50"
                       >
                         Retake
                       </button>
-                      <button 
+                      <button
                         onClick={handleVerifyIdentity}
                         disabled={isVerifying}
                         className="flex-1 px-4 py-2 bg-[#B4ED57] hover:bg-[#c5f278] text-black font-bold rounded-xl disabled:opacity-50"
@@ -249,7 +236,7 @@ export default function QRPage() {
                     <div className="flex items-center gap-2 mb-3">
                       <span className="text-[#B4ED57] font-bold">✓ {verificationResult.message}</span>
                     </div>
-                    
+
                     <div className="space-y-2 text-xs">
                       <div className="flex justify-between">
                         <span className="text-white/60">Aadhaar Card</span>
@@ -267,7 +254,7 @@ export default function QRPage() {
                       </div>
                     </div>
 
-                    <button 
+                    <button
                       onClick={() => scanQR()}
                       className="w-full px-4 py-2 bg-[#B4ED57] hover:bg-[#c5f278] text-black font-bold rounded-xl mt-4"
                     >

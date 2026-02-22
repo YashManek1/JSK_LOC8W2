@@ -1,10 +1,37 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useApp } from "../context/AppContext";
 import LoginForm from "../components/auth/LoginForm";
 import SignupForm from "../components/auth/SignupForm";
 
 export default function AuthPage() {
-  const { authMode, setAuthMode, selectedHackathon, navigateTo } = useApp();
+  const { authMode, setAuthMode, selectedHackathon, navigateTo, loginUser } = useApp();
+
+  // Handle GitHub OAuth callback — backend redirects back with token + user info in URL params
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get("token");
+    const userId = params.get("userId");
+    const email = params.get("email");
+    const role = params.get("role");
+    const fullName = params.get("fullName");
+
+    if (token && userId) {
+      // Clean URL
+      window.history.replaceState({}, document.title, window.location.pathname);
+      // Auto-login
+      loginUser(
+        {
+          id: userId,
+          name: fullName || email?.split("@")[0] || "User",
+          email: email || "",
+          role: role === "Participant" ? "student" : (role || "student"),
+          hackathonId: selectedHackathon?.id || "h1",
+          hackathonName: selectedHackathon?.name || "HackOS 2026",
+        },
+        token,
+      );
+    }
+  }, []);
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center p-4 relative overflow-hidden">
@@ -51,21 +78,19 @@ export default function AuthPage() {
           <div className="flex bg-white/5 rounded-xl p-1 mb-6">
             <button
               onClick={() => setAuthMode("login")}
-              className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-all ${
-                authMode === "login"
+              className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-all ${authMode === "login"
                   ? "bg-[#B4ED57] text-black"
                   : "text-white/60 hover:text-white"
-              }`}
+                }`}
             >
               Sign In
             </button>
             <button
               onClick={() => setAuthMode("signup")}
-              className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-all ${
-                authMode === "signup"
+              className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-all ${authMode === "signup"
                   ? "bg-[#B4ED57] text-black"
                   : "text-white/60 hover:text-white"
-              }`}
+                }`}
             >
               Sign Up
             </button>
