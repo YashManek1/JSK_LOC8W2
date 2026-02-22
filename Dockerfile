@@ -42,22 +42,22 @@ COPY --from=ghcr.io/astral-sh/uv:latest /uv /bin/uv
 RUN python -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
-# 🚨 CRITICAL FIX 1: Set the Extra Index globally.
-ENV UV_EXTRA_INDEX_URL="https://download.pytorch.org/whl/cpu"
-
-RUN uv pip install --no-cache torch torchvision torchaudio
-
 COPY identity-service/requirements.txt ./
 
-# 🚨 CRITICAL FIX 2: Install requirements, strip out GPU TensorFlow, and aggressively delete CUDA/NVIDIA libs
-RUN uv pip install --no-cache -r requirements.txt \
+# 🚨 THE ULTIMATE ANTI-BLOAT FIX: 
+# Everything is chained in a single RUN command so Docker never caches the GPU bloat.
+# 1. Force CPU-only indices.
+# 2. Uninstall GPU TensorFlow and completely wipe its folder to prevent overlap corruption.
+# 3. Nuke NVIDIA and Triton packages.
+# 4. Install lightweight tensorflow-cpu and aggressively strip C++ debug symbols.
+RUN uv pip install --no-cache torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu \
+    && uv pip install --no-cache -r requirements.txt --index-url https://download.pytorch.org/whl/cpu --extra-index-url https://pypi.org/simple \
     && uv pip uninstall -y tensorflow tensorflow-cpu \
-    && uv pip install --no-cache tensorflow-cpu tf-keras \
+    && rm -rf /opt/venv/lib/python3.10/site-packages/tensorflow* \
     && rm -rf /opt/venv/lib/python3.10/site-packages/nvidia* \
     && rm -rf /opt/venv/lib/python3.10/site-packages/triton* \
-    && rm -rf /opt/venv/lib/python3.10/site-packages/tensorboard* \
-    && rm -rf /opt/venv/lib/python3.10/site-packages/torch/lib/libtorch_cuda* \
-    && find /opt/venv -name "*.so" -exec strip {} \; || true \
+    && uv pip install --no-cache tensorflow-cpu tf-keras \
+    && find /opt/venv -name "*.so" -exec strip --strip-unneeded {} \; || true \
     && find /opt/venv -type d -name "__pycache__" -exec rm -rf {} + \
     && find /opt/venv -name "*.pyc" -delete
 
