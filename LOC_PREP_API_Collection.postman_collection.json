@@ -1,0 +1,607 @@
+{
+  "info": {
+    "_postman_id": "loc-prep-complete-2026",
+    "name": "LOC_PREP - Complete API Collection",
+    "description": "Complete API collection for LOC_PREP Hackathon Platform\n\nBackend: NestJS on port 3000\nFrontend: Vite React on port 5173\nDatabase: PostgreSQL (Supabase)\nRedis: BullMQ Queue Management\n\nFeatures:\n- GitHub Analytics with AI Codebase Evaluation\n- Shortlist Management with Groq AI Scoring\n- Voice Chat Interview System\n- Identity Verification\n- Gamification & Leaderboards",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "version": "2.0.0"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "https://jskloc8w2-production.up.railway.app",
+      "type": "string",
+      "description": "NestJS Backend Server (Railway)"
+    },
+    {
+      "key": "frontendUrl",
+      "value": "http://localhost:5173",
+      "type": "string",
+      "description": "Vite Frontend Server"
+    },
+    {
+      "key": "teamName",
+      "value": "Team Innovix",
+      "type": "string"
+    },
+    {
+      "key": "entryId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "userId",
+      "value": "alice-coder",
+      "type": "string"
+    },
+    {
+      "key": "hackathonId",
+      "value": "some-uuid",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "🩺 Health Check",
+      "item": [
+        {
+          "name": "Backend Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/",
+              "host": ["{{baseUrl}}"],
+              "path": [""]
+            },
+            "description": "Check if backend is running"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "🚀 GitHub Analytics",
+      "description": "Real-time GitHub repository analysis with AI-powered codebase evaluation using Repomix + Groq",
+      "item": [
+        {
+          "name": "Sync Repository Stats",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    console.log('✅ Repository synced successfully');",
+                  "    var jsonData = pm.response.json();",
+                  "    console.log('Total Commits:', jsonData.totalCommits);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"teamName\": \"{{teamName}}\",\n  \"githubUrl\": \"https://github.com/facebook/react\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/github/sync/{{teamName}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["github", "sync", "{{teamName}}"]
+            },
+            "description": "**Force sync GitHub repository statistics**\n\nThis endpoint:\n1. Fetches contributors, commits, languages from GitHub API\n2. Packs codebase using Repomix\n3. Runs Groq AI evaluation against problem statement\n4. Maps features to individual developers\n5. Caches everything in PostgreSQL\n\n**Rate Limits:** Uses GROQ_API_KEY_SECONDARY to isolate quotas"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Repository Stats",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var jsonData = pm.response.json();",
+                  "    console.log('GitHub Data:', jsonData.githubData);",
+                  "    console.log('AI Analysis:', jsonData.aiData);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/github/stats/{{teamName}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["github", "stats", "{{teamName}}"]
+            },
+            "description": "**Retrieve cached GitHub statistics**\n\nReturns:\n- `githubData`: Contributors, commits, languages, timeline\n- `aiData`: Implemented features, missing features, relevance score\n\nAuto-syncs if cache is older than 1 hour"
+          },
+          "response": []
+        },
+        {
+          "name": "Sync by Entry ID",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"githubUrl\": \"https://github.com/username/repo\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/github/sync/{{entryId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["github", "sync", "{{entryId}}"]
+            },
+            "description": "Sync using shortlist entry UUID instead of team name"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "📋 Problem Statements",
+      "description": "Endpoints for managing and allocating Problem Statements",
+      "item": [
+        {
+          "name": "Get Problem Statements",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/ps/{{hackathonId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["ps", "{{hackathonId}}"]
+            },
+            "description": "Get all domains/problem statements for a hackathon"
+          },
+          "response": []
+        },
+        {
+          "name": "Get PS Preferences (Team)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/ps/{{hackathonId}}/preferences",
+              "host": ["{{baseUrl}}"],
+              "path": ["ps", "{{hackathonId}}", "preferences"]
+            },
+            "description": "Get current teams top 3 problem statement preferences"
+          },
+          "response": []
+        },
+        {
+          "name": "Set PS Preferences (Team Leader)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"preferences\": [\n    \"domain_id_1\",\n    \"domain_id_2\",\n    \"domain_id_3\"\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/ps/{{hackathonId}}/preferences",
+              "host": ["{{baseUrl}}"],
+              "path": ["ps", "{{hackathonId}}", "preferences"]
+            },
+            "description": "Set teams top 3 problem statement preferences"
+          },
+          "response": []
+        },
+        {
+          "name": "Allocate PS (Admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"maxTeamsPerDomain\": 50\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/hackathons/{{hackathonId}}/allocate-ps",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "hackathons", "{{hackathonId}}", "allocate-ps"]
+            },
+            "description": "Trigger FCFS allocation of teams to problem statements"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "📊 Shortlist - Public API",
+      "description": "Public-facing shortlist submission and status endpoints",
+      "item": [
+        {
+          "name": "Submit Entry",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200 || pm.response.code === 201) {",
+                  "    var jsonData = pm.response.json();",
+                  "    if (jsonData.entryId) {",
+                  "        pm.collectionVariables.set('entryId', jsonData.entryId);",
+                  "        console.log('Entry ID saved:', jsonData.entryId);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "teamName",
+                  "value": "Team Innovators",
+                  "type": "text",
+                  "description": "Team name"
+                },
+                {
+                  "key": "githubUrl",
+                  "value": "https://github.com/team/repo",
+                  "type": "text",
+                  "description": "Optional GitHub repository URL"
+                },
+                {
+                  "key": "pptx",
+                  "type": "file",
+                  "src": [],
+                  "description": "PPTX file (max 15 slides)"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/shortlist/submit",
+              "host": ["{{baseUrl}}"],
+              "path": ["shortlist", "submit"]
+            },
+            "description": "Submit shortlist entry with PPTX presentation"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Entry Status",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/shortlist/{{entryId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["shortlist", "{{entryId}}"]
+            },
+            "description": "Get entry details with AI scores and status"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Leaderboard",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/shortlist/leaderboard",
+              "host": ["{{baseUrl}}"],
+              "path": ["shortlist", "leaderboard"]
+            },
+            "description": "Get published leaderboard (only after admin publishes)"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "🔐 Admin - Shortlist Management",
+      "description": "Admin endpoints for managing shortlist configuration and entries",
+      "item": [
+        {
+          "name": "Get Configuration",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/config",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "config"]
+            },
+            "description": "Get current round configuration"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Configuration",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"maxSlides\": 15,\n  \"targetShortlist\": 10,\n  \"domains\": [\"AI/ML\", \"Web3\", \"FinTech\"],\n  \"keywords\": [\"innovative\", \"scalable\", \"disruptive\"],\n  \"problemStatement\": \"Build innovative solutions that address real-world problems in the target domains\",\n  \"scoringWeights\": {\n    \"problemRelevance\": 25,\n    \"innovation\": 25,\n    \"technicalDepth\": 20,\n    \"marketImpact\": 15,\n    \"slideQuality\": 15\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/config",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "config"]
+            },
+            "description": "Update scoring criteria and problem statement"
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Entries",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/entries",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "entries"]
+            },
+            "description": "Get all shortlist entries with full details"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Stats",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/stats",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "stats"]
+            },
+            "description": "Get screening statistics (pending, processing, evaluated, etc.)"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Queue Status",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/queue-status",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "queue-status"]
+            },
+            "description": "Get BullMQ queue status and ETA"
+          },
+          "response": []
+        },
+        {
+          "name": "Mass Upload PPTs",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "pptxFiles",
+                  "type": "file",
+                  "src": [],
+                  "description": "Multiple PPTX files"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/mass-upload",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "mass-upload"]
+            },
+            "description": "Bulk upload multiple PPTX files (auto-extracts team names)"
+          },
+          "response": []
+        },
+        {
+          "name": "Start Evaluation",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/start-evaluation",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "start-evaluation"]
+            },
+            "description": "Queue all PENDING entries for AI evaluation"
+          },
+          "response": []
+        },
+        {
+          "name": "Eliminate Entry",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/entries/{{entryId}}/eliminate",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "entries", "{{entryId}}", "eliminate"]
+            },
+            "description": "Mark entry as eliminated"
+          },
+          "response": []
+        },
+        {
+          "name": "Restore Entry",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/entries/{{entryId}}/restore",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "entries", "{{entryId}}", "restore"]
+            },
+            "description": "Restore eliminated entry"
+          },
+          "response": []
+        },
+        {
+          "name": "Requeue Entry",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/entries/{{entryId}}/requeue",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "entries", "{{entryId}}", "requeue"]
+            },
+            "description": "Requeue failed entry for re-evaluation"
+          },
+          "response": []
+        },
+        {
+          "name": "Add Admin Note",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"note\": \"Strong technical implementation, needs better UI/UX\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/entries/{{entryId}}/note",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "entries", "{{entryId}}", "note"]
+            },
+            "description": "Add private admin note to entry"
+          },
+          "response": []
+        },
+        {
+          "name": "Rescore All",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/rescore",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "rescore"]
+            },
+            "description": "Recalculate all scores with new weights"
+          },
+          "response": []
+        },
+        {
+          "name": "Publish Leaderboard",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/publish",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "publish"]
+            },
+            "description": "Publish leaderboard to participants"
+          },
+          "response": []
+        },
+        {
+          "name": "Start New Round",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/new-round",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "new-round"]
+            },
+            "description": "Archive current round and start fresh"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "🧪 Test & Mock Data",
+      "description": "Testing endpoints for development without hitting external APIs",
+      "item": [
+        {
+          "name": "Get Mock GitHub Data",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/test/mock-github-data/{{teamName}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["test", "mock-github-data", "{{teamName}}"]
+            },
+            "description": "Returns fake GitHub statistics for testing UI"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Mock AI Features",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/test/mock-ai-features/{{teamName}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["test", "mock-ai-features", "{{teamName}}"]
+            },
+            "description": "Returns mock AI-analyzed features for testing"
+          },
+          "response": []
+        },
+        {
+          "name": "Award Mock Spark",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/test/mock-spark/{{userId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["test", "mock-spark", "{{userId}}"]
+            },
+            "description": "Simulates awarding gamification points"
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}
