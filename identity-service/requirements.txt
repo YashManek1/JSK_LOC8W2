@@ -1,8 +1,8 @@
 fastapi
 uvicorn
 easyocr
-deepface
 opencv-python-headless
 python-multipart
-tf-keras
+tf keras
 tensorflow-cpu
+deepface
