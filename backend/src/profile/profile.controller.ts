@@ -7,13 +7,14 @@ import {
   Param,
   UseInterceptors,
   UploadedFile,
+  BadRequestException,
 } from '@nestjs/common';
 import { ProfileService } from './profile.service';
 import { FileInterceptor } from '@nestjs/platform-express';
 
 @Controller('profile')
 export class ProfileController {
-  constructor(private readonly profileService: ProfileService) {}
+  constructor(private readonly profileService: ProfileService) { }
 
   @Get(':userId')
   async getProfile(@Param('userId') userId: string) {
@@ -28,9 +29,16 @@ export class ProfileController {
     return this.profileService.updateProfile(userId, body);
   }
 
+  // UPDATED: Accepts the full profile payload and extracts userId
   @Post('submit')
-  async submitProfile(@Body('userId') userId: string) {
-    return this.profileService.submitProfile(userId);
+  async submitProfile(@Body() body: Record<string, any>) {
+    const { userId, ...profileData } = body;
+
+    if (!userId) {
+      throw new BadRequestException('userId is required to submit the profile');
+    }
+
+    return this.profileService.submitProfile(userId, profileData);
   }
 
   @Post(':userId/resume')
@@ -40,7 +48,7 @@ export class ProfileController {
     @UploadedFile() file: Express.Multer.File,
   ) {
     if (!file) {
-      throw new Error('Resume file is required');
+      throw new BadRequestException('Resume file is required');
     }
     return this.profileService.extractResumeData(userId, file);
   }

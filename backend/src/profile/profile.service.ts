@@ -17,7 +17,7 @@ export class ProfileService {
   constructor(
     private prisma: PrismaService,
     private geminiService: GeminiService,
-  ) {}
+  ) { }
 
   async getProfile(userId: string) {
     const user = await this.prisma.participant.findUnique({
@@ -79,7 +79,8 @@ export class ProfileService {
     return updatedUser;
   }
 
-  async submitProfile(userId: string) {
+  // UPDATED: Now receives the complete data payload to save everything to the DB at once
+  async submitProfile(userId: string, data: Record<string, unknown>) {
     const user = await this.prisma.participant.findUnique({
       where: { id: userId },
     });
@@ -87,9 +88,13 @@ export class ProfileService {
       throw new NotFoundException('User not found');
     }
 
+    // Merges the final submitted data (manual, parsed, Gemini) and marks the profile complete
     return this.prisma.participant.update({
       where: { id: userId },
-      data: { isProfileComplete: true },
+      data: {
+        ...data,
+        isProfileComplete: true,
+      },
     });
   }
 
