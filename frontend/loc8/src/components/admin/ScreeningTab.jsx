@@ -161,11 +161,11 @@ export default function ScreeningTab() {
     const loadAll = useCallback(async () => {
         try {
             const [cfgRes, lbRes, allRes, statsRes, qRes] = await Promise.all([
-                fetch(`${API_BASE_URL}/api/admin/config`),
-                fetch(`${API_BASE_URL}/api/admin/leaderboard`),
-                fetch(`${API_BASE_URL}/api/admin/entries`),
-                fetch(`${API_BASE_URL}/api/admin/stats`),
-                fetch(`${API_BASE_URL}/api/admin/queue-status`),
+                fetch(`${API_BASE_URL}/admin/config`),
+                fetch(`${API_BASE_URL}/admin/leaderboard`),
+                fetch(`${API_BASE_URL}/admin/entries`),
+                fetch(`${API_BASE_URL}/admin/stats`),
+                fetch(`${API_BASE_URL}/admin/queue-status`),
             ]);
             if (cfgRes.ok) {
                 const c = await cfgRes.json();
@@ -216,7 +216,7 @@ export default function ScreeningTab() {
         e.preventDefault(); setSaving(true); setSaveMsg('');
         const totalW = Object.values(scoringWeights).reduce((a, b) => a + b, 0);
         if (Math.abs(totalW - 100) > 1) { setSaveMsg('❌ Weights must sum to 100'); setSaving(false); return; }
-        const res = await fetch(`${API_BASE_URL}/api/admin/config`, {
+        const res = await fetch(`${API_BASE_URL}/admin/config`, {
             method: 'POST', headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ maxSlides, targetShortlist, domains, keywords, problemStatement, scoringWeights }),
         });
@@ -230,7 +230,7 @@ export default function ScreeningTab() {
         setUploading(true); setSaveMsg('');
         const fd = new FormData();
         files.forEach(f => fd.append('pptxFiles', f));
-        const res = await fetch(`${API_BASE_URL}/api/admin/mass-upload`, { method: 'POST', body: fd });
+        const res = await fetch(`${API_BASE_URL}/admin/mass-upload`, { method: 'POST', body: fd });
         if (res.ok) {
             const d = await res.json();
             setSaveMsg(`✓ Uploaded ${d.count} teams. Click "Start AI Scoring" to begin.`);
@@ -242,7 +242,7 @@ export default function ScreeningTab() {
 
     const startEvaluation = async () => {
         setStartingEval(true); setSaveMsg('');
-        const res = await fetch(`${API_BASE_URL}/api/admin/start-evaluation`, { method: 'POST' });
+        const res = await fetch(`${API_BASE_URL}/admin/start-evaluation`, { method: 'POST' });
         if (res.ok) {
             const d = await res.json();
             const eta = d.etaSeconds > 60 ? `~${Math.ceil(d.etaSeconds / 60)} min` : `~${d.etaSeconds}s`;
@@ -253,32 +253,32 @@ export default function ScreeningTab() {
         setTimeout(() => setSaveMsg(''), 8000);
     };
 
-    const eliminate = async (id) => { await fetch(`${API_BASE_URL}/api/admin/entries/${id}/eliminate`, { method: 'POST' }); loadAll(); };
-    const restore = async (id) => { await fetch(`${API_BASE_URL}/api/admin/entries/${id}/restore`, { method: 'POST' }); loadAll(); };
-    const requeue = async (id) => { await fetch(`${API_BASE_URL}/api/admin/entries/${id}/requeue`, { method: 'POST' }); loadAll(); };
+    const eliminate = async (id) => { await fetch(`${API_BASE_URL}/admin/entries/${id}/eliminate`, { method: 'POST' }); loadAll(); };
+    const restore = async (id) => { await fetch(`${API_BASE_URL}/admin/entries/${id}/restore`, { method: 'POST' }); loadAll(); };
+    const requeue = async (id) => { await fetch(`${API_BASE_URL}/admin/entries/${id}/requeue`, { method: 'POST' }); loadAll(); };
     const saveNote = async () => {
         if (!noteEntry) return;
-        await fetch(`${API_BASE_URL}/api/admin/entries/${noteEntry.id}/note`, {
+        await fetch(`${API_BASE_URL}/admin/entries/${noteEntry.id}/note`, {
             method: 'PATCH', headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ note: noteText }),
         });
         setNoteEntry(null); loadAll();
     };
     const rescore = async () => {
-        const res = await fetch(`${API_BASE_URL}/api/admin/rescore`, { method: 'POST' });
+        const res = await fetch(`${API_BASE_URL}/admin/rescore`, { method: 'POST' });
         if (res.ok) { const d = await res.json(); setSaveMsg(`✓ Rescored ${d.updated} entries`); loadAll(); }
         setTimeout(() => setSaveMsg(''), 4000);
     };
     const publish = async () => {
         setPublishing(true);
-        await fetch(`${API_BASE_URL}/api/admin/publish`, { method: 'POST' });
+        await fetch(`${API_BASE_URL}/admin/publish`, { method: 'POST' });
         setSaveMsg('✓ Leaderboard published to participants!');
         loadAll(); setPublishing(false); setTimeout(() => setSaveMsg(''), 5000);
     };
     const startNewRound = async () => {
         if (!confirm('Start a new round? Previous data is kept.')) return;
         setStartingNewRound(true);
-        await fetch(`${API_BASE_URL}/api/admin/new-round`, { method: 'POST' });
+        await fetch(`${API_BASE_URL}/admin/new-round`, { method: 'POST' });
         setSaveMsg('✓ New round started!'); loadAll(); setStartingNewRound(false);
         setTimeout(() => setSaveMsg(''), 4000);
     };

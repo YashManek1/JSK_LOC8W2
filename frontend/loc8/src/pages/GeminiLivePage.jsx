@@ -240,7 +240,9 @@ export default function GeminiLivePage() {
     const email = currentUser?.email;
     if (!email) return;
 
-    const newSocket = io(`${API_BASE_URL}/voice-chat`);
+    // Strip trailing /api so Socket.IO connects to the server root
+    const serverRoot = API_BASE_URL.replace(/\/api\/?$/, "");
+    const newSocket = io(`${serverRoot}/voice-chat`);
 
     newSocket.on("connect", () => setIsConnected(true));
     newSocket.on("disconnect", () => setIsConnected(false));

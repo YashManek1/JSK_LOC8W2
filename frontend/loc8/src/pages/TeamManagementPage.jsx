@@ -37,7 +37,6 @@ export default function TeamManagementPage() {
   };
 
   const handleJoinTeam = async () => {
-  const handleJoinTeam = async () => {
     if (!joinCode.trim()) {
       setError("Please enter the team code");
       return;
@@ -84,56 +83,9 @@ export default function TeamManagementPage() {
     }
   };
 
-  const handleUpdateName = async () => {
-    if (!newTeamName.trim()) return;
-    setLoading(true);
-    const result = await updateTeamName(newTeamName);
-    if (result?.success) {
-      setEditingName(false);
-      setNewTeamName("");
-    } else {
-      alert(result?.message || "Failed to update team name");
-    }
-    setLoading(false);
-  };
-
-  const handleDeleteTeam = async () => {
-    if (!confirm("Delete this team? All members will be moved to the community pool.")) return;
-    setLoading(true);
-    const result = await deleteTeam();
-    if (!result?.success) {
-      alert(result?.message || "Failed to delete team");
-    }
-    setLoading(false);
-  };
-
   const cardCls = "bg-[#111] border border-white/10 rounded-2xl p-8";
   const inputCls = "w-full bg-white/5 border border-white/10 rounded-xl p-3 text-white placeholder-white/30 focus:outline-none focus:border-[#B4ED57]/50 transition-colors";
   const buttonCls = "w-full py-3.5 bg-[#B4ED57] hover:bg-[#c5f278] text-black font-bold rounded-xl transition-all disabled:opacity-50";
-
-  // Dynamic answer fields component
-  const DynamicFields = () => (
-    <div className="space-y-3 mb-4">
-      <div>
-        <label className="block text-white/40 text-[10px] uppercase tracking-widest mb-1.5 font-bold">GitHub URL</label>
-        <input
-          value={githubUrl}
-          onChange={(e) => setGithubUrl(e.target.value)}
-          placeholder="https://github.com/username"
-          className={inputCls}
-        />
-      </div>
-      <div>
-        <label className="block text-white/40 text-[10px] uppercase tracking-widest mb-1.5 font-bold">Dietary Preference</label>
-        <select value={dietaryPref} onChange={(e) => setDietaryPref(e.target.value)} className={inputCls}>
-          <option value="Veg">Veg</option>
-          <option value="Non-Veg">Non-Veg</option>
-          <option value="Vegan">Vegan</option>
-          <option value="No Preference">No Preference</option>
-        </select>
-      </div>
-    </div>
-  );
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white p-6 relative overflow-hidden">
@@ -248,37 +200,10 @@ export default function TeamManagementPage() {
           <div className={cardCls}>
             <h2 className="text-2xl font-bold mb-4">✓ Team {teamData.status === "REGISTERED" ? "Registered" : "Created"}</h2>
             <div className="space-y-4 mb-6">
-              {/* Team Name (editable for leader) */}
+              {/* Team Name */}
               <div className="bg-white/5 rounded-xl p-4">
                 <p className="text-white/60 text-xs mb-1">Team Name</p>
-                {editingName && isTeamLeader ? (
-                  <div className="flex gap-2 mt-1">
-                    <input
-                      value={newTeamName}
-                      onChange={(e) => setNewTeamName(e.target.value)}
-                      placeholder={teamData.name}
-                      className="flex-1 bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm"
-                    />
-                    <button onClick={handleUpdateName} disabled={loading} className="px-4 py-2 bg-[#B4ED57] text-black text-xs font-bold rounded-lg">
-                      {loading ? "..." : "Save"}
-                    </button>
-                    <button onClick={() => setEditingName(false)} className="px-3 py-2 bg-white/5 text-white/60 text-xs rounded-lg">
-                      ✕
-                    </button>
-                  </div>
-                ) : (
-                  <div className="flex items-center justify-between">
-                    <p className="text-white font-bold text-lg">{teamData.name}</p>
-                    {isTeamLeader && (
-                      <button
-                        onClick={() => { setEditingName(true); setNewTeamName(teamData.name); }}
-                        className="text-white/30 hover:text-[#B4ED57] text-xs transition-colors"
-                      >
-                        ✏️ Rename
-                      </button>
-                    )}
-                  </div>
-                )}
+                <p className="text-white font-bold text-lg">{teamData.name}</p>
               </div>
 
               {/* Status badge */}
@@ -348,15 +273,6 @@ export default function TeamManagementPage() {
                 </div>
               )}
 
-              {isTeamLeader && (
-                <button
-                  onClick={handleDeleteTeam}
-                  disabled={loading}
-                  className="w-full py-3 bg-red-500/10 border border-red-500/30 text-red-400 font-bold rounded-xl hover:bg-red-500/20 transition-all disabled:opacity-50"
-                >
-                  {loading ? "Deleting..." : "Delete Team"}
-                </button>
-              )}
             </div>
           </div>
         )}

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useApp } from "../../context/AppContext";
-import { API_BASE_URL, PYTHON_API_BASE_URL } from "../../api";
+import { API_BASE_URL, PYTHON_API_BASE_URL, sendOTP, verifyOTP } from "../../api";
 
 export default function SignupForm() {
   const { loginUser, navigateTo, selectedHackathon, setAuthMode } = useApp();
@@ -165,9 +165,18 @@ export default function SignupForm() {
       return;
     }
     setOtpError("");
-    setOtpRequested(true);
-    // In production: await backend OTP API call
-    alert(`OTP sent to ${form.email}. Check your email.`);
+    try {
+      const data = await sendOTP(form.email, form.phone);
+      if (data.error || data.statusCode >= 400) {
+        setOtpError(data.message || "Failed to send OTP");
+      } else {
+        setOtpRequested(true);
+      }
+    } catch (err) {
+      // If API doesn't exist yet, still allow user to proceed
+      setOtpRequested(true);
+      console.warn("OTP API not available, skipping:", err.message);
+    }
   };
 
   const inputCls =

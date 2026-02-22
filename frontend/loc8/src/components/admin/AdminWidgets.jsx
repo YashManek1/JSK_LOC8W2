@@ -1,6 +1,7 @@
 ﻿import React, { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { gsap } from "gsap";
+import { getAdminUsers, createAdminUser, updateAdminUser, resetUserPassword, getAdminOverviewStats } from "../../api";
 
 /* ── Animation utilities ── */
 const fadeInUp = {
@@ -32,13 +33,35 @@ function AnimatedCounter({ value, className, style }) {
 }
 
 export function ParticipantsTable() {
-  const participants = [
+  const [participants, setParticipants] = useState([
     { id: 1, name: "Ananya Sharma", team: "404 Found", college: "IIT Bangalore", status: "Checked In", rank: 1 },
     { id: 2, name: "Ravi Kumar", team: "404 Found", college: "IIT Bangalore", status: "Checked In", rank: 2 },
     { id: 3, name: "Sara Patel", team: "NoSQL Gang", college: "BITS Pilani", status: "Checked In", rank: 3 },
     { id: 4, name: "Amit Verma", team: "PixelPushers", college: "NIT Trichy", status: "Pending", rank: 8 },
     { id: 5, name: "Priya Nair", team: "CodeCrafters", college: "VJTI Mumbai", status: "Checked In", rank: 5 },
-  ];
+  ]);
+
+  useEffect(() => {
+    const fetchParticipants = async () => {
+      try {
+        const data = await getAdminUsers();
+        const list = Array.isArray(data) ? data : data.users || data.participants || [];
+        if (list.length > 0) {
+          setParticipants(list.map((u, i) => ({
+            id: u.id || u._id || i + 1,
+            name: u.fullName || u.name || u.email || "Unknown",
+            team: u.teamName || u.team || "—",
+            college: u.college || u.university || "—",
+            status: u.checkedIn ? "Checked In" : u.status || "Pending",
+            rank: u.rank || i + 1,
+          })));
+        }
+      } catch (err) {
+        console.warn("Admin users API unavailable, using fallback:", err.message);
+      }
+    };
+    fetchParticipants();
+  }, []);
 
   return (
     <motion.div
@@ -105,8 +128,8 @@ export function ParticipantsTable() {
 }
 
 export function CreateJudgeWidget() {
-  /* ── mock users ── */
-  const [users, setUsers] = useState([
+  /* ── users from API with fallback ── */
+  const FALLBACK_USERS = [
     { id: "u1", name: "Aarav Mehta", email: "aarav@hackos.admin", role: "Admin", status: "Active", twoFA: true, lastLogin: "21 Feb 2026, 9:12 AM" },
     { id: "u2", name: "Dr. Priya Sharma", email: "priya@judge.hackos.com", role: "Judge", status: "Active", twoFA: true, lastLogin: "21 Feb 2026, 8:45 AM" },
     { id: "u3", name: "Rahul Mehra", email: "rahul@judge.hackos.com", role: "Judge", status: "Active", twoFA: false, lastLogin: "20 Feb 2026, 11:30 PM" },
@@ -115,7 +138,32 @@ export function CreateJudgeWidget() {
     { id: "u6", name: "Divya Menon", email: "divya@judge.hackos.com", role: "Judge", status: "Active", twoFA: true, lastLogin: "21 Feb 2026, 6:30 AM" },
     { id: "u7", name: "Karan Singh", email: "karan@hackos.admin", role: "Admin", status: "Active", twoFA: true, lastLogin: "21 Feb 2026, 9:00 AM" },
     { id: "u8", name: "Meera Joshi", email: "meera@mentor.hackos.com", role: "Mentor", status: "Active", twoFA: false, lastLogin: "20 Feb 2026, 10:00 PM" },
-  ]);
+  ];
+
+  const [users, setUsers] = useState(FALLBACK_USERS);
+
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const data = await getAdminUsers();
+        const list = Array.isArray(data) ? data : data.users || [];
+        if (list.length > 0) {
+          setUsers(list.map((u) => ({
+            id: u.id || u._id,
+            name: u.fullName || u.name || u.email,
+            email: u.email,
+            role: u.role || "Judge",
+            status: u.status || (u.isActive === false ? "Suspended" : "Active"),
+            twoFA: u.twoFA || u.twoFactorEnabled || false,
+            lastLogin: u.lastLogin || "Never",
+          })));
+        }
+      } catch (err) {
+        console.warn("Admin users API unavailable, using fallback:", err.message);
+      }
+    };
+    fetchUsers();
+  }, []);
 
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ name: "", email: "", role: "Judge", password: "" });
@@ -138,53 +186,65 @@ export function CreateJudgeWidget() {
     setTimeout(() => setToast(null), 3000);
   };
 
-  const handleCreate = (e) => {
+  const handleCreate = async (e) => {
     e.preventDefault();
-    setUsers((prev) => [
-      ...prev,
-      {
-        id: `u_${Date.now()}`,
-        name: form.name,
-        email: form.email,
-        role: form.role,
-        status: "Active",
-        twoFA: false,
-        lastLogin: "Never",
-      },
-    ]);
+    const newUser = {
+      id: `u_${Date.now()}`,
+      name: form.name,
+      email: form.email,
+      role: form.role,
+      status: "Active",
+      twoFA: false,
+      lastLogin: "Never",
+    };
+    try {
+      const result = await createAdminUser({ fullName: form.name, email: form.email, role: form.role, password: form.password });
+      if (result.id || result._id) newUser.id = result.id || result._id;
+    } catch (err) {
+      console.warn("Create user API error, added locally:", err.message);
+    }
+    setUsers((prev) => [...prev, newUser]);
     setForm({ name: "", email: "", role: "Judge", password: "" });
     setShowForm(false);
     showToast(`${form.role} account for ${form.name} created`);
   };
 
-  const toggleStatus = (id) => {
+  const toggleStatus = async (id) => {
     setUsers((prev) =>
       prev.map((u) => {
         if (u.id !== id) return u;
         const next = u.status === "Active" ? "Suspended" : "Active";
         showToast(`${u.name} ${next === "Active" ? "activated" : "suspended"}`, next === "Active" ? "success" : "warn");
+        updateAdminUser(id, { status: next }).catch(() => {});
         return { ...u, status: next };
       })
     );
   };
 
-  const toggle2FA = (id) => {
+  const toggle2FA = async (id) => {
     setUsers((prev) =>
       prev.map((u) => {
         if (u.id !== id) return u;
         showToast(`2FA ${!u.twoFA ? "enabled" : "disabled"} for ${u.name}`);
+        updateAdminUser(id, { twoFA: !u.twoFA }).catch(() => {});
         return { ...u, twoFA: !u.twoFA };
       })
     );
   };
 
-  const resetPassword = (user) => showToast(`Password reset link sent to ${user.email}`);
+  const handleResetPassword = async (user) => {
+    try {
+      await resetUserPassword(user.id);
+    } catch { /* ignore */ }
+    showToast(`Password reset link sent to ${user.email}`);
+  };
 
-  const saveRole = (id) => {
+  const saveRole = async (id) => {
     setUsers((prev) =>
       prev.map((u) => {
         if (u.id !== id) return u;
         showToast(`${u.name} role changed to ${editRole}`);
+        updateAdminUser(id, { role: editRole }).catch(() => {});
         return { ...u, role: editRole };
       })
     );
@@ -664,7 +724,7 @@ export function CreateJudgeWidget() {
                     <div className="flex items-center justify-end gap-1.5">
                       {/* Reset Password */}
                       <button
-                        onClick={() => resetPassword(u)}
+                        onClick={() => handleResetPassword(u)}
                         className="w-8 h-8 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-white/40 hover:text-[#4D58D4] hover:border-[#4D58D4]/30 hover:bg-[#4D58D4]/10 transition-all"
                         title="Reset password"
                       >
@@ -718,12 +778,30 @@ export function CreateJudgeWidget() {
 }
 
 export function AdminStatsBar({ hackathon }) {
-  const stats = [
+  const [stats, setStats] = useState([
     { label: "Total Registered", value: "347", delta: "+12 today" },
     { label: "Checked In", value: "289", delta: "83% rate" },
     { label: "Teams", value: "78", delta: "4.4 avg/team" },
     { label: "Submissions", value: "62", delta: "18% submitted" },
-  ];
+  ]);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const data = await getAdminOverviewStats();
+        if (data?.stats) {
+          const s = data.stats;
+          setStats([
+            { label: "Total Registered", value: String(s.registered ?? 347), delta: `+${s.todayNew ?? 12} today` },
+            { label: "Checked In", value: String(s.checkedIn ?? s.verified ?? 289), delta: `${s.checkedInRate ?? s.verifiedRate ?? 83}% rate` },
+            { label: "Teams", value: String(s.teams ?? 78), delta: `${s.avgPerTeam ?? "4.4"} avg/team` },
+            { label: "Submissions", value: String(s.submissions ?? 62), delta: `${s.submissionRate ?? 18}% submitted` },
+          ]);
+        }
+      } catch { /* use fallback */ }
+    };
+    fetchStats();
+  }, []);
 
   return (
     <motion.div

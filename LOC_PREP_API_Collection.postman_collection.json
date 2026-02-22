@@ -9,9 +9,9 @@
   "variable": [
     {
       "key": "baseUrl",
-      "value": "https://jskloc8w2-production.up.railway.app",
+      "value": "http://localhost:3000",
       "type": "string",
-      "description": "NestJS Backend Server (Railway)"
+      "description": "NestJS Backend Server"
     },
     {
       "key": "frontendUrl",
@@ -41,25 +41,6 @@
     }
   ],
   "item": [
-    {
-      "name": "🩺 Health Check",
-      "item": [
-        {
-          "name": "Backend Health",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/",
-              "host": ["{{baseUrl}}"],
-              "path": [""]
-            },
-            "description": "Check if backend is running"
-          },
-          "response": []
-        }
-      ]
-    },
     {
       "name": "🚀 GitHub Analytics",
       "description": "Real-time GitHub repository analysis with AI-powered codebase evaluation using Repomix + Groq",
@@ -95,12 +76,17 @@
             },
             "url": {
               "raw": "{{baseUrl}}/github/sync/{{teamName}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["github", "sync", "{{teamName}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "github",
+                "sync",
+                "{{teamName}}"
+              ]
             },
             "description": "**Force sync GitHub repository statistics**\n\nThis endpoint:\n1. Fetches contributors, commits, languages from GitHub API\n2. Packs codebase using Repomix\n3. Runs Groq AI evaluation against problem statement\n4. Maps features to individual developers\n5. Caches everything in PostgreSQL\n\n**Rate Limits:** Uses GROQ_API_KEY_SECONDARY to isolate quotas"
-          },
-          "response": []
+          }
         },
         {
           "name": "Get Repository Stats",
@@ -124,12 +110,17 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/github/stats/{{teamName}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["github", "stats", "{{teamName}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "github",
+                "stats",
+                "{{teamName}}"
+              ]
             },
             "description": "**Retrieve cached GitHub statistics**\n\nReturns:\n- `githubData`: Contributors, commits, languages, timeline\n- `aiData`: Implemented features, missing features, relevance score\n\nAuto-syncs if cache is older than 1 hour"
-          },
-          "response": []
+          }
         },
         {
           "name": "Sync by Entry ID",
@@ -147,12 +138,17 @@
             },
             "url": {
               "raw": "{{baseUrl}}/github/sync/{{entryId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["github", "sync", "{{entryId}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "github",
+                "sync",
+                "{{entryId}}"
+              ]
             },
             "description": "Sync using shortlist entry UUID instead of team name"
-          },
-          "response": []
+          }
         }
       ]
     },
@@ -167,12 +163,16 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/ps/{{hackathonId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["ps", "{{hackathonId}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ps",
+                "{{hackathonId}}"
+              ]
             },
             "description": "Get all domains/problem statements for a hackathon"
-          },
-          "response": []
+          }
         },
         {
           "name": "Get PS Preferences (Team)",
@@ -181,12 +181,17 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/ps/{{hackathonId}}/preferences",
-              "host": ["{{baseUrl}}"],
-              "path": ["ps", "{{hackathonId}}", "preferences"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ps",
+                "{{hackathonId}}",
+                "preferences"
+              ]
             },
             "description": "Get current teams top 3 problem statement preferences"
-          },
-          "response": []
+          }
         },
         {
           "name": "Set PS Preferences (Team Leader)",
@@ -204,12 +209,17 @@
             },
             "url": {
               "raw": "{{baseUrl}}/ps/{{hackathonId}}/preferences",
-              "host": ["{{baseUrl}}"],
-              "path": ["ps", "{{hackathonId}}", "preferences"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ps",
+                "{{hackathonId}}",
+                "preferences"
+              ]
             },
             "description": "Set teams top 3 problem statement preferences"
-          },
-          "response": []
+          }
         },
         {
           "name": "Allocate PS (Admin)",
@@ -227,12 +237,81 @@
             },
             "url": {
               "raw": "{{baseUrl}}/admin/hackathons/{{hackathonId}}/allocate-ps",
-              "host": ["{{baseUrl}}"],
-              "path": ["admin", "hackathons", "{{hackathonId}}", "allocate-ps"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "hackathons",
+                "{{hackathonId}}",
+                "allocate-ps"
+              ]
             },
             "description": "Trigger FCFS allocation of teams to problem statements"
-          },
-          "response": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "🧪 Test & Mock Data",
+      "description": "Testing endpoints for development without hitting external APIs",
+      "item": [
+        {
+          "name": "Get Mock GitHub Data",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/test/mock-github-data/{{teamName}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "test",
+                "mock-github-data",
+                "{{teamName}}"
+              ]
+            },
+            "description": "Returns fake GitHub statistics for testing UI"
+          }
+        },
+        {
+          "name": "Get Mock AI Features",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/test/mock-ai-features/{{teamName}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "test",
+                "mock-ai-features",
+                "{{teamName}}"
+              ]
+            },
+            "description": "Returns mock AI-analyzed features for testing"
+          }
+        },
+        {
+          "name": "Award Mock Spark",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/test/mock-spark/{{userId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "test",
+                "mock-spark",
+                "{{userId}}"
+              ]
+            },
+            "description": "Simulates awarding gamification points"
+          }
         }
       ]
     },
@@ -287,12 +366,16 @@
             },
             "url": {
               "raw": "{{baseUrl}}/shortlist/submit",
-              "host": ["{{baseUrl}}"],
-              "path": ["shortlist", "submit"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "shortlist",
+                "submit"
+              ]
             },
             "description": "Submit shortlist entry with PPTX presentation"
-          },
-          "response": []
+          }
         },
         {
           "name": "Get Entry Status",
@@ -301,12 +384,16 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/shortlist/{{entryId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["shortlist", "{{entryId}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "shortlist",
+                "{{entryId}}"
+              ]
             },
             "description": "Get entry details with AI scores and status"
-          },
-          "response": []
+          }
         },
         {
           "name": "Get Leaderboard",
@@ -315,12 +402,16 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/shortlist/leaderboard",
-              "host": ["{{baseUrl}}"],
-              "path": ["shortlist", "leaderboard"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "shortlist",
+                "leaderboard"
+              ]
             },
             "description": "Get published leaderboard (only after admin publishes)"
-          },
-          "response": []
+          }
         }
       ]
     },
@@ -335,12 +426,16 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/admin/config",
-              "host": ["{{baseUrl}}"],
-              "path": ["admin", "config"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "config"
+              ]
             },
             "description": "Get current round configuration"
-          },
-          "response": []
+          }
         },
         {
           "name": "Update Configuration",
@@ -358,12 +453,16 @@
             },
             "url": {
               "raw": "{{baseUrl}}/admin/config",
-              "host": ["{{baseUrl}}"],
-              "path": ["admin", "config"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "config"
+              ]
             },
             "description": "Update scoring criteria and problem statement"
-          },
-          "response": []
+          }
         },
         {
           "name": "Get All Entries",
@@ -372,12 +471,16 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/admin/entries",
-              "host": ["{{baseUrl}}"],
-              "path": ["admin", "entries"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "entries"
+              ]
             },
             "description": "Get all shortlist entries with full details"
-          },
-          "response": []
+          }
         },
         {
           "name": "Get Stats",
@@ -386,12 +489,16 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/admin/stats",
-              "host": ["{{baseUrl}}"],
-              "path": ["admin", "stats"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "stats"
+              ]
             },
             "description": "Get screening statistics (pending, processing, evaluated, etc.)"
-          },
-          "response": []
+          }
         },
         {
           "name": "Get Queue Status",
@@ -400,12 +507,16 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/admin/queue-status",
-              "host": ["{{baseUrl}}"],
-              "path": ["admin", "queue-status"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "queue-status"
+              ]
             },
             "description": "Get BullMQ queue status and ETA"
-          },
-          "response": []
+          }
         },
         {
           "name": "Mass Upload PPTs",
@@ -425,12 +536,16 @@
             },
             "url": {
               "raw": "{{baseUrl}}/admin/mass-upload",
-              "host": ["{{baseUrl}}"],
-              "path": ["admin", "mass-upload"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "mass-upload"
+              ]
             },
             "description": "Bulk upload multiple PPTX files (auto-extracts team names)"
-          },
-          "response": []
+          }
         },
         {
           "name": "Start Evaluation",
@@ -439,12 +554,16 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/admin/start-evaluation",
-              "host": ["{{baseUrl}}"],
-              "path": ["admin", "start-evaluation"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "start-evaluation"
+              ]
             },
             "description": "Queue all PENDING entries for AI evaluation"
-          },
-          "response": []
+          }
         },
         {
           "name": "Eliminate Entry",
@@ -453,12 +572,18 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/admin/entries/{{entryId}}/eliminate",
-              "host": ["{{baseUrl}}"],
-              "path": ["admin", "entries", "{{entryId}}", "eliminate"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "entries",
+                "{{entryId}}",
+                "eliminate"
+              ]
             },
             "description": "Mark entry as eliminated"
-          },
-          "response": []
+          }
         },
         {
           "name": "Restore Entry",
@@ -467,12 +592,18 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/admin/entries/{{entryId}}/restore",
-              "host": ["{{baseUrl}}"],
-              "path": ["admin", "entries", "{{entryId}}", "restore"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "entries",
+                "{{entryId}}",
+                "restore"
+              ]
             },
             "description": "Restore eliminated entry"
-          },
-          "response": []
+          }
         },
         {
           "name": "Requeue Entry",
@@ -481,12 +612,18 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/admin/entries/{{entryId}}/requeue",
-              "host": ["{{baseUrl}}"],
-              "path": ["admin", "entries", "{{entryId}}", "requeue"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "entries",
+                "{{entryId}}",
+                "requeue"
+              ]
             },
             "description": "Requeue failed entry for re-evaluation"
-          },
-          "response": []
+          }
         },
         {
           "name": "Add Admin Note",
@@ -504,12 +641,18 @@
             },
             "url": {
               "raw": "{{baseUrl}}/admin/entries/{{entryId}}/note",
-              "host": ["{{baseUrl}}"],
-              "path": ["admin", "entries", "{{entryId}}", "note"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "entries",
+                "{{entryId}}",
+                "note"
+              ]
             },
             "description": "Add private admin note to entry"
-          },
-          "response": []
+          }
         },
         {
           "name": "Rescore All",
@@ -518,12 +661,16 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/admin/rescore",
-              "host": ["{{baseUrl}}"],
-              "path": ["admin", "rescore"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "rescore"
+              ]
             },
             "description": "Recalculate all scores with new weights"
-          },
-          "response": []
+          }
         },
         {
           "name": "Publish Leaderboard",
@@ -532,12 +679,16 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/admin/publish",
-              "host": ["{{baseUrl}}"],
-              "path": ["admin", "publish"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "publish"
+              ]
             },
             "description": "Publish leaderboard to participants"
-          },
-          "response": []
+          }
         },
         {
           "name": "Start New Round",
@@ -546,60 +697,805 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/admin/new-round",
-              "host": ["{{baseUrl}}"],
-              "path": ["admin", "new-round"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "new-round"
+              ]
             },
             "description": "Archive current round and start fresh"
-          },
-          "response": []
+          }
         }
       ]
     },
     {
-      "name": "🧪 Test & Mock Data",
-      "description": "Testing endpoints for development without hitting external APIs",
+      "name": "🩺 Health Check",
       "item": [
         {
-          "name": "Get Mock GitHub Data",
+          "name": "Backend Health",
           "request": {
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/test/mock-github-data/{{teamName}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["test", "mock-github-data", "{{teamName}}"]
+              "raw": "{{baseUrl}}/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                ""
+              ]
             },
-            "description": "Returns fake GitHub statistics for testing UI"
-          },
-          "response": []
-        },
+            "description": "Check if backend is running"
+          }
+        }
+      ]
+    },
+    {
+      "name": "📱 Student Dashboard & Python Modules",
+      "description": "Added endpoints for hackathon timing, student scoring, meals, github commits proxy, evaluate stream, and python proxies.",
+      "item": [
         {
-          "name": "Get Mock AI Features",
+          "name": "Get Hackathon Time",
           "request": {
             "method": "GET",
-            "header": [],
             "url": {
-              "raw": "{{baseUrl}}/test/mock-ai-features/{{teamName}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["test", "mock-ai-features", "{{teamName}}"]
+              "raw": "{{baseUrl}}/api/hackathon/{{hackathonId}}/time",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "hackathon",
+                "{{hackathonId}}",
+                "time"
+              ]
             },
-            "description": "Returns mock AI-analyzed features for testing"
-          },
-          "response": []
+            "description": "Returns hackathon start and end dates."
+          }
         },
         {
-          "name": "Award Mock Spark",
+          "name": "Get Student Score",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/student/score",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "student",
+                "score"
+              ]
+            },
+            "description": "Returns the student's team evaluation score."
+          }
+        },
+        {
+          "name": "Get Student Meals",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/student/meals",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "student",
+                "meals"
+              ]
+            },
+            "description": "Returns the logs of scanned student meals."
+          }
+        },
+        {
+          "name": "Get Github Commits",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/github/commits/{{teamName}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "github",
+                "commits",
+                "{{teamName}}"
+              ]
+            },
+            "description": "Proxy endpoint for fetching github commits via team name."
+          }
+        },
+        {
+          "name": "Evaluate Stream (SSE)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/evaluate/stream?evaluationId={{evaluationId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "evaluate",
+                "stream"
+              ],
+              "query": [
+                {
+                  "key": "evaluationId",
+                  "value": "{{evaluationId}}"
+                }
+              ]
+            },
+            "description": "Server sent events for real-time evaluation updates."
+          }
+        },
+        {
+          "name": "Proxy: Verify Face",
           "request": {
             "method": "POST",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/test/mock-spark/{{userId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["test", "mock-spark", "{{userId}}"]
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": []
+                }
+              ]
             },
-            "description": "Simulates awarding gamification points"
-          },
-          "response": []
+            "url": {
+              "raw": "{{baseUrl}}/api/verify-face",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "verify-face"
+              ]
+            },
+            "description": "Proxy to Python face verification microservice."
+          }
+        },
+        {
+          "name": "Proxy: OCR Aadhaar",
+          "request": {
+            "method": "POST",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": []
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/ocr/aadhaar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ocr",
+                "aadhaar"
+              ]
+            },
+            "description": "Proxy to Python aadhaar OCR microservice."
+          }
+        }
+      ]
+    },
+    {
+      "name": "🔐 Authentication",
+      "description": "Signup, Login, OTP, and OAuth login",
+      "item": [
+        {
+          "name": "Signup",
+          "request": {
+            "method": "POST",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "email",
+                  "value": "test@example.com",
+                  "type": "text"
+                },
+                {
+                  "key": "password",
+                  "value": "password123",
+                  "type": "text"
+                },
+                {
+                  "key": "fullName",
+                  "value": "Test User",
+                  "type": "text"
+                },
+                {
+                  "key": "role",
+                  "value": "PARTICIPANT",
+                  "type": "text"
+                },
+                {
+                  "key": "aadhaar",
+                  "type": "file",
+                  "src": []
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/signup",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "signup"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"test@example.com\",\n  \"password\": \"password123\",\n  \"role\": \"PARTICIPANT\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Send OTP",
+          "request": {
+            "method": "POST",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"test@example.com\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/send-otp",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "send-otp"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Verify OTP",
+          "request": {
+            "method": "POST",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"test@example.com\",\n  \"otp\": \"123456\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/verify-otp",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "verify-otp"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🤝 Community Hub",
+      "description": "Discussions, Team Requests, and Community Search",
+      "item": [
+        {
+          "name": "Get Discussions",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/community/discussions",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "community",
+                "discussions"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Discussion",
+          "request": {
+            "method": "POST",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Question about AI Evaluation\",\n  \"content\": \"How does the scoring system work?\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/community/discussions",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "community",
+                "discussions"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Team Requests",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/community/requests",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "community",
+                "requests"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Search Community",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/community/search?query=AI",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "community",
+                "search"
+              ],
+              "query": [
+                {
+                  "key": "query",
+                  "value": "AI"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "👤 Profile & Resume",
+      "description": "User profile management and resume parsing",
+      "item": [
+        {
+          "name": "Get Profile",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/profile/{{userId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "profile",
+                "{{userId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Profile",
+          "request": {
+            "method": "PUT",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"Jane Doe\",\n  \"college\": \"Stanford University\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/profile/{{userId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "profile",
+                "{{userId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Upload Resume",
+          "request": {
+            "method": "POST",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "resume",
+                  "type": "file",
+                  "src": []
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/profile/{{userId}}/resume",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "profile",
+                "{{userId}}",
+                "resume"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🎯 Registration",
+      "description": "Solo and team registration for hackathons",
+      "item": [
+        {
+          "name": "Register Solo",
+          "request": {
+            "method": "POST",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"hackathonId\": \"{{hackathonId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/registration/solo",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "registration",
+                "solo"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Team",
+          "request": {
+            "method": "POST",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"hackathonId\": \"{{hackathonId}}\",\n  \"teamName\": \"Fire Breathing Rubber Duckies\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/registration/team",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "registration",
+                "team"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Join Team",
+          "request": {
+            "method": "POST",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"inviteCode\": \"TEAM-XYZ\",\n  \"hackathonId\": \"{{hackathonId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/registration/join",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "registration",
+                "join"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "⚖️ Judge Evaluations",
+      "description": "Project scoring and evaluation for judges",
+      "item": [
+        {
+          "name": "Get Assigned Teams",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/judge/teams",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "judge",
+                "teams"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Submit Score",
+          "request": {
+            "method": "POST",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"innovationScore\": 9,\n  \"feasibilityScore\": 8,\n  \"techDepthScore\": 9,\n  \"clarityScore\": 7,\n  \"impactScore\": 8,\n  \"note\": \"Excellent technical execution\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/judge/score/{{teamId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "judge",
+                "score",
+                "{{teamId}}"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "✅ Check-In & Meals",
+      "description": "QR-based check-in and meal distribution",
+      "item": [
+        {
+          "name": "Generate Check-In QR",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/check-in/qr/{{hackathonId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "check-in",
+                "qr",
+                "{{hackathonId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Check-In Scan (Admin)",
+          "request": {
+            "method": "POST",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"qrToken\": \"uuid-token\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/check-in/scan",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "check-in",
+                "scan"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Meal Scan (Admin)",
+          "request": {
+            "method": "POST",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"qrToken\": \"uuid-token\",\n  \"mealType\": \"LUNCH\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/check-in/meal-scan",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "check-in",
+                "meal-scan"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🎙️ Voice Chat & Interview",
+      "description": "AI-powered voice interview system",
+      "item": [
+        {
+          "name": "Start Interview",
+          "request": {
+            "method": "POST",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"teamId\": \"{{teamId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/voice-chat/start",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "voice-chat",
+                "start"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Feedback",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/voice-chat/{{sessionId}}/feedback",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "voice-chat",
+                "{{sessionId}}",
+                "feedback"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "📁 Admin Hub",
+      "description": "User management and platform statistics",
+      "item": [
+        {
+          "name": "Get All Users",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/users",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "users"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Stats Overview",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/overview-stats",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "overview-stats"
+              ]
+            }
+          }
         }
       ]
     }

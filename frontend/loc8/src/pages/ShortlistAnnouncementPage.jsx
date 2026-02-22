@@ -1,23 +1,55 @@
 import React, { useState, useEffect } from "react";
 import { useApp } from "../context/AppContext";
+import { API_BASE_URL } from "../api";
 
 export default function ShortlistAnnouncementPage() {
-  const { selectedHackathon, teamData, isTeamLeader, setIsShortlisted, proceedToNextPhase } = useApp();
+  const { selectedHackathon, teamData, isTeamLeader, setIsShortlisted, proceedToNextPhase, token } = useApp();
   const [announced, setAnnounced] = useState(false);
   const [isShortlistedLocal, setIsShortlistedLocal] = useState(null);
+  const [rank, setRank] = useState(null);
+  const [score, setScore] = useState(null);
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    // Simulate announcement after delay
-    const timer = setTimeout(() => {
-      setAnnounced(true);
-      // Randomly shortlist or not (70% chance of shortlisting)
-      const shortlisted = Math.random() > 0.3;
-      setIsShortlistedLocal(shortlisted);
-      setIsShortlisted(shortlisted);
-      if (shortlisted && isTeamLeader) {
-        console.log(`[SIMULATED EMAIL] Congratulations! ${teamData?.name} has been shortlisted!`);
+    const fetchShortlistStatus = async () => {
+      try {
+        const res = await fetch(`${API_BASE_URL}/shortlist/leaderboard`);
+        if (res.ok) {
+          const data = await res.json();
+          // data is an array of entries sorted by rank
+          const entries = Array.isArray(data) ? data : data.entries || data.leaderboard || [];
+          const teamName = teamData?.name?.toLowerCase();
+          const myEntry = entries.find(
+            (e) => e.teamName?.toLowerCase() === teamName
+          );
+
+          if (myEntry) {
+            const myRank = entries.indexOf(myEntry) + 1;
+            setRank(myRank);
+            setScore(myEntry.finalScore != null ? Math.round(myEntry.finalScore) : null);
+            const shortlisted = myEntry.status !== "ELIMINATED";
+            setIsShortlistedLocal(shortlisted);
+            setIsShortlisted(shortlisted);
+          } else {
+            // Team not found in leaderboard — check if leaderboard is published
+            if (entries.length > 0) {
+              setIsShortlistedLocal(false);
+              setIsShortlisted(false);
+            } else {
+              setError("Results haven't been published yet. Check back soon!");
+            }
+          }
+        } else {
+          setError("Results are not available yet.");
+        }
+      } catch {
+        setError("Could not fetch results. Please try again later.");
       }
-    }, 2000);
+      setAnnounced(true);
+    };
+
+    // Small delay for dramatic effect
+    const timer = setTimeout(fetchShortlistStatus, 1500);
     return () => clearTimeout(timer);
   }, []);
 
@@ -43,9 +75,21 @@ export default function ShortlistAnnouncementPage() {
                 <p className="text-6xl">📊</p>
               </div>
               <h2 className="text-2xl font-bold mb-4">
-                Evaluating presentations...
+                Checking results...
               </h2>
-              <p className="text-white/60">Our judges are reviewing all submissions</p>
+              <p className="text-white/60">Fetching shortlist data from the server</p>
+            </div>
+          ) : error ? (
+            <div className="text-center py-12">
+              <p className="text-5xl mb-4">⏳</p>
+              <h2 className="text-2xl font-bold mb-2">Results Pending</h2>
+              <p className="text-white/60">{error}</p>
+              <button
+                onClick={() => window.location.reload()}
+                className="mt-6 px-6 py-2.5 bg-white/5 hover:bg-white/10 border border-white/10 text-white text-sm font-bold rounded-xl transition-all"
+              >
+                ↻ Refresh
+              </button>
             </div>
           ) : isShortlistedLocal ? (
             <div className="space-y-6">
@@ -60,6 +104,20 @@ export default function ShortlistAnnouncementPage() {
 
               <div className="bg-[#B4ED57]/10 border border-[#B4ED57]/30 rounded-xl p-6">
                 <p className="text-[#B4ED57] text-sm font-bold mb-4">🏆 YOU'RE IN!</p>
+                <div className="grid grid-cols-2 gap-4 mb-4">
+                  {rank && (
+                    <div className="bg-black/20 rounded-xl p-4 text-center">
+                      <p className="text-white/40 text-xs mb-1">YOUR RANK</p>
+                      <p className="text-[#B4ED57] text-3xl font-black">#{rank}</p>
+                    </div>
+                  )}
+                  {score != null && (
+                    <div className="bg-black/20 rounded-xl p-4 text-center">
+                      <p className="text-white/40 text-xs mb-1">SCORE</p>
+                      <p className="text-white text-3xl font-black">{score}</p>
+                    </div>
+                  )}
+                </div>
                 <ul className="space-y-3 text-white/80">
                   <li className="flex gap-2">
                     <span className="text-[#B4ED57]">✓</span>

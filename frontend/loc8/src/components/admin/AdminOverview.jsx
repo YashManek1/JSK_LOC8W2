@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { gsap } from "gsap";
+import { getAdminOverviewStats } from "../../api";
 
 /* ── Animation variants ── */
 const fadeInUp = {
@@ -31,7 +32,7 @@ const glassStyle = "backdrop-blur-xl bg-white/[0.03] border border-white/[0.08] 
 /*  DATA                                                               */
 /* ═══════════════════════════════════════════════════════════════════ */
 
-const TIMELINE = [
+const FALLBACK_TIMELINE = [
   { time: "09:00", label: "Registration &\nVerification", status: "completed" },
   { time: "10:30", label: "Opening\nCeremony", status: "completed" },
   { time: "11:00", label: "Hacking\nBegins", status: "completed" },
@@ -41,7 +42,7 @@ const TIMELINE = [
   { time: "23:59", label: "PPT Submission\nLock", status: "upcoming" },
 ];
 
-const MENTOR_JUDGE_ACTIVITY = [
+const FALLBACK_MENTOR_JUDGE_ACTIVITY = [
   { label: "Dr. Priya Sharma", role: "Judge", completed: 22, assigned: 25, color: "#B4ED57" },
   { label: "Rahul Mehra", role: "Judge", completed: 18, assigned: 25, color: "#B4ED57" },
   { label: "Prof. Anand Rao", role: "Mentor", completed: 15, assigned: 20, color: "#4D58D4" },
@@ -49,14 +50,14 @@ const MENTOR_JUDGE_ACTIVITY = [
   { label: "Vikram Desai", role: "Judge", completed: 10, assigned: 25, color: "#B4ED57" },
 ];
 
-const DONUT_DATA = [
+const FALLBACK_DONUT_DATA = [
   { label: "Approved", value: 980, pct: "78.4", color: "#B4ED57" },
   { label: "Pending", value: 124, pct: "9.9", color: "#4D58D4" },
   { label: "Rejected", value: 86, pct: "6.9", color: "#f87171" },
   { label: "Flagged", value: 60, pct: "4.8", color: "#f59e0b" },
 ];
 
-const MEALS = [
+const FALLBACK_MEALS = [
   { name: "Breakfast", consumed: 733, registered: 856, remaining: 123, rate: 84.5, status: "completed" },
   { name: "Lunch", consumed: 613, registered: 856, remaining: 244, rate: 71.5, status: "active" },
   { name: "Dinner", consumed: 0, registered: 856, remaining: 856, rate: 0, status: "upcoming" },
@@ -66,19 +67,19 @@ const MEALS = [
 /*  DONUT CHART                                                        */
 /* ═══════════════════════════════════════════════════════════════════ */
 
-function DonutChart() {
+function DonutChart({ data }) {
   const size = 190;
   const sw = 30;
   const r = (size - sw) / 2;
   const C = 2 * Math.PI * r;
-  const total = DONUT_DATA.reduce((s, d) => s + d.value, 0);
+  const total = data.reduce((s, d) => s + d.value, 0);
   const gap = 5;
   let cum = 0;
 
   return (
     <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
       <g transform={`rotate(-90 ${size / 2} ${size / 2})`}>
-        {DONUT_DATA.map((d, i) => {
+        {data.map((d, i) => {
           const arc = (d.value / total) * C;
           const dash = `${arc - gap} ${C - arc + gap}`;
           const off = -cum;
@@ -131,6 +132,49 @@ export default function AdminOverview() {
   const [autoRefresh, setAutoRefresh] = useState(true);
   const statsRef = useRef(null);
 
+  /* API-fetched state with fallbacks */
+  const [statsData, setStatsData] = useState({ registered: 318, verified: 289, teams: 74, meals: 186, verifiedRate: "92.6", todayNew: 24, rsvpPending: 6, lunchPct: "64" });
+  const [timeline, setTimeline] = useState(FALLBACK_TIMELINE);
+  const [mentorJudgeActivity, setMentorJudgeActivity] = useState(FALLBACK_MENTOR_JUDGE_ACTIVITY);
+  const [donutData, setDonutData] = useState(FALLBACK_DONUT_DATA);
+  const [meals, setMeals] = useState(FALLBACK_MEALS);
+
+  /* Fetch overview stats from API */
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const data = await getAdminOverviewStats();
+        if (data && !data.error && !data.statusCode) {
+          if (data.stats) {
+            setStatsData(prev => ({
+              registered: data.stats.registered ?? prev.registered,
+              verified: data.stats.verified ?? prev.verified,
+              teams: data.stats.teams ?? prev.teams,
+              meals: data.stats.mealsServed ?? data.stats.meals ?? prev.meals,
+              verifiedRate: data.stats.verifiedRate ?? prev.verifiedRate,
+              todayNew: data.stats.todayNew ?? prev.todayNew,
+              rsvpPending: data.stats.rsvpPending ?? prev.rsvpPending,
+              lunchPct: data.stats.lunchPct ?? prev.lunchPct,
+            }));
+          }
+          if (data.timeline?.length) setTimeline(data.timeline);
+          if (data.mentorJudgeActivity?.length) setMentorJudgeActivity(data.mentorJudgeActivity);
+          if (data.verification?.length) setDonutData(data.verification);
+          if (data.meals?.length) setMeals(data.meals);
+        }
+      } catch (err) {
+        console.warn("Admin overview stats API unavailable, using fallback:", err.message);
+      }
+    };
+    fetchStats();
+    // Auto refresh every 30s if enabled
+    let interval;
+    if (autoRefresh) {
+      interval = setInterval(fetchStats, 30000);
+    }
+    return () => interval && clearInterval(interval);
+  }, [autoRefresh]);
+
   useEffect(() => {
     const t = setInterval(() => setClock(new Date()), 1000);
     return () => clearInterval(t);
@@ -140,7 +184,7 @@ export default function AdminOverview() {
   const clockStr = `${pad(clock.getHours())}:${pad(clock.getMinutes())}:${pad(clock.getSeconds())}`;
 
   /* active timeline index */
-  const activeIdx = TIMELINE.findIndex((e) => e.status === "active");
+  const activeIdx = timeline.findIndex((e) => e.status === "active");
 
   return (
     <motion.div
@@ -253,10 +297,10 @@ export default function AdminOverview() {
                 animate={{ opacity: 1 }}
                 transition={{ delay: 1 }}
               >
-                <span>↑</span> 24 today
+                <span>↑</span> {statsData.todayNew} today
               </motion.span>
             </div>
-            <AnimatedCounter value={318} className="text-black text-4xl font-black" style={{ fontFamily: "'Questrial', sans-serif" }} />
+            <AnimatedCounter value={statsData.registered} className="text-black text-4xl font-black" style={{ fontFamily: "'Questrial', sans-serif" }} />
             <div className="text-black/50 text-sm mt-1">Registered</div>
           </div>
         </motion.div>
@@ -276,9 +320,9 @@ export default function AdminOverview() {
                 <path d="M22 11.08V12a10 10 0 11-5.93-9.14" />
                 <path d="M22 4L12 14.01 9 11.01" />
               </svg>
-              <span className="text-white/50 text-xs font-medium">92.6% RATE</span>
+              <span className="text-white/50 text-xs font-medium">{statsData.verifiedRate}% RATE</span>
             </div>
-            <AnimatedCounter value={289} className="text-white text-4xl font-black" style={{ fontFamily: "'Questrial', sans-serif" }} />
+            <AnimatedCounter value={statsData.verified} className="text-white text-4xl font-black" style={{ fontFamily: "'Questrial', sans-serif" }} />
             <div className="text-white/50 text-sm mt-1">Verified</div>
           </div>
         </motion.div>
@@ -303,8 +347,8 @@ export default function AdminOverview() {
               </svg>
               <span className="text-white/30 text-[10px] font-bold uppercase tracking-widest">Teams</span>
             </div>
-            <AnimatedCounter value={74} className="text-white text-4xl font-black" style={{ fontFamily: "'Questrial', sans-serif" }} />
-            <div className="text-white/40 text-sm mt-1">6 RSVP pending</div>
+            <AnimatedCounter value={statsData.teams} className="text-white text-4xl font-black" style={{ fontFamily: "'Questrial', sans-serif" }} />
+            <div className="text-white/40 text-sm mt-1">{statsData.rsvpPending} RSVP pending</div>
           </div>
         </motion.div>
 
@@ -325,8 +369,8 @@ export default function AdminOverview() {
               </svg>
               <span className="text-white/30 text-[10px] font-bold uppercase tracking-widest">Meals</span>
             </div>
-            <AnimatedCounter value={186} className="text-white text-4xl font-black" style={{ fontFamily: "'Questrial', sans-serif" }} />
-            <div className="text-white/40 text-sm mt-1">Lunch: 64%</div>
+            <AnimatedCounter value={statsData.meals} className="text-white text-4xl font-black" style={{ fontFamily: "'Questrial', sans-serif" }} />
+            <div className="text-white/40 text-sm mt-1">Lunch: {statsData.lunchPct}%</div>
           </div>
         </motion.div>
       </motion.div>
@@ -359,12 +403,12 @@ export default function AdminOverview() {
             {/* green dot on the active card */}
             <div
               className="absolute -top-[5px] w-3 h-3 bg-[#B4ED57] rounded-full shadow-lg shadow-[#B4ED57]/40 z-10"
-              style={{ left: `${(activeIdx / (TIMELINE.length - 1)) * 100}%`, transform: "translateX(-50%)" }}
+              style={{ left: `${(activeIdx / (timeline.length - 1)) * 100}%`, transform: "translateX(-50%)" }}
             />
           </div>
 
           <div className="flex gap-4 pt-6 overflow-x-auto pb-2" style={{ scrollbarWidth: "none" }}>
-            {TIMELINE.map((ev, i) => {
+            {timeline.map((ev, i) => {
               const done = ev.status === "completed";
               const now = ev.status === "active";
               const soon = ev.status === "upcoming";
@@ -444,10 +488,10 @@ export default function AdminOverview() {
       <motion.div className="grid grid-cols-1 lg:grid-cols-2 gap-5" variants={staggerContainer}>
         {/* Mentor & Judge Activity Funnel */}
         {(() => {
-          const totalCompleted = MENTOR_JUDGE_ACTIVITY.reduce((s, m) => s + m.completed, 0);
-          const totalAssigned = MENTOR_JUDGE_ACTIVITY.reduce((s, m) => s + m.assigned, 0);
+          const totalCompleted = mentorJudgeActivity.reduce((s, m) => s + m.completed, 0);
+          const totalAssigned = mentorJudgeActivity.reduce((s, m) => s + m.assigned, 0);
           const overallPct = ((totalCompleted / totalAssigned) * 100).toFixed(1);
-          const maxAssigned = Math.max(...MENTOR_JUDGE_ACTIVITY.map((m) => m.assigned));
+          const maxAssigned = Math.max(...mentorJudgeActivity.map((m) => m.assigned));
           return (
             <motion.div
               className={`rounded-2xl p-6 ${glassStyle}`}
@@ -466,7 +510,7 @@ export default function AdminOverview() {
               <p className="text-white/40 text-xs mb-5">Evaluation progress across mentors &amp; judges</p>
 
               <div className="space-y-4">
-                {MENTOR_JUDGE_ACTIVITY.map((m, i) => {
+                {mentorJudgeActivity.map((m, i) => {
                   const pct = ((m.completed / m.assigned) * 100).toFixed(1);
                   const pending = m.assigned - m.completed;
                   return (
@@ -519,9 +563,9 @@ export default function AdminOverview() {
           <p className="text-white/40 text-xs mb-6">Current status distribution</p>
 
           <div className="flex items-center justify-center gap-10">
-            <DonutChart />
+            <DonutChart data={donutData} />
             <div className="space-y-5">
-              {DONUT_DATA.map((d, i) => (
+              {donutData.map((d, i) => (
                 <div key={i} className="flex items-center gap-3">
                   <span className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: d.color }} />
                   <div>
@@ -552,7 +596,7 @@ export default function AdminOverview() {
         <p className="text-white/40 text-xs mb-5">Registered vs consumed meals comparison</p>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {MEALS.map((meal, i) => {
+          {meals.map((meal, i) => {
             const isActive = meal.status === "active";
             const isUpcoming = meal.status === "upcoming";
             const pct = meal.registered > 0 ? (meal.consumed / meal.registered) * 100 : 0;

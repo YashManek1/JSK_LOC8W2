@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { useApp } from "../../context/AppContext";
-import { MOCK_JUDGES } from "../../data/hackathons";
 import { API_BASE_URL } from "../../api";
 
 export default function LoginForm() {
@@ -22,32 +21,8 @@ export default function LoginForm() {
     setLoading(true);
 
     try {
-      // Judge login uses mock credentials
-      if (role === "judge") {
-        const judge = MOCK_JUDGES.find(
-          (j) => j.email === email && j.password === password,
-        );
-        if (judge) {
-          loginUser(
-            {
-              id: judge.id,
-              name: judge.name,
-              email: judge.email,
-              role: "judge",
-              hackathonId: selectedHackathon?.id || "h1",
-              hackathonName: selectedHackathon?.name || "HackOS 2026",
-            },
-            "mock-judge-token",
-          );
-        } else {
-          setError("Invalid judge credentials.");
-        }
-        setLoading(false);
-        return;
-      }
-
-      // Normal login via backend API
-      const roleMap = { student: "Participant", mentor: "Mentor", organiser: "Organiser" };
+      // All roles use the backend API
+      const roleMap = { student: "Participant", mentor: "Mentor", organiser: "Organiser", judge: "Judge" };
       const mappedRoleToSend = roleMap[role] || "Participant";
 
       const res = await fetch(`${API_BASE_URL}/auth/login`, {
@@ -61,9 +36,11 @@ export default function LoginForm() {
         const mappedRole =
           role === "organiser"
             ? "admin"
-            : data.user?.role === "Participant"
-              ? "student"
-              : role;
+            : role === "judge"
+              ? "judge"
+              : data.user?.role === "Participant"
+                ? "student"
+                : role;
 
         loginUser(
           {

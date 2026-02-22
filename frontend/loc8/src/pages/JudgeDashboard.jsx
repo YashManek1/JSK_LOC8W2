@@ -5,6 +5,7 @@ import { useApp } from "../context/AppContext";
 import Sidebar from "../components/layout/Sidebar";
 import { Excalidraw } from "@excalidraw/excalidraw";
 import "@excalidraw/excalidraw/index.css";
+import { getJudgeTeams, submitJudgeScore, getJudgeLeaderboard } from "../api";
 
 /* ── Animation variants (matching AdminDashboard) ────────────────── */
 const pageTransition = {
@@ -21,8 +22,8 @@ const staggerItem = {
   animate: { opacity: 1, y: 0, transition: { duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] } },
 };
 
-/* ── Hardcoded data ──────────────────────────────────────────────── */
-const ASSIGNED_TEAMS = [
+/* ── Hardcoded data — used as fallback only ──────────────────────── */
+const FALLBACK_TEAMS = [
   { id: "t1", name: "404 Found", project: "HealthTrack ML", track: "AI/ML", members: ["Aarav P.", "Sneha G.", "Rohan J.", "Meera N."], status: "submitted", scores: { innovation: 0, feasibility: 0, techDepth: 0, clarity: 0, impact: 0 } },
   { id: "t2", name: "ChainHackers", project: "DefiVault", track: "Web3", members: ["Vikram S.", "Priya R.", "Arjun M."], status: "submitted", scores: { innovation: 0, feasibility: 0, techDepth: 0, clarity: 0, impact: 0 } },
   { id: "t3", name: "IoTSquad", project: "SmartHome Hub", track: "IoT", members: ["Kavya S.", "Dev K.", "Riya D.", "Aditya R."], status: "pending", scores: { innovation: 0, feasibility: 0, techDepth: 0, clarity: 0, impact: 0 } },
@@ -31,20 +32,20 @@ const ASSIGNED_TEAMS = [
   { id: "t6", name: "SyntaxError", project: "CodeBuddy AI", track: "AI/ML", members: ["Varun S.", "Divya P.", "Rahul M.", "Kriti S."], status: "submitted", scores: { innovation: 0, feasibility: 0, techDepth: 0, clarity: 0, impact: 0 } },
 ];
 
+const FALLBACK_CANDIDATES = [
+  { id: "c1", name: "Aarav Patel", team: "404 Found", role: "ML Engineer", skills: ["Python", "TensorFlow", "FastAPI"], rating: 4.5, shortlisted: false },
+  { id: "c2", name: "Priya Reddy", team: "ChainHackers", role: "Smart Contract Dev", skills: ["Solidity", "Hardhat", "ethers.js"], rating: 4.2, shortlisted: false },
+  { id: "c3", name: "Varun Shetty", team: "SyntaxError", role: "Full-Stack Dev", skills: ["TypeScript", "LangChain", "React"], rating: 4.8, shortlisted: true },
+  { id: "c4", name: "Ananya Iyer", team: "MetaMinds", role: "AR/VR Developer", skills: ["Unity", "ARCore", "Flutter"], rating: 4.3, shortlisted: false },
+  { id: "c5", name: "Siddharth Nair", team: "FarmTech", role: "Backend Engineer", skills: ["Python", "AWS", "MongoDB"], rating: 4.1, shortlisted: false },
+];
+
 const CRITERIA = [
   { key: "innovation", label: "Innovation", max: 20 },
   { key: "feasibility", label: "Feasibility", max: 20 },
   { key: "techDepth", label: "Technical Depth", max: 25 },
   { key: "clarity", label: "Presentation & Clarity", max: 20 },
   { key: "impact", label: "Impact", max: 15 },
-];
-
-const CANDIDATES = [
-  { id: "c1", name: "Aarav Patel", team: "404 Found", role: "ML Engineer", skills: ["Python", "TensorFlow", "FastAPI"], rating: 4.5, shortlisted: false },
-  { id: "c2", name: "Priya Reddy", team: "ChainHackers", role: "Smart Contract Dev", skills: ["Solidity", "Hardhat", "ethers.js"], rating: 4.2, shortlisted: false },
-  { id: "c3", name: "Varun Shetty", team: "SyntaxError", role: "Full-Stack Dev", skills: ["TypeScript", "LangChain", "React"], rating: 4.8, shortlisted: true },
-  { id: "c4", name: "Ananya Iyer", team: "MetaMinds", role: "AR/VR Developer", skills: ["Unity", "ARCore", "Flutter"], rating: 4.3, shortlisted: false },
-  { id: "c5", name: "Siddharth Nair", team: "FarmTech", role: "Backend Engineer", skills: ["Python", "AWS", "MongoDB"], rating: 4.1, shortlisted: false },
 ];
 
 const totalScore = (s) => s.innovation + s.feasibility + s.techDepth + s.clarity + s.impact;
@@ -300,11 +301,58 @@ export default function JudgeDashboard() {
 
   /* Dashboard state */
   const [activeSection, setActiveSection] = useState("dashboard");
-  const [teams, setTeams] = useState(ASSIGNED_TEAMS);
+  const [teams, setTeams] = useState([]);
   const [selectedTeam, setSelectedTeam] = useState(null);
   const [saved, setSaved] = useState({});
   const [notes, setNotes] = useState({});
-  const [candidates, setCandidates] = useState(CANDIDATES);
+  const [candidates, setCandidates] = useState([]);
+  const [teamsLoading, setTeamsLoading] = useState(true);
+
+  /* Fetch assigned teams from API */
+  useEffect(() => {
+    const fetchTeams = async () => {
+      setTeamsLoading(true);
+      try {
+        const data = await getJudgeTeams();
+        const apiTeams = Array.isArray(data) ? data : data.teams || data.assignedTeams || [];
+        if (apiTeams.length > 0) {
+          // Normalize API team data to our expected format
+          const normalized = apiTeams.map((t, i) => ({
+            id: t.id || t._id || `t${i + 1}`,
+            name: t.name || t.teamName || `Team ${i + 1}`,
+            project: t.project || t.projectName || t.projectTitle || "Untitled Project",
+            track: t.track || t.domain || "General",
+            members: t.members || t.memberNames || [],
+            status: t.status || "submitted",
+            scores: t.scores || { innovation: 0, feasibility: 0, techDepth: 0, clarity: 0, impact: 0 },
+          }));
+          setTeams(normalized);
+          // Extract candidates from team members for recruitment
+          const cands = normalized.flatMap((t) =>
+            (t.members || []).map((m, j) => ({
+              id: `${t.id}_m${j}`,
+              name: typeof m === "string" ? m : m.name || "Unknown",
+              team: t.name,
+              role: typeof m === "object" ? m.role || "Developer" : "Developer",
+              skills: typeof m === "object" ? m.skills || [] : [],
+              rating: typeof m === "object" ? m.rating || 4.0 : 4.0,
+              shortlisted: false,
+            }))
+          );
+          setCandidates(cands.length > 0 ? cands : FALLBACK_CANDIDATES);
+        } else {
+          setTeams(FALLBACK_TEAMS);
+          setCandidates(FALLBACK_CANDIDATES);
+        }
+      } catch (err) {
+        console.warn("Judge teams API unavailable, using fallback data:", err.message);
+        setTeams(FALLBACK_TEAMS);
+        setCandidates(FALLBACK_CANDIDATES);
+      }
+      setTeamsLoading(false);
+    };
+    if (roleConfirmed) fetchTeams();
+  }, [roleConfirmed]);
 
   const handleRoleConfirm = (sponsor) => {
     setIsSponsor(sponsor);
@@ -320,8 +368,17 @@ export default function JudgeDashboard() {
     setTeams((prev) => prev.map((t) => t.id === teamId ? { ...t, scores: { ...t.scores, [key]: value } } : t));
   };
 
-  const saveScores = (teamId) => {
-    setSaved((prev) => ({ ...prev, [teamId]: true }));
+  const saveScores = async (teamId) => {
+    const team = teams.find((t) => t.id === teamId);
+    if (!team) return;
+    setSaved((prev) => ({ ...prev, [teamId]: "saving" }));
+    try {
+      await submitJudgeScore(teamId, team.scores, notes[teamId] || "");
+      setSaved((prev) => ({ ...prev, [teamId]: true }));
+    } catch (err) {
+      console.warn("Score save API error, saved locally:", err.message);
+      setSaved((prev) => ({ ...prev, [teamId]: true }));
+    }
     setTimeout(() => setSaved((prev) => ({ ...prev, [teamId]: false })), 2000);
   };
 

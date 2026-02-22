@@ -1,32 +1,43 @@
 import React, { useState, useEffect, useRef } from "react";
-import { API_BASE_URL } from "../../api";
+import { API_BASE_URL, getHackathonTime, getStudentScore, getStudentMeals } from "../../api";
 
-export function CountdownWidget() {
+export function CountdownWidget({ hackathonId }) {
   const [time, setTime] = useState({ h: 11, m: 24, s: 50 });
+  const [endTime, setEndTime] = useState(null);
+
+  useEffect(() => {
+    const fetchTime = async () => {
+      try {
+        const data = await getHackathonTime(hackathonId);
+        if (data?.endTime) {
+          setEndTime(new Date(data.endTime));
+        }
+      } catch { /* use local countdown */ }
+    };
+    if (hackathonId) fetchTime();
+  }, [hackathonId]);
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setTime((prev) => {
-        let { h, m, s } = prev;
-        s--;
-        if (s < 0) {
-          s = 59;
-          m--;
-        }
-        if (m < 0) {
-          m = 59;
-          h--;
-        }
-        if (h < 0) {
-          h = 0;
-          m = 0;
-          s = 0;
-        }
-        return { h, m, s };
-      });
+      if (endTime) {
+        const diff = Math.max(0, endTime - Date.now());
+        const h = Math.floor(diff / 3600000);
+        const m = Math.floor((diff % 3600000) / 60000);
+        const s = Math.floor((diff % 60000) / 1000);
+        setTime({ h, m, s });
+      } else {
+        setTime((prev) => {
+          let { h, m, s } = prev;
+          s--;
+          if (s < 0) { s = 59; m--; }
+          if (m < 0) { m = 59; h--; }
+          if (h < 0) { h = 0; m = 0; s = 0; }
+          return { h, m, s };
+        });
+      }
     }, 1000);
     return () => clearInterval(interval);
-  }, []);
+  }, [endTime]);
 
   const pad = (n) => String(n).padStart(2, "0");
 
@@ -71,13 +82,32 @@ export function CountdownWidget() {
 }
 
 export function PPTScoreWidget() {
-  const scores = [
+  const FALLBACK_SCORES = [
     { label: "Innovation", score: 92, max: 20 },
     { label: "Feasibility", score: 88, max: 20 },
     { label: "Tech Depth", score: 95, max: 25 },
     { label: "Clarity", score: 85, max: 20 },
     { label: "Impact", score: 90, max: 15 },
   ];
+  const [scores, setScores] = useState(FALLBACK_SCORES);
+  const [aiReasoning, setAiReasoning] = useState(
+    '"High Technical Depth due to mentions of federated learning, model quantization, and real-time inference pipeline in slides 7–9."'
+  );
+
+  useEffect(() => {
+    const fetchScore = async () => {
+      try {
+        const data = await getStudentScore();
+        if (data?.scores) {
+          setScores(data.scores);
+        }
+        if (data?.aiReasoning) {
+          setAiReasoning(data.aiReasoning);
+        }
+      } catch { /* use fallback */ }
+    };
+    fetchScore();
+  }, []);
 
   return (
     <div
@@ -115,8 +145,7 @@ export function PPTScoreWidget() {
       <div className="mt-4 bg-[#B4ED57]/5 border border-[#B4ED57]/20 rounded-xl p-4">
         <div className="text-[#B4ED57]/60 text-xs mb-1">⚡ AI Reasoning</div>
         <p className="text-white/60 text-xs leading-relaxed">
-          "High Technical Depth due to mentions of federated learning, model
-          quantization, and real-time inference pipeline in slides 7–9."
+          {aiReasoning}
         </p>
       </div>
     </div>
@@ -124,11 +153,26 @@ export function PPTScoreWidget() {
 }
 
 export function MealQRWidget() {
-  const meals = [
+  const FALLBACK_MEALS = [
     { name: "Breakfast", time: "06:00–09:00", status: "Used" },
     { name: "Lunch", time: "13:00–14:30", status: "Active" },
     { name: "Dinner", time: "20:00–21:30", status: "Locked" },
   ];
+  const [meals, setMeals] = useState(FALLBACK_MEALS);
+  const [notice, setNotice] = useState("Notice: Counter A busy → Go to Counter B");
+
+  useEffect(() => {
+    const fetchMeals = async () => {
+      try {
+        const data = await getStudentMeals();
+        if (data?.meals && Array.isArray(data.meals)) {
+          setMeals(data.meals);
+        }
+        if (data?.notice) setNotice(data.notice);
+      } catch { /* use fallback */ }
+    };
+    fetchMeals();
+  }, []);
 
   const statusStyle = {
     Used: "bg-white/10 text-white/40",
@@ -175,26 +219,41 @@ export function MealQRWidget() {
       </div>
       <div className="mt-3 flex items-center gap-2 text-yellow-400/70 text-xs bg-yellow-400/5 border border-yellow-400/15 rounded-xl p-3">
         <span>⚠️</span>
-        <span>Notice: Counter A busy → Go to Counter B</span>
+        <span>{notice}</span>
       </div>
     </div>
   );
 }
 
 export function TeamCommitsWidget({ teamName }) {
-  const members = [
-    {
-      name: "Ananya",
-      commits: 45,
-      color: "bg-[#B4ED57]",
-      isYou: true,
-      badge: "👑 King",
-    },
-    { name: "Ravi", commits: 32, color: "bg-[#4D58D4]", isYou: false },
-    { name: "Sara", commits: 28, color: "bg-purple-500", isYou: false },
-    { name: "Kiran", commits: 8, color: "bg-gray-600", isYou: false },
-  ];
-  const total = members.reduce((s, m) => s + m.commits, 0);
+  const [contributors, setContributors] = useState([]);
+  const [totalCommits, setTotalCommits] = useState(0);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!teamName) { setLoading(false); return; }
+    const fetchStats = async () => {
+      try {
+        const res = await fetch(`${API_BASE_URL}/github/stats/${teamName}`);
+        if (res.ok) {
+          const data = await res.json();
+          const sorted = (data.contributors || []).sort((a, b) => b.commits - a.commits);
+          setContributors(sorted);
+          setTotalCommits(data.totalCommits || sorted.reduce((s, c) => s + c.commits, 0));
+        }
+      } catch (err) {
+        console.error("Failed to fetch team commits:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchStats();
+    const interval = setInterval(fetchStats, 60000);
+    return () => clearInterval(interval);
+  }, [teamName]);
+
+  const colors = ["bg-[#B4ED57]", "bg-[#4D58D4]", "bg-purple-500", "bg-pink-500", "bg-orange-500", "bg-cyan-500"];
+  const maxCommits = contributors[0]?.commits || 1;
 
   return (
     <div
@@ -206,7 +265,7 @@ export function TeamCommitsWidget({ teamName }) {
           className="text-white font-semibold"
           style={{ fontFamily: "'Questrial', sans-serif" }}
         >
-          Team Commits · {teamName || "404 Found"}
+          Team Commits · {teamName || "No Team"}
         </h3>
         <button className="text-[#B4ED57] text-xs hover:underline">
           View details →
@@ -218,28 +277,30 @@ export function TeamCommitsWidget({ teamName }) {
           style={{ fontFamily: "'Questrial', sans-serif" }}
           className="font-bold text-white/70"
         >
-          {total}
+          {totalCommits}
         </span>{" "}
         commits
       </p>
+      {loading ? (
+        <p className="text-white/30 text-xs animate-pulse">Loading commits...</p>
+      ) : contributors.length === 0 ? (
+        <p className="text-white/30 text-xs">No data yet. Sync your GitHub repo first.</p>
+      ) : (
       <div className="space-y-3">
-        {members.map((m) => (
-          <div key={m.name} className="space-y-1.5">
+        {contributors.slice(0, 5).map((m, idx) => (
+          <div key={m.author} className="space-y-1.5">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <div
-                  className={`w-7 h-7 ${m.isYou ? "bg-[#B4ED57]" : m.color} rounded-full flex items-center justify-center text-xs font-bold text-black`}
-                >
-                  {m.name[0]}
-                </div>
+                {m.avatarUrl ? (
+                  <img src={m.avatarUrl} alt={m.author} className="w-7 h-7 rounded-full" />
+                ) : (
+                  <div className={`w-7 h-7 ${colors[idx % colors.length]} rounded-full flex items-center justify-center text-xs font-bold text-black`}>
+                    {m.author[0]}
+                  </div>
+                )}
                 <span className="text-white text-sm">
-                  {m.name}
-                  {m.isYou && (
-                    <span className="text-[#B4ED57]/70 text-xs ml-1">
-                      (You)
-                    </span>
-                  )}
-                  {m.badge && <span className="text-xs ml-1">{m.badge}</span>}
+                  {m.author}
+                  {idx === 0 && <span className="text-xs ml-1">👑 King</span>}
                 </span>
               </div>
               <span
@@ -251,13 +312,14 @@ export function TeamCommitsWidget({ teamName }) {
             </div>
             <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
               <div
-                className={`h-full ${m.color} rounded-full transition-all duration-1000`}
-                style={{ width: `${(m.commits / 45) * 100}%` }}
+                className={`h-full ${colors[idx % colors.length]} rounded-full transition-all duration-1000`}
+                style={{ width: `${(m.commits / maxCommits) * 100}%` }}
               />
             </div>
           </div>
         ))}
       </div>
+      )}
     </div>
   );
 }
@@ -340,7 +402,7 @@ export function VoiceAssistantWidget({ userEmail }) {
     if (!userEmail) return;
     const startSession = async () => {
       try {
-        const res = await fetch(`${API_BASE_URL}/api/chat/start`, {
+        const res = await fetch(`${API_BASE_URL}/chat/start`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ email: userEmail }),
@@ -371,7 +433,7 @@ export function VoiceAssistantWidget({ userEmail }) {
     setLoading(true);
 
     try {
-      const res = await fetch(`${API_BASE_URL}/api/chat/message`, {
+      const res = await fetch(`${API_BASE_URL}/chat/message`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ sessionId, message: userMsg }),
@@ -440,7 +502,7 @@ export function VoiceAssistantWidget({ userEmail }) {
       const fd = new FormData();
       fd.append("audio", blob, "recording.webm");
       fd.append("sessionId", sessionId);
-      const res = await fetch(`${API_BASE_URL}/api/chat/voice`, {
+      const res = await fetch(`${API_BASE_URL}/chat/voice`, {
         method: "POST",
         body: fd,
       });

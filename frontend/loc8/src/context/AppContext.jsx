@@ -355,9 +355,30 @@ export function AppProvider({ children }) {
     else if (phase === "qrGeneration") navigateTo("qr");
   };
 
-  const saveProblemsPreference = (problems) => {
+  const saveProblemsPreference = async (problems) => {
     setSelectedProblems(problems);
     setAllocatedProblem(problems[0]);
+
+    // Persist preferences to backend
+    if (selectedHackathon?.id) {
+      try {
+        const preferenceIds = problems.map((p) => p.id);
+        const res = await fetch(`${API_BASE_URL}/ps/${selectedHackathon.id}/preferences`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+          body: JSON.stringify({ preferences: preferenceIds }),
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          console.error("Failed to save preferences:", data.message);
+        }
+      } catch (err) {
+        console.error("Network error saving preferences:", err);
+      }
+    }
   };
 
   const scanQR = () => {

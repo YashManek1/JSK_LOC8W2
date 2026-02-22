@@ -4,6 +4,14 @@ import Navbar from "../components/layout/Navbar";
 import Footer from "../components/layout/Footer";
 import { Search, Filter, Send, Heart, MessageCircle, Pin, ChevronDown, X, Check, UserPlus, Users, MessageSquare, Inbox } from "lucide-react";
 import {
+    getCommunityTeams,
+    applyToTeam,
+    getCommunityRequests,
+    respondToRequest,
+    getCommunityDiscussions,
+    createDiscussionPost,
+} from "../api";
+import {
     MOCK_TEAM_LISTINGS,
     MOCK_TEAMMATE_LISTINGS,
     MOCK_INCOMING_REQUESTS,
@@ -82,13 +90,32 @@ function Avatar({ letter, size = "md", gradient }) {
 /* ═══════════════════════════════════════════════════ */
 /*  TAB: FIND A TEAM                                  */
 /* ═══════════════════════════════════════════════════ */
-function FindTeamTab({ userSkills }) {
+function FindTeamTab({ userSkills, hackathonId }) {
     const [searchQuery, setSearchQuery] = useState("");
     const [selectedSkillFilter, setSelectedSkillFilter] = useState([]);
     const [appliedTeams, setAppliedTeams] = useState([]);
+    const [teamListings, setTeamListings] = useState(MOCK_TEAM_LISTINGS);
+
+    useEffect(() => {
+        const fetchTeams = async () => {
+            try {
+                const data = await getCommunityTeams(hackathonId);
+                const teams = Array.isArray(data) ? data : data?.teams || [];
+                if (teams.length > 0) setTeamListings(teams);
+            } catch { /* use fallback */ }
+        };
+        fetchTeams();
+    }, [hackathonId]);
+
+    const handleApply = async (teamId) => {
+        try {
+            await applyToTeam(teamId, "I'd love to join your team!");
+        } catch { /* fire and forget */ }
+        setAppliedTeams((prev) => [...prev, teamId]);
+    };
 
     const filteredTeams = useMemo(() => {
-        return MOCK_TEAM_LISTINGS.filter((team) => {
+        return teamListings.filter((team) => {
             const matchesSearch =
                 !searchQuery ||
                 team.teamName.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -234,7 +261,7 @@ function FindTeamTab({ userSkills }) {
                                         {team.domain}
                                     </span>
                                     <button
-                                        onClick={() => !hasApplied && setAppliedTeams((prev) => [...prev, team.id])}
+                                        onClick={() => !hasApplied && handleApply(team.id)}
                                         className={`px-4 py-2 text-xs font-bold rounded-xl transition-all flex items-center gap-1.5 ${hasApplied
                                             ? "bg-[#B4ED57]/10 text-[#B4ED57] border border-[#B4ED57]/30 cursor-default"
                                             : "bg-[#B4ED57] hover:bg-[#c5f278] text-black hover:scale-105 active:scale-95"
@@ -465,16 +492,29 @@ function FindTeammateTab({ userSkills, communityPool, inviteSoloToTeam, isTeamLe
 function RequestsTab({ userSkills }) {
     const [requests, setRequests] = useState(MOCK_INCOMING_REQUESTS);
 
-    const handleAccept = (id) => {
+    useEffect(() => {
+        const fetchRequests = async () => {
+            try {
+                const data = await getCommunityRequests();
+                const reqs = Array.isArray(data) ? data : data?.requests || [];
+                if (reqs.length > 0) setRequests(reqs);
+            } catch { /* use fallback */ }
+        };
+        fetchRequests();
+    }, []);
+
+    const handleAccept = async (id) => {
         setRequests((prev) =>
             prev.map((r) => (r.id === id ? { ...r, status: "accepted" } : r))
         );
+        try { await respondToRequest(id, "accept"); } catch { /* already updated locally */ }
     };
 
-    const handleReject = (id) => {
+    const handleReject = async (id) => {
         setRequests((prev) =>
             prev.map((r) => (r.id === id ? { ...r, status: "rejected" } : r))
         );
+        try { await respondToRequest(id, "reject"); } catch { /* already updated locally */ }
     };
 
     const pending = requests.filter((r) => r.status === "pending");
@@ -620,12 +660,23 @@ function RequestsTab({ userSkills }) {
 /* ═══════════════════════════════════════════════════ */
 /*  TAB: DISCUSSION                                   */
 /* ═══════════════════════════════════════════════════ */
-function DiscussionTab() {
+function DiscussionTab({ hackathonId }) {
     const [posts, setPosts] = useState(MOCK_DISCUSSION_POSTS);
     const [newPost, setNewPost] = useState("");
     const [likedPosts, setLikedPosts] = useState([]);
 
-    const handleCreatePost = () => {
+    useEffect(() => {
+        const fetchPosts = async () => {
+            try {
+                const data = await getCommunityDiscussions(hackathonId);
+                const fetched = Array.isArray(data) ? data : data?.posts || [];
+                if (fetched.length > 0) setPosts(fetched);
+            } catch { /* use fallback */ }
+        };
+        fetchPosts();
+    }, [hackathonId]);
+
+    const handleCreatePost = async () => {
         if (!newPost.trim()) return;
         const post = {
             id: `d_new_${Date.now()}`,
@@ -639,6 +690,9 @@ function DiscussionTab() {
         };
         setPosts((prev) => [post, ...prev]);
         setNewPost("");
+        try {
+            await createDiscussionPost(newPost, ["community"]);
+        } catch { /* already added locally */ }
     };
 
     const toggleLike = (id) => {
@@ -789,6 +843,8 @@ export default function CommunityPage() {
     const [communityPool, setCommunityPool] = useState([]);
     const [soloRegistered, setSoloRegistered] = useState(false);
     const [soloLoading, setSoloLoading] = useState(false);
+    const [communityStats, setCommunityStats] = useState(COMMUNITY_STATS);
+    const [pendingRequestCount, setPendingRequestCount] = useState(MOCK_INCOMING_REQUESTS.filter(r => r.status === "pending").length);
 
     // Fetch community pool on mount
     useEffect(() => {
@@ -796,6 +852,20 @@ export default function CommunityPage() {
             fetchCommunityPool(selectedHackathon.id).then(setCommunityPool);
         }
     }, [selectedHackathon?.id]);
+
+    // Fetch pending request count
+    useEffect(() => {
+        const fetchCount = async () => {
+            try {
+                const data = await getCommunityRequests();
+                const reqs = Array.isArray(data) ? data : data?.requests || [];
+                if (reqs.length > 0) {
+                    setPendingRequestCount(reqs.filter(r => r.status === "pending").length);
+                }
+            } catch { /* use fallback */ }
+        };
+        fetchCount();
+    }, []);
 
     const handleRegisterSolo = async () => {
         setSoloLoading(true);
@@ -822,7 +892,7 @@ export default function CommunityPage() {
     const tabs = [
         { key: "findTeam", label: "Find a Team", icon: <Users size={16} /> },
         { key: "findTeammate", label: "Find a Teammate", icon: <UserPlus size={16} /> },
-        { key: "requests", label: "Requests", icon: <Inbox size={16} />, badge: MOCK_INCOMING_REQUESTS.filter(r => r.status === "pending").length },
+        { key: "requests", label: "Requests", icon: <Inbox size={16} />, badge: pendingRequestCount },
         { key: "discussion", label: "Discussion", icon: <MessageSquare size={16} /> },
     ];
 
@@ -917,7 +987,7 @@ export default function CommunityPage() {
 
                 {/* Stats Bar */}
                 <div className="flex justify-center gap-5 px-4 mb-16 flex-wrap">
-                    {COMMUNITY_STATS.map((stat, i) => (
+                    {communityStats.map((stat, i) => (
                         <div
                             key={i}
                             className={`bg-[#141414] border border-white/10 ${stat.border} border-l-2 rounded-xl px-6 py-5 min-w-[160px]`}
@@ -1008,10 +1078,10 @@ export default function CommunityPage() {
                     </div>
 
                     {/* Tab Content */}
-                    {activeTab === "findTeam" && <FindTeamTab userSkills={userSkills} />}
+                    {activeTab === "findTeam" && <FindTeamTab userSkills={userSkills} hackathonId={selectedHackathon?.id} />}
                     {activeTab === "findTeammate" && <FindTeammateTab userSkills={userSkills} communityPool={communityPool} inviteSoloToTeam={inviteSoloToTeam} isTeamLeader={isTeamLeader} />}
                     {activeTab === "requests" && <RequestsTab userSkills={userSkills} />}
-                    {activeTab === "discussion" && <DiscussionTab />}
+                    {activeTab === "discussion" && <DiscussionTab hackathonId={selectedHackathon?.id} />}
                 </div>
             </main>
 

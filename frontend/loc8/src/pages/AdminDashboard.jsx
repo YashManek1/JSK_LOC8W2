@@ -6,6 +6,8 @@ import { ParticipantsTable, CreateJudgeWidget, AdminStatsBar } from "../componen
 import TeamsTab from "../components/admin/TeamsTab";
 import AdminOverview from "../components/admin/AdminOverview";
 import ShortlistManagement from "../components/admin/ShortlistManagement";
+import ScreeningTab from "../components/admin/ScreeningTab";
+import { allocatePS, getPublicLeaderboard, checkInScan, mealScan, getAdminTimeline } from "../api";
 
 /* ── Animation variants ── */
 const pageTransition = {
@@ -28,7 +30,7 @@ const sections = {
 };
 
 /* Sample timeline data */
-const TIMELINE_EVENTS = [
+const FALLBACK_TIMELINE_EVENTS = [
   { time: "9:00 AM", event: "Registration & Check-in", status: "completed" },
   { time: "10:00 AM", event: "Opening Ceremony", status: "completed" },
   { time: "10:30 AM", event: "Hacking Begins", status: "completed" },
@@ -43,15 +45,27 @@ const TIMELINE_EVENTS = [
   { time: "12:00 PM", event: "Awards Ceremony", status: "upcoming" },
 ];
 
-function TimelineSection() {
+function TimelineSection({ hackathonId }) {
   const [visibleCount, setVisibleCount] = useState(0);
+  const [events, setEvents] = useState(FALLBACK_TIMELINE_EVENTS);
 
   useEffect(() => {
-    if (visibleCount < TIMELINE_EVENTS.length) {
+    const fetchTimeline = async () => {
+      try {
+        const data = await getAdminTimeline(hackathonId);
+        const timeline = Array.isArray(data) ? data : data?.events || data?.timeline || [];
+        if (timeline.length > 0) setEvents(timeline);
+      } catch { /* use fallback */ }
+    };
+    if (hackathonId) fetchTimeline();
+  }, [hackathonId]);
+
+  useEffect(() => {
+    if (visibleCount < events.length) {
       const t = setTimeout(() => setVisibleCount((c) => c + 1), 120);
       return () => clearTimeout(t);
     }
-  }, [visibleCount]);
+  }, [visibleCount, events.length]);
 
   return (
     <motion.div
@@ -75,7 +89,7 @@ function TimelineSection() {
       <div className="relative">
         <div className="absolute left-[19px] top-0 bottom-0 w-0.5 bg-gradient-to-b from-[#B4ED57] via-[#4D58D4] to-white/10" />
         <div className="space-y-1">
-          {TIMELINE_EVENTS.map((ev, i) => {
+          {events.map((ev, i) => {
             const isCompleted = ev.status === "completed";
             const isActive = ev.status === "active";
             const show = i < visibleCount;
@@ -114,10 +128,337 @@ function TimelineSection() {
   );
 }
 
+/* ── PS Allocation Section ── */
+function PSAllocationSection({ hackathonId }) {
+  const [maxTeams, setMaxTeams] = useState(5);
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState(null);
+  const [error, setError] = useState("");
+
+  const handleAllocate = async () => {
+    if (!hackathonId) {
+      setError("No hackathon selected");
+      return;
+    }
+    setLoading(true);
+    setError("");
+    setResult(null);
+    try {
+      const data = await allocatePS(hackathonId, maxTeams);
+      setResult(data);
+    } catch (err) {
+      setError(err.message || "Allocation failed");
+    }
+    setLoading(false);
+  };
+
+  return (
+    <div className="space-y-6">
+      <motion.div
+        className="backdrop-blur-xl bg-white/[0.03] border border-white/[0.08] shadow-[0_8px_32px_rgba(0,0,0,0.3)] rounded-2xl p-8"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+      >
+        <h3 className="text-white font-bold text-xl mb-1" style={{ fontFamily: "'Questrial', sans-serif" }}>Problem Statement Allocation</h3>
+        <p className="text-white/40 text-sm mb-6" style={{ fontFamily: "'Fustat', sans-serif" }}>
+          Automatically allocate problem statements to teams based on their preferences.
+        </p>
+
+        <div className="flex items-end gap-4 mb-6">
+          <div className="flex-1 max-w-xs">
+            <label className="text-white/40 text-xs uppercase tracking-widest font-bold mb-2 block" style={{ fontFamily: "'Fustat', sans-serif" }}>
+              Max Teams Per Domain
+            </label>
+            <input
+              type="number"
+              min={1}
+              value={maxTeams}
+              onChange={(e) => setMaxTeams(parseInt(e.target.value) || 1)}
+              className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white outline-none text-sm"
+              style={{ fontFamily: "'Fustat', sans-serif" }}
+            />
+          </div>
+          <motion.button
+            onClick={handleAllocate}
+            disabled={loading}
+            className="px-6 py-3 bg-[#B4ED57] hover:bg-[#c5f278] text-black font-bold rounded-xl transition-all disabled:opacity-50"
+            whileHover={{ scale: 1.03 }}
+            whileTap={{ scale: 0.97 }}
+          >
+            {loading ? "⏳ Allocating..." : "📦 Run Allocation"}
+          </motion.button>
+        </div>
+
+        {error && (
+          <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4 mb-4">
+            <p className="text-red-400 text-sm font-bold">❌ {error}</p>
+          </div>
+        )}
+
+        {result && (
+          <motion.div
+            className="bg-[#B4ED57]/5 border border-[#B4ED57]/20 rounded-xl p-6"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+          >
+            <p className="text-[#B4ED57] font-bold text-sm mb-2">✓ Allocation Complete</p>
+            <pre className="text-white/60 text-xs whitespace-pre-wrap font-mono bg-black/20 rounded-lg p-4 max-h-64 overflow-y-auto">
+              {JSON.stringify(result, null, 2)}
+            </pre>
+          </motion.div>
+        )}
+      </motion.div>
+    </div>
+  );
+}
+
+/* ── Shortlist Leaderboard Section (Admin View) ── */
+function ShortlistLeaderboardSection() {
+  const [entries, setEntries] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const data = await getPublicLeaderboard();
+        const list = Array.isArray(data) ? data : data.entries || data.leaderboard || [];
+        setEntries(list);
+      } catch { /* ignore */ }
+      setLoading(false);
+    };
+    load();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="backdrop-blur-xl bg-white/[0.03] border border-white/[0.08] rounded-2xl p-12 text-center">
+        <div className="animate-spin text-4xl mb-4">⏳</div>
+        <p className="text-white/40">Loading shortlist...</p>
+      </div>
+    );
+  }
+
+  if (entries.length === 0) {
+    return (
+      <div className="backdrop-blur-xl bg-white/[0.03] border border-white/[0.08] rounded-2xl p-12 text-center">
+        <p className="text-5xl mb-4">📋</p>
+        <h3 className="text-white font-bold text-xl mb-2" style={{ fontFamily: "'Questrial', sans-serif" }}>No Shortlist Data</h3>
+        <p className="text-white/40 text-sm">Publish the leaderboard from the Screening tab to see results here.</p>
+      </div>
+    );
+  }
+
+  const shortlisted = entries.filter((e) => e.status !== "ELIMINATED");
+  const eliminated = entries.filter((e) => e.status === "ELIMINATED");
+
+  return (
+    <div className="space-y-6">
+      {/* Summary cards */}
+      <div className="grid grid-cols-3 gap-4">
+        <motion.div className="bg-[#B4ED57]/10 border border-[#B4ED57]/20 rounded-2xl p-5 text-center" whileHover={{ scale: 1.02 }}>
+          <p className="text-[#B4ED57] text-3xl font-black" style={{ fontFamily: "'Questrial', sans-serif" }}>{shortlisted.length}</p>
+          <p className="text-white/40 text-xs mt-1" style={{ fontFamily: "'Fustat', sans-serif" }}>Shortlisted</p>
+        </motion.div>
+        <motion.div className="bg-red-500/10 border border-red-500/20 rounded-2xl p-5 text-center" whileHover={{ scale: 1.02 }}>
+          <p className="text-red-400 text-3xl font-black" style={{ fontFamily: "'Questrial', sans-serif" }}>{eliminated.length}</p>
+          <p className="text-white/40 text-xs mt-1" style={{ fontFamily: "'Fustat', sans-serif" }}>Eliminated</p>
+        </motion.div>
+        <motion.div className="bg-white/5 border border-white/10 rounded-2xl p-5 text-center" whileHover={{ scale: 1.02 }}>
+          <p className="text-white text-3xl font-black" style={{ fontFamily: "'Questrial', sans-serif" }}>{entries.length}</p>
+          <p className="text-white/40 text-xs mt-1" style={{ fontFamily: "'Fustat', sans-serif" }}>Total Entries</p>
+        </motion.div>
+      </div>
+
+      {/* Shortlisted teams */}
+      <div className="backdrop-blur-xl bg-white/[0.03] border border-white/[0.08] rounded-2xl overflow-hidden">
+        <div className="p-5 border-b border-white/10">
+          <h3 className="text-white font-bold" style={{ fontFamily: "'Questrial', sans-serif" }}>Published Leaderboard</h3>
+        </div>
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-white/5">
+              <th className="px-5 py-3 text-left text-white/30 text-xs uppercase tracking-wider font-bold">Rank</th>
+              <th className="px-5 py-3 text-left text-white/30 text-xs uppercase tracking-wider font-bold">Team</th>
+              <th className="px-5 py-3 text-left text-white/30 text-xs uppercase tracking-wider font-bold">Score</th>
+              <th className="px-5 py-3 text-left text-white/30 text-xs uppercase tracking-wider font-bold">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {entries.map((e, i) => (
+              <tr key={e.id || i} className="border-b border-white/[0.04] hover:bg-white/[0.02] transition-colors">
+                <td className="px-5 py-3">
+                  <span className={`inline-flex w-7 h-7 rounded-lg items-center justify-center text-xs font-bold ${i < 3 ? "bg-[#B4ED57]/10 text-[#B4ED57]" : "bg-white/5 text-white/30"}`}>{i + 1}</span>
+                </td>
+                <td className="px-5 py-3 text-white font-bold" style={{ fontFamily: "'Fustat', sans-serif" }}>{e.teamName}</td>
+                <td className="px-5 py-3 text-white font-black" style={{ fontFamily: "'Questrial', sans-serif" }}>{e.finalScore != null ? Math.round(e.finalScore) : "—"}</td>
+                <td className="px-5 py-3">
+                  <span className={`text-xs px-2.5 py-1 rounded-full font-bold ${
+                    e.status === "ELIMINATED" ? "bg-red-500/10 text-red-400" : "bg-[#B4ED57]/10 text-[#B4ED57]"
+                  }`}>{e.status || "SHORTLISTED"}</span>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+/* ── QR Management Section ── */
+function QRManagementSection() {
+  const [qrTab, setQrTab] = useState("food");
+  const [qrInput, setQrInput] = useState("");
+  const [mealType, setMealType] = useState("lunch");
+  const [scanResult, setScanResult] = useState(null);
+  const [scanError, setScanError] = useState("");
+  const [scanning, setScanning] = useState(false);
+  const [scanHistory, setScanHistory] = useState([]);
+
+  const handleScan = async () => {
+    if (!qrInput.trim()) return;
+    setScanning(true);
+    setScanResult(null);
+    setScanError("");
+    try {
+      let data;
+      if (qrTab === "food") {
+        data = await mealScan(qrInput.trim(), mealType);
+      } else {
+        data = await checkInScan(qrInput.trim());
+      }
+      setScanResult(data);
+      setScanHistory((prev) => [
+        { qr: qrInput.trim(), type: qrTab === "food" ? `Meal (${mealType})` : "Entry", time: new Date().toLocaleTimeString(), success: true },
+        ...prev.slice(0, 19),
+      ]);
+      setQrInput("");
+    } catch (err) {
+      setScanError(err.message || "Scan failed");
+      setScanHistory((prev) => [
+        { qr: qrInput.trim(), type: qrTab === "food" ? `Meal (${mealType})` : "Entry", time: new Date().toLocaleTimeString(), success: false },
+        ...prev.slice(0, 19),
+      ]);
+    }
+    setScanning(false);
+  };
+
+  return (
+    <div className="space-y-5">
+      {/* Tabs */}
+      <div className="flex gap-2">
+        {["food", "entry"].map((tab) => (
+          <motion.button
+            key={tab}
+            onClick={() => { setQrTab(tab); setScanResult(null); setScanError(""); }}
+            className={`px-5 py-2.5 rounded-xl text-sm font-bold transition-all ${qrTab === tab
+                ? "bg-[#B4ED57] text-black shadow-lg shadow-[#B4ED57]/20"
+                : "bg-white/5 border border-white/10 text-white/50 hover:text-white hover:bg-white/10"
+              }`}
+          >
+            {tab === "food" ? "🍽  Food" : "🚪  Entry"}
+          </motion.button>
+        ))}
+      </div>
+
+      {/* Scanner */}
+      <motion.div
+        className={`rounded-2xl p-8 ${glassStyle}`}
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+      >
+        <h3 className="text-white font-bold text-xl mb-2" style={{ fontFamily: "'Questrial', sans-serif" }}>
+          {qrTab === "food" ? "🍽 Food QR Scanner" : "🚪 Entry QR Scanner"}
+        </h3>
+        <p className="text-white/40 text-sm mb-6" style={{ fontFamily: "'Fustat', sans-serif" }}>
+          {qrTab === "food" ? "Scan meal QR codes or enter QR data manually" : "Scan entry QR codes for venue check-in"}
+        </p>
+
+        <div className="flex flex-col md:flex-row gap-4 mb-6">
+          <input
+            value={qrInput}
+            onChange={(e) => setQrInput(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && handleScan()}
+            placeholder="Paste QR data or scan..."
+            className="flex-1 px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white text-sm placeholder-white/20 focus:outline-none focus:border-[#B4ED57]/50"
+          />
+          {qrTab === "food" && (
+            <select
+              value={mealType}
+              onChange={(e) => setMealType(e.target.value)}
+              className="px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white text-sm focus:outline-none"
+            >
+              <option value="breakfast">Breakfast</option>
+              <option value="lunch">Lunch</option>
+              <option value="dinner">Dinner</option>
+              <option value="snack">Snack</option>
+            </select>
+          )}
+          <motion.button
+            onClick={handleScan}
+            disabled={scanning || !qrInput.trim()}
+            className="px-6 py-3 bg-[#B4ED57] hover:bg-[#c5f278] text-black font-bold rounded-xl disabled:opacity-50"
+            whileHover={{ scale: 1.03 }}
+            whileTap={{ scale: 0.97 }}
+          >
+            {scanning ? "⏳ Scanning..." : "📷 Scan"}
+          </motion.button>
+        </div>
+
+        {scanError && (
+          <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4 mb-4">
+            <p className="text-red-400 text-sm font-bold">❌ {scanError}</p>
+          </div>
+        )}
+
+        {scanResult && (
+          <motion.div
+            className="bg-[#B4ED57]/10 border border-[#B4ED57]/20 rounded-xl p-5 mb-4"
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+          >
+            <p className="text-[#B4ED57] font-bold text-sm mb-2">✓ {scanResult.message || "Scan Successful"}</p>
+            {scanResult.participant && (
+              <p className="text-white/60 text-sm">Participant: <span className="text-white font-bold">{scanResult.participant}</span></p>
+            )}
+            {scanResult.mealType && (
+              <p className="text-white/60 text-sm">Meal: <span className="text-white">{scanResult.mealType}</span></p>
+            )}
+          </motion.div>
+        )}
+      </motion.div>
+
+      {/* Scan History */}
+      {scanHistory.length > 0 && (
+        <motion.div
+          className={`rounded-2xl p-6 ${glassStyle}`}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+        >
+          <h4 className="text-white font-bold text-sm mb-4" style={{ fontFamily: "'Questrial', sans-serif" }}>Recent Scans</h4>
+          <div className="space-y-2">
+            {scanHistory.map((s, i) => (
+              <div key={i} className="flex items-center justify-between px-4 py-2.5 rounded-xl bg-white/[0.02] border border-white/5">
+                <div className="flex items-center gap-3">
+                  <span className={`w-2 h-2 rounded-full ${s.success ? "bg-[#B4ED57]" : "bg-red-400"}`} />
+                  <span className="text-white/60 text-xs font-mono truncate max-w-[200px]">{s.qr}</span>
+                </div>
+                <div className="flex items-center gap-4">
+                  <span className="text-white/30 text-xs">{s.type}</span>
+                  <span className="text-white/20 text-xs">{s.time}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </motion.div>
+      )}
+    </div>
+  );
+}
+
 export default function AdminDashboard() {
   const { currentUser, selectedHackathon } = useApp();
   const [activeSection, setActiveSection] = useState("overview");
-  const [qrTab, setQrTab] = useState("food");
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] flex">
@@ -176,67 +517,18 @@ export default function AdminDashboard() {
 
         {activeSection === "ppt" && <ShortlistManagement />}
 
+            {activeSection === "screening" && <ScreeningTab />}
+
+            {activeSection === "shortlist" && <ShortlistLeaderboardSection />}
+
             {activeSection === "qr" && (
-              <div className="space-y-5">
-                {/* Tabs */}
-                <div className="flex gap-2">
-                  {["food", "entry"].map((tab) => (
-                    <motion.button
-                      key={tab}
-                      onClick={() => setQrTab(tab)}
-                      className={`px-5 py-2.5 rounded-xl text-sm font-bold transition-all ${qrTab === tab
-                          ? "bg-[#B4ED57] text-black shadow-lg shadow-[#B4ED57]/20"
-                          : "bg-white/5 border border-white/10 text-white/50 hover:text-white hover:bg-white/10"
-                        }`}
-                    >
-                      {tab === "food" ? "\ud83c\udf7d  Food" : "\ud83d\udeaa  Entry"}
-                    </motion.button>
-                  ))}
-                </div>
-                {/* Tab content */}
-                <AnimatePresence mode="wait">
-                  <motion.div
-                    key={qrTab}
-                    className={`rounded-2xl p-8 text-center ${glassStyle}`}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    transition={{ duration: 0.3 }}
-                    whileHover={{ borderColor: "rgba(180,237,87,0.2)" }}
-                  >
-                    <motion.span
-                      className="text-5xl block mb-4"
-                      animate={{ y: [0, -8, 0] }}
-                      transition={{ duration: 2, repeat: Infinity }}
-                    >{qrTab === "food" ? "\ud83c\udf7d" : "\ud83d\udeaa"}</motion.span>
-                    <h3 className="text-white font-bold text-xl mb-2" style={{ fontFamily: "'Questrial', sans-serif" }}>
-                      {qrTab === "food" ? "Food QR Management" : "Entry QR Management"}
-                    </h3>
-                    <p className="text-white/40 text-sm">
-                      {qrTab === "food"
-                        ? "Manage meal QR codes for participants"
-                        : "Manage entry/exit QR scanning for venue check-in"}
-                    </p>
-                  </motion.div>
-                </AnimatePresence>
-              </div>
+              <QRManagementSection />
             )}
 
             {activeSection === "credentials" && <CreateJudgeWidget />}
 
             {activeSection === "allocations" && (
-              <motion.div
-                className={`rounded-2xl p-8 text-center ${glassStyle}`}
-                whileHover={{ borderColor: "rgba(180,237,87,0.2)" }}
-              >
-                <motion.span
-                  className="text-5xl block mb-4"
-                  animate={{ y: [0, -8, 0] }}
-                  transition={{ duration: 2, repeat: Infinity }}
-                >{"\ud83d\udce6"}</motion.span>
-                <h3 className="text-white font-bold text-xl mb-2" style={{ fontFamily: "'Questrial', sans-serif" }}>Allocations</h3>
-                <p className="text-white/40 text-sm">Manage room, lab & seating allocations for teams</p>
-              </motion.div>
+              <PSAllocationSection hackathonId={selectedHackathon?.id} />
             )}
           </motion.div>
         </AnimatePresence>
