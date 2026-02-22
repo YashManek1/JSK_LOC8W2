@@ -1,27 +1,33 @@
 import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { lastValueFrom } from 'rxjs';
-// FIX 1: Use 'require' to bypass the TS construct signature error for FormData
+import * as fs from 'fs';
+// Bypass TS construct signature error
 const FormData = require('form-data');
 
 @Injectable()
 export class IdentityService {
     constructor(private readonly httpService: HttpService) { }
 
-    async verifyIdentity(selfie: Express.Multer.File, document: Express.Multer.File) {
-        // FIX 2: Explicitly type 'error' as 'any' so we can read its properties safely
+    // FIX: Updated to accept 3 arguments matching your controller
+    // and type them as strings since the controller is passing the '.path'
+    async verifyIdentity(participantId: string, idCardPath: string, selfiePath: string) {
         try {
             const formData = new FormData();
-            formData.append('selfie', selfie.buffer, { filename: selfie.originalname });
-            formData.append('document', document.buffer, { filename: document.originalname });
+
+            // Read the files directly from the disk paths provided by the controller
+            formData.append('document', fs.createReadStream(idCardPath));
+            formData.append('selfie', fs.createReadStream(selfiePath));
 
             const request = this.httpService.post('http://127.0.0.1:8000/verify/face', formData, {
                 headers: formData.getHeaders(),
             });
 
-            // FIX 3: Cast the response to 'any' to bypass the 'unknown' object error
             const response = await lastValueFrom(request) as any;
             const { isMatch, distance, faceEmbedding } = response.data;
+
+            // Note: You can now use the 'participantId' here to securely save 
+            // the 'faceEmbedding' into your Prisma Database using PrismaService!
 
             return { isMatch, distance, faceEmbedding };
 
