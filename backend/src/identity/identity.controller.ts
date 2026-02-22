@@ -46,7 +46,7 @@ export class IdentityController {
         if (!files.liveSelfie || !files.liveSelfie[0]) throw new BadRequestException('Live selfie is required');
 
         // Pass the saved file paths to the service
-        return await this.identityService.verifyAndSaveIdentity(
+        return await this.identityService.verifyIdentity(
             userId,
             files.idCard[0].path,      // e.g., 'uploads/identity/idCard-1234.jpg'
             files.liveSelfie[0].path   // e.g., 'uploads/identity/liveSelfie-5678.jpg'
