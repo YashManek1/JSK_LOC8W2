@@ -29,7 +29,6 @@ RUN find node_modules/@prisma node_modules/.prisma -type f -name "*windows*" -de
 FROM python:3.10-slim AS python-builder
 WORKDIR /app
 
-# 🚨 FIX: Added 'curl' and 'ca-certificates' to handle robust model downloading
 RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc g++ binutils \
     libgl1 \
@@ -58,9 +57,12 @@ RUN uv pip install --no-cache torch torchvision torchaudio --index-url https://d
     && find /opt/venv -type d -name "__pycache__" -exec rm -rf {} + \
     && find /opt/venv -name "*.pyc" -delete
 
-# 🚨 FIX: Manually download the ArcFace model using cURL with aggressive retries so broken pipes don't fail the build.
+# 🚨 BULLETPROOF FIX: Bash loop with curl -C - (Resume). 
+# If Railway drops the connection at 90%, it will wait 2 seconds and resume from 90%.
 RUN mkdir -p /root/.deepface/weights \
-    && curl -L --retry 5 --retry-connrefused --retry-delay 2 -o /root/.deepface/weights/arcface_weights.h5 https://github.com/serengil/deepface_models/releases/download/v1.0/arcface_weights.h5 \
+    && for i in 1 2 3 4 5 6 7 8 9 10; do \
+         curl -L -C - -o /root/.deepface/weights/arcface_weights.h5 https://github.com/serengil/deepface_models/releases/download/v1.0/arcface_weights.h5 && break || sleep 2; \
+       done \
     && python -c "import easyocr; easyocr.Reader(['en'], gpu=False); from deepface import DeepFace; DeepFace.build_model('ArcFace')"
 
 
