@@ -5,6 +5,7 @@ import Sidebar from "../components/layout/Sidebar";
 import { ParticipantsTable, CreateJudgeWidget, AdminStatsBar } from "../components/admin/AdminWidgets";
 import TeamsTab from "../components/admin/TeamsTab";
 import AdminOverview from "../components/admin/AdminOverview";
+import ShortlistManagement from "../components/admin/ShortlistManagement";
 
 /* ── Animation variants ── */
 const pageTransition = {
@@ -171,20 +172,7 @@ export default function AdminDashboard() {
 
         {activeSection === "teams" && <TeamsTab />}
 
-        {activeSection === "ppt" && (
-          <motion.div
-            className={`rounded-2xl p-8 text-center ${glassStyle}`}
-            whileHover={{ borderColor: "rgba(180,237,87,0.2)" }}
-          >
-            <motion.span
-              className="text-5xl block mb-4"
-              animate={{ y: [0, -8, 0] }}
-              transition={{ duration: 2, repeat: Infinity }}
-            >{"\ud83d\udcca"}</motion.span>
-            <h3 className="text-white font-bold text-xl mb-2" style={{ fontFamily: "'Questrial', sans-serif" }}>PPT Evaluation</h3>
-            <p className="text-white/40 text-sm">Evaluate and score team presentations</p>
-          </motion.div>
-        )}
+        {activeSection === "ppt" && <ShortlistManagement />}
 
         {activeSection === "qr" && (
           <div className="space-y-5">
