@@ -29,12 +29,13 @@ RUN find node_modules/@prisma node_modules/.prisma -type f -name "*windows*" -de
 FROM python:3.10-slim AS python-builder
 WORKDIR /app
 
+# Swapped curl for 'wget' which has much better native download resuming functionality
 RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc g++ binutils \
     libgl1 \
     libglib2.0-0 \
     libxcb1 \
-    curl ca-certificates \
+    wget ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
 # Pull in the ultra-fast Rust-based 'uv' package manager
@@ -43,27 +44,35 @@ COPY --from=ghcr.io/astral-sh/uv:latest /uv /bin/uv
 RUN python -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
+# Set the Extra Index globally.
+ENV UV_EXTRA_INDEX_URL="https://download.pytorch.org/whl/cpu"
+
 COPY identity-service/requirements.txt ./
 
-# Install Python requirements and wipe GPU bloat
-RUN uv pip install --no-cache torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu \
-    && uv pip install --no-cache -r requirements.txt --index-url https://download.pytorch.org/whl/cpu --extra-index-url https://pypi.org/simple \
-    && uv pip uninstall -y tensorflow tensorflow-cpu \
+# 🚨 THE ULTIMATE ANTI-BLOAT & TF-CRASH FIX:
+# 1. Install CPU torch.
+# 2. Install requirements.
+# 3. Deep uninstall ALL tensorflow/keras packages to clear the broken C++ registry.
+# 4. Install stable `tensorflow-cpu<2.16` to BYPASS the double-registration bug entirely.
+RUN uv pip install --no-cache torch torchvision torchaudio \
+    && uv pip install --no-cache -r requirements.txt --extra-index-url https://pypi.org/simple \
+    && uv pip uninstall -y tensorflow tensorflow-cpu keras tf-keras tensorboard tensorboard-data-server tensorflow-io-gcs-filesystem \
     && rm -rf /opt/venv/lib/python3.10/site-packages/tensorflow* \
+    && rm -rf /opt/venv/lib/python3.10/site-packages/keras* \
+    && rm -rf /opt/venv/lib/python3.10/site-packages/tensorboard* \
     && rm -rf /opt/venv/lib/python3.10/site-packages/nvidia* \
     && rm -rf /opt/venv/lib/python3.10/site-packages/triton* \
-    && uv pip install --no-cache tensorflow-cpu tf-keras \
+    && uv pip install --no-cache "tensorflow-cpu<2.16" \
     && find /opt/venv -name "*.so" -exec strip --strip-unneeded {} \; || true \
     && find /opt/venv -type d -name "__pycache__" -exec rm -rf {} + \
     && find /opt/venv -name "*.pyc" -delete
 
-# 🚨 BULLETPROOF FIX: Bash loop with curl -C - (Resume). 
-# If Railway drops the connection at 90%, it will wait 2 seconds and resume from 90%.
+# 🚨 FIX: Using `wget -c` (continue). If connection drops, it will safely resume right where it left off.
 RUN mkdir -p /root/.deepface/weights \
     && for i in 1 2 3 4 5 6 7 8 9 10; do \
-         curl -L -C - -o /root/.deepface/weights/arcface_weights.h5 https://github.com/serengil/deepface_models/releases/download/v1.0/arcface_weights.h5 && break || sleep 2; \
+         wget -c -O /root/.deepface/weights/arcface_weights.h5 https://github.com/serengil/deepface_models/releases/download/v1.0/arcface_weights.h5 && break || sleep 2; \
        done \
-    && python -c "import easyocr; easyocr.Reader(['en'], gpu=False); from deepface import DeepFace; DeepFace.build_model('ArcFace')"
+    && python -c "import os; os.environ['TF_CPP_MIN_LOG_LEVEL']='3'; import easyocr; easyocr.Reader(['en'], gpu=False); from deepface import DeepFace; DeepFace.build_model('ArcFace')"
 
 
 # ----- Stage 3: Final Production Image -----
