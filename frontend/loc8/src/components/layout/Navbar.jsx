@@ -22,9 +22,8 @@ export default function Navbar() {
 
       {/* Nav Links */}
       <div className="hidden md:flex items-center gap-8">
-        <button onClick={() => navigateTo("landing")} className="text-white/70 hover:text-white text-sm transition-colors">Hackathons</button>
-        <a href="#features" className="text-white/70 hover:text-white text-sm transition-colors">Features</a>
         <a href="#about" className="text-white/70 hover:text-white text-sm transition-colors">About</a>
+          <button onClick={() => navigateTo("hackathons")} className="text-white/70 hover:text-white text-sm transition-colors">Hackathons</button>
       </div>
 
       {/* Auth Buttons */}

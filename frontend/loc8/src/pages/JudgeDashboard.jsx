@@ -3,6 +3,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { gsap } from "gsap";
 import { useApp } from "../context/AppContext";
 import Sidebar from "../components/layout/Sidebar";
+import { Excalidraw } from "@excalidraw/excalidraw";
+import "@excalidraw/excalidraw/index.css";
 
 /* ── Animation variants (matching AdminDashboard) ────────────────── */
 const pageTransition = {
@@ -66,15 +68,54 @@ function AnimatedCounter({ value, className, style }) {
   return <div ref={ref} className={className} style={style}>0</div>;
 }
 
-/* ── Score Slider ─────────────────────────────────────────────────── */
+/* ── Score Slider (Glowing progress bar) ──────────────────────────── */
 function ScoreSlider({ label, value, max, onChange }) {
+  const pct = max > 0 ? (value / max) * 100 : 0;
+  const sliderRef = useRef(null);
+
   return (
-    <div className="space-y-1">
-      <div className="flex justify-between text-xs">
-        <span className="text-white/60">{label}</span>
-        <span className="text-[#B4ED57] font-bold">{value} / {max}</span>
+    <div className="rounded-2xl bg-[#111118] border border-white/[0.06] p-4">
+      {/* Label row */}
+      <div className="flex items-center justify-between mb-3">
+        <span className="text-white/80 text-sm font-semibold tracking-wide" style={{ fontFamily: "'Questrial', sans-serif" }}>{label}</span>
+        <span className="text-[#B4ED57] text-xl font-black tabular-nums">{value}<span className="text-white/25 text-sm font-medium">/{max}</span></span>
       </div>
-      <input type="range" min={0} max={max} value={value} onChange={(e) => onChange(Number(e.target.value))} className="w-full accent-[#B4ED57]" />
+
+      {/* Custom progress bar track */}
+      <div className="relative h-3 rounded-full bg-white/[0.06]">
+        {/* Filled track with glow */}
+        <div
+          className="absolute inset-y-0 left-0 rounded-full transition-all duration-200 ease-out"
+          style={{
+            width: `${pct}%`,
+            background: `linear-gradient(90deg, #4D58D4, #6ddf3a, #B4ED57)`,
+            boxShadow: pct > 0 ? `0 0 12px rgba(180,237,87,0.4), 0 0 24px rgba(180,237,87,0.15)` : 'none',
+          }}
+        />
+        {/* Glowing thumb indicator */}
+        {pct > 0 && (
+          <div
+            className="absolute top-1/2 -translate-y-1/2 w-5 h-5 rounded-full border-2 border-[#B4ED57] pointer-events-none transition-all duration-200 ease-out"
+            style={{
+              left: `calc(${pct}% - 10px)`,
+              background: `radial-gradient(circle, #B4ED57 30%, rgba(180,237,87,0.3) 70%)`,
+              boxShadow: `0 0 10px rgba(180,237,87,0.6), 0 0 20px rgba(180,237,87,0.3), 0 0 40px rgba(180,237,87,0.1)`,
+            }}
+          />
+        )}
+
+        {/* Hidden native range input overlaid for interaction */}
+        <input
+          ref={sliderRef}
+          type="range"
+          min={0}
+          max={max}
+          value={value}
+          onChange={(e) => onChange(Number(e.target.value))}
+          className="absolute inset-0 w-full opacity-0 cursor-pointer"
+          style={{ height: '20px', top: '-4px' }}
+        />
+      </div>
     </div>
   );
 }
@@ -299,7 +340,7 @@ export default function JudgeDashboard() {
     <div className="min-h-screen bg-[#0a0a0a] flex">
       <Sidebar activeSection={activeSection} setActiveSection={setActiveSection} variant="judge" showRecruitment={isSponsor} />
 
-      <main className="flex-1 ml-16 md:ml-64 p-6" style={{ fontFamily: "'Fustat', sans-serif" }}>
+      <main className="flex-1 ml-16 p-6" style={{ fontFamily: "'Fustat', sans-serif" }}>
         {/* Header */}
         <motion.div
           className="flex items-center justify-between mb-6"
@@ -316,13 +357,12 @@ export default function JudgeDashboard() {
               transition={{ duration: 0.5 }}
               key={activeSection}
             >
-              {activeSection === "dashboard" && <>Judge{" "}<motion.span className="text-[#B4ED57] italic" style={{ fontFamily: "'Pixelify Sans', cursive" }} initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.3, duration: 0.5 }}>Dashboard</motion.span></>}
-              {activeSection === "assignedTeams" && <>Assigned{" "}<motion.span className="text-[#B4ED57] italic" style={{ fontFamily: "'Pixelify Sans', cursive" }} initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.3, duration: 0.5 }}>Teams</motion.span></>}
-              {activeSection === "evaluation" && <>Evaluation{" "}<motion.span className="text-[#B4ED57] italic" style={{ fontFamily: "'Pixelify Sans', cursive" }} initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.3, duration: 0.5 }}>Workspace</motion.span></>}
-              {activeSection === "notes" && <>Notes &{" "}<motion.span className="text-[#B4ED57] italic" style={{ fontFamily: "'Pixelify Sans', cursive" }} initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.3, duration: 0.5 }}>Feedback</motion.span></>}
-              {activeSection === "leaderboard" && <motion.span className="text-[#B4ED57] italic" style={{ fontFamily: "'Pixelify Sans', cursive" }} initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.3, duration: 0.5 }}>Leaderboard</motion.span>}
-              {activeSection === "recruitment" && <motion.span className="text-[#B4ED57] italic" style={{ fontFamily: "'Pixelify Sans', cursive" }} initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.3, duration: 0.5 }}>Recruitment</motion.span>}
-              {activeSection === "settings" && <>Profile &{" "}<motion.span className="text-[#B4ED57] italic" style={{ fontFamily: "'Pixelify Sans', cursive" }} initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.3, duration: 0.5 }}>Settings</motion.span></>}
+              {activeSection === "dashboard" && <>Judge{" "}<motion.span className="text-[#B4ED57] italic text-[2.6rem]" style={{ fontFamily: "'Pixelify Sans', cursive" }} initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.3, duration: 0.5 }}>Dashboard</motion.span></>}
+              {activeSection === "assignedTeams" && <>Assigned{" "}<motion.span className="text-[#B4ED57] italic text-[2.6rem]" style={{ fontFamily: "'Pixelify Sans', cursive" }} initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.3, duration: 0.5 }}>Teams</motion.span></>}
+              {activeSection === "notes" && <motion.span className="text-[#B4ED57] italic text-[2.6rem]" style={{ fontFamily: "'Pixelify Sans', cursive" }} initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.3, duration: 0.5 }}>Notes</motion.span>}
+              {activeSection === "leaderboard" && <motion.span className="text-[#B4ED57] italic text-[2.6rem]" style={{ fontFamily: "'Pixelify Sans', cursive" }} initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.3, duration: 0.5 }}>Leaderboard</motion.span>}
+              {activeSection === "recruitment" && <>Recruitment{" "}<motion.span className="text-[#B4ED57] italic text-[2.6rem]" style={{ fontFamily: "'Pixelify Sans', cursive" }} initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.3, duration: 0.5 }}>Panel</motion.span></>}
+              {activeSection === "settings" && <>Profile &{" "}<motion.span className="text-[#B4ED57] italic text-[2.6rem]" style={{ fontFamily: "'Pixelify Sans', cursive" }} initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.3, duration: 0.5 }}>Settings</motion.span></>}
             </motion.h1>
             <p className="text-white/40 text-sm mt-0.5">
               {selectedHackathon?.name || "HackOS 2026"} ·{" "}
@@ -363,34 +403,113 @@ export default function JudgeDashboard() {
               initial="initial"
               animate="animate"
             >
-              {[
-                { label: "Assigned", value: teams.length, icon: "📋", color: "#4D58D4" },
-                { label: "Scored", value: scored.length, icon: "✅", color: "#B4ED57" },
-                { label: "Pending", value: teams.length - scored.length, icon: "⏳", color: "#F59E0B" },
-                { label: "Avg Score", value: scored.length > 0 ? Math.round(scored.reduce((s, t) => s + totalScore(t.scores), 0) / scored.length) : 0, icon: "⭐", color: "#EC4899", suffix: "/100" },
-              ].map((stat) => (
-                <motion.div
-                  key={stat.label}
-                  className="rounded-2xl p-5 bg-[#4D58D4]/8 border border-[#4D58D4]/25 backdrop-blur-xl shadow-[0_8px_32px_rgba(0,0,0,0.3)]"
-                  variants={staggerItem}
-                  whileHover={{ scale: 1.03, borderColor: "rgba(180,237,87,0.3)", boxShadow: "0 12px 40px rgba(77,88,212,0.15)" }}
-                  transition={{ type: "spring", stiffness: 300 }}
-                >
-                  <div className="flex items-center justify-between mb-3">
-                    <motion.span
-                      className="text-2xl"
-                      animate={{ y: [0, -4, 0] }}
-                      transition={{ duration: 2, repeat: Infinity, delay: Math.random() }}
-                    >{stat.icon}</motion.span>
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ backgroundColor: `${stat.color}15`, color: stat.color, border: `1px solid ${stat.color}30` }}>
-                      {stat.label}
+              {/* Card 1 — Teams Assigned */}
+              <motion.div
+                className="rounded-2xl p-5 relative overflow-hidden group"
+                style={{ background: "linear-gradient(135deg, rgba(77,88,212,0.15) 0%, rgba(77,88,212,0.05) 100%)", border: "1px solid rgba(77,88,212,0.25)" }}
+                variants={staggerItem}
+                whileHover={{ scale: 1.03, borderColor: "rgba(77,88,212,0.5)", boxShadow: "0 12px 40px rgba(77,88,212,0.2)" }}
+                transition={{ type: "spring", stiffness: 300 }}
+              >
+                <motion.div className="absolute inset-0 bg-gradient-to-br from-[#4D58D4]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                <div className="relative z-10">
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="w-10 h-10 rounded-xl bg-[#4D58D4]/20 border border-[#4D58D4]/30 flex items-center justify-center">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4D58D4" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
+                        <circle cx="9" cy="7" r="4" />
+                        <path d="M23 21v-2a4 4 0 00-3-3.87" />
+                        <path d="M16 3.13a4 4 0 010 7.75" />
+                      </svg>
+                    </div>
+                    <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-[#4D58D4]/15 text-[#8B93F0] border border-[#4D58D4]/25">
+                      TEAMS
                     </span>
                   </div>
-                  <div className="text-white text-3xl font-black" style={{ fontFamily: "'Questrial', sans-serif" }}>
-                    {stat.value}{stat.suffix && <span className="text-white/30 text-sm ml-1">{stat.suffix}</span>}
+                  <AnimatedCounter value={teams.length} className="text-white text-4xl font-black mb-1" style={{ fontFamily: "'Questrial', sans-serif" }} />
+                  <p className="text-white/40 text-xs">Teams assigned to you</p>
+                </div>
+              </motion.div>
+
+              {/* Card 2 — Evaluations Done */}
+              <motion.div
+                className="rounded-2xl p-5 relative overflow-hidden group"
+                style={{ background: "linear-gradient(135deg, rgba(180,237,87,0.12) 0%, rgba(180,237,87,0.03) 100%)", border: "1px solid rgba(180,237,87,0.2)" }}
+                variants={staggerItem}
+                whileHover={{ scale: 1.03, borderColor: "rgba(180,237,87,0.45)", boxShadow: "0 12px 40px rgba(180,237,87,0.15)" }}
+                transition={{ type: "spring", stiffness: 300 }}
+              >
+                <motion.div className="absolute inset-0 bg-gradient-to-br from-[#B4ED57]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                <div className="relative z-10">
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="w-10 h-10 rounded-xl bg-[#B4ED57]/15 border border-[#B4ED57]/25 flex items-center justify-center">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#B4ED57" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M22 11.08V12a10 10 0 11-5.93-9.14" />
+                        <polyline points="22 4 12 14.01 9 11.01" />
+                      </svg>
+                    </div>
+                    <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-[#B4ED57]/12 text-[#B4ED57] border border-[#B4ED57]/20">
+                      SCORED
+                    </span>
                   </div>
-                </motion.div>
-              ))}
+                  <AnimatedCounter value={scored.length} className="text-white text-4xl font-black mb-1" style={{ fontFamily: "'Questrial', sans-serif" }} />
+                  <p className="text-white/40 text-xs">Evaluations completed</p>
+                </div>
+              </motion.div>
+
+              {/* Card 3 — Pending Reviews */}
+              <motion.div
+                className="rounded-2xl p-5 relative overflow-hidden group"
+                style={{ background: "linear-gradient(135deg, rgba(251,191,36,0.12) 0%, rgba(251,191,36,0.03) 100%)", border: "1px solid rgba(251,191,36,0.2)" }}
+                variants={staggerItem}
+                whileHover={{ scale: 1.03, borderColor: "rgba(251,191,36,0.45)", boxShadow: "0 12px 40px rgba(251,191,36,0.15)" }}
+                transition={{ type: "spring", stiffness: 300 }}
+              >
+                <motion.div className="absolute inset-0 bg-gradient-to-br from-[#FBBF24]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                <div className="relative z-10">
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="w-10 h-10 rounded-xl bg-[#FBBF24]/15 border border-[#FBBF24]/25 flex items-center justify-center">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FBBF24" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                        <circle cx="12" cy="12" r="10" />
+                        <polyline points="12 6 12 12 16 14" />
+                      </svg>
+                    </div>
+                    <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-[#FBBF24]/12 text-[#FBBF24] border border-[#FBBF24]/20">
+                      PENDING
+                    </span>
+                  </div>
+                  <AnimatedCounter value={teams.length - scored.length} className="text-white text-4xl font-black mb-1" style={{ fontFamily: "'Questrial', sans-serif" }} />
+                  <p className="text-white/40 text-xs">Reviews awaiting scores</p>
+                </div>
+              </motion.div>
+
+              {/* Card 4 — Average Score */}
+              <motion.div
+                className="rounded-2xl p-5 relative overflow-hidden group"
+                style={{ background: "linear-gradient(135deg, rgba(139,93,246,0.12) 0%, rgba(139,93,246,0.03) 100%)", border: "1px solid rgba(139,93,246,0.2)" }}
+                variants={staggerItem}
+                whileHover={{ scale: 1.03, borderColor: "rgba(139,93,246,0.45)", boxShadow: "0 12px 40px rgba(139,93,246,0.15)" }}
+                transition={{ type: "spring", stiffness: 300 }}
+              >
+                <motion.div className="absolute inset-0 bg-gradient-to-br from-[#8B5DF6]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                <div className="relative z-10">
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="w-10 h-10 rounded-xl bg-[#8B5DF6]/15 border border-[#8B5DF6]/25 flex items-center justify-center">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8B5DF6" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                      </svg>
+                    </div>
+                    <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-[#8B5DF6]/12 text-[#A78BFA] border border-[#8B5DF6]/20">
+                      AVG SCORE
+                    </span>
+                  </div>
+                  <div className="flex items-baseline gap-1 mb-1">
+                    <AnimatedCounter value={scored.length > 0 ? Math.round(scored.reduce((s, t) => s + totalScore(t.scores), 0) / scored.length) : 0} className="text-white text-4xl font-black" style={{ fontFamily: "'Questrial', sans-serif" }} />
+                    <span className="text-white/25 text-sm font-medium">/100</span>
+                  </div>
+                  <p className="text-white/40 text-xs">Average across evaluations</p>
+                </div>
+              </motion.div>
             </motion.div>
             {/* ── Visualization Widgets (admin-style colored cards) ── */}
             <motion.div
@@ -529,103 +648,52 @@ export default function JudgeDashboard() {
 
         {/* ═══════════ ASSIGNED TEAMS ═══════════ */}
         {activeSection === "assignedTeams" && (
-          <motion.div
-            className="space-y-3"
-            variants={staggerContainer}
-            initial="initial"
-            animate="animate"
-          >
-            {teams.map((t) => (
-              <motion.div
-                key={t.id}
-                className="rounded-2xl p-5 bg-[#4D58D4]/8 border border-[#4D58D4]/25 backdrop-blur-xl shadow-[0_8px_32px_rgba(0,0,0,0.3)]"
-                variants={staggerItem}
-                whileHover={{ scale: 1.01, borderColor: "rgba(180,237,87,0.3)", boxShadow: "0 12px 40px rgba(77,88,212,0.15)" }}
-              >
-                <div className="flex items-start justify-between">
-                  <div>
-                    <h3 className="text-white font-bold text-base">{t.name}</h3>
-                    <p className="text-white/40 text-sm mt-0.5">{t.project} · {t.track}</p>
-                    <div className="flex gap-2 mt-2">
-                      {t.members.map((m) => (
-                        <span key={m} className="text-xs bg-white/5 border border-white/10 px-2 py-1 rounded-lg text-white/50">{m}</span>
-                      ))}
-                    </div>
-                  </div>
-                  <div className="text-right shrink-0">
-                    <span className={`text-xs px-2.5 py-1 rounded-full ${t.status === "submitted" ? "bg-[#B4ED57]/10 text-[#B4ED57]" : "bg-yellow-400/10 text-yellow-400"}`}>
-                      {t.status === "submitted" ? "Submitted" : "Pending"}
-                    </span>
-                    <div className={`text-lg font-black mt-2 ${totalScore(t.scores) > 0 ? "text-[#B4ED57]" : "text-white/20"}`}>
-                      {totalScore(t.scores)}<span className="text-xs text-white/30">/100</span>
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-          </motion.div>
-        )}
-
-        {/* ═══════════ EVALUATION WORKSPACE ═══════════ */}
-        {activeSection === "evaluation" && (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-            {/* Team list */}
-            <motion.div
-              className="space-y-3"
-              variants={staggerContainer}
-              initial="initial"
-              animate="animate"
-            >
-              <h3 className="text-white/60 text-xs uppercase tracking-wider mb-3">Select a Team</h3>
-              {teams.filter((t) => t.status === "submitted").map((t) => (
-                <motion.button
-                  key={t.id}
-                  onClick={() => setSelectedTeam(t.id)}
-                  className={`w-full text-left p-4 rounded-2xl border transition-colors ${
-                    selectedTeam === t.id
-                      ? "backdrop-blur-xl bg-[#B4ED57]/10 border-2 border-[#B4ED57]/40 shadow-[0_12px_40px_rgba(180,237,87,0.15)]"
-                      : "bg-[#4D58D4]/8 border-[#4D58D4]/25 backdrop-blur-xl shadow-[0_8px_32px_rgba(0,0,0,0.3)] hover:border-[#4D58D4]/40"
-                  }`}
-                  variants={staggerItem}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
+          <AnimatePresence mode="wait">
+            {selectedTeam ? (() => {
+              const team = teams.find((t) => t.id === selectedTeam);
+              if (!team) return null;
+              return (
+                <motion.div
+                  key={selectedTeam}
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  transition={{ duration: 0.3 }}
                 >
-                  <div className="text-white font-semibold text-sm">{t.name}</div>
-                  <div className="text-white/40 text-xs mt-0.5">{t.project} · {t.track}</div>
-                  <div className="flex items-center justify-between mt-2">
-                    <span className={`text-xs ${totalScore(t.scores) > 0 ? "text-[#B4ED57]" : "text-white/30"}`}>
-                      {totalScore(t.scores)}/100
-                    </span>
-                    {saved[t.id] && <span className="text-xs text-[#B4ED57]">✓ Saved</span>}
-                  </div>
-                </motion.button>
-              ))}
-            </motion.div>
-
-            {/* Scoring panel */}
-            <div className="lg:col-span-2">
-              <AnimatePresence mode="wait">
-              {selectedTeam ? (() => {
-                const team = teams.find((t) => t.id === selectedTeam);
-                if (!team) return null;
-                return (
-                  <motion.div
-                    key={selectedTeam}
-                    className="rounded-2xl p-6 bg-[#4D58D4]/8 border border-[#4D58D4]/25 backdrop-blur-xl shadow-[0_8px_32px_rgba(0,0,0,0.3)]"
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -20 }}
-                    transition={{ duration: 0.3 }}
+                  {/* Back button */}
+                  <motion.button
+                    onClick={() => setSelectedTeam(null)}
+                    className="flex items-center gap-2 text-white/50 hover:text-[#B4ED57] text-sm mb-5 transition-colors"
+                    whileHover={{ x: -3 }}
                   >
-                    <div className="flex items-start justify-between mb-6">
+                    <span>←</span> Back to all teams
+                  </motion.button>
+
+                  <div className="rounded-3xl p-8 bg-[#111118] border border-white/[0.06] shadow-[0_8px_32px_rgba(0,0,0,0.4)]">
+                    {/* Team header */}
+                    <div className="flex items-start justify-between mb-8">
                       <div>
-                        <h2 className="text-white text-xl font-bold" style={{ fontFamily: "'Questrial', sans-serif" }}>{team.name}</h2>
-                        <p className="text-white/40 text-sm">{team.project} · {team.track}</p>
+                        <h2 className="text-white text-2xl font-black tracking-tight" style={{ fontFamily: "'Questrial', sans-serif" }}>{team.name}</h2>
+                        <p className="text-white/40 text-base mt-1">{team.project} <span className="text-white/20">·</span> <span className="text-[#4D58D4]">{team.track}</span></p>
+                        <div className="flex flex-wrap gap-2 mt-3">
+                          {team.members.map((m) => (
+                            <span key={m} className="text-xs bg-white/[0.04] border border-white/[0.08] px-3 py-1.5 rounded-xl text-white/50 font-medium">{m}</span>
+                          ))}
+                        </div>
                       </div>
-                      <span className="text-[#B4ED57] text-3xl font-black">{totalScore(team.scores)}<span className="text-lg text-white/30">/100</span></span>
+                      <div className="text-right">
+                        <div className="text-[#B4ED57] text-4xl font-black tabular-nums leading-none">{totalScore(team.scores)}</div>
+                        <div className="text-white/20 text-sm font-medium mt-1">out of 100</div>
+                      </div>
                     </div>
 
-                    <div className="space-y-5 mb-6">
+                    {/* Section label */}
+                    <div className="flex items-center gap-3 mb-5">
+                      <h3 className="text-white/60 text-xs font-semibold uppercase tracking-widest">Scoring Criteria</h3>
+                      <div className="flex-1 h-px bg-white/[0.06]" />
+                    </div>
+
+                    <div className="space-y-3 mb-8">
                       {CRITERIA.map((c) => (
                         <ScoreSlider key={c.key} label={c.label} max={c.max} value={team.scores[c.key]} onChange={(v) => updateScore(team.id, c.key, v)} />
                       ))}
@@ -633,67 +701,115 @@ export default function JudgeDashboard() {
 
                     <motion.button
                       onClick={() => saveScores(team.id)}
-                      className="w-full py-3 bg-[#B4ED57] hover:bg-[#c5f278] text-black font-bold rounded-xl transition-all shadow-lg shadow-[#B4ED57]/20"
+                      className="w-full py-3.5 bg-[#B4ED57] hover:bg-[#c5f278] text-black font-bold text-base rounded-xl transition-all shadow-lg shadow-[#B4ED57]/20"
                       whileHover={{ scale: 1.02, boxShadow: "0 8px 24px rgba(180,237,87,0.3)" }}
                       whileTap={{ scale: 0.98 }}
                     >
-                      {saved[team.id] ? "✓ Saved!" : "Save Scores"}
+                      {saved[team.id] ? "Saved!" : "Save Scores"}
                     </motion.button>
-                  </motion.div>
-                );
-              })() : (
-                <motion.div
-                  className="rounded-2xl p-12 text-center h-full flex flex-col items-center justify-center bg-[#4D58D4]/8 border border-[#4D58D4]/25 backdrop-blur-xl shadow-[0_8px_32px_rgba(0,0,0,0.3)]"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                >
-                  <motion.span
-                    className="text-5xl block mb-4"
-                    animate={{ y: [0, -8, 0] }}
-                    transition={{ duration: 2, repeat: Infinity }}
-                  >⚖️</motion.span>
-                  <h3 className="text-white font-bold text-lg mb-2" style={{ fontFamily: "'Questrial', sans-serif" }}>Select a Team</h3>
-                  <p className="text-white/40 text-sm">Choose a team from the list to start evaluating</p>
+                  </div>
                 </motion.div>
-              )}
-              </AnimatePresence>
-            </div>
-          </div>
+              );
+            })() : (
+              <motion.div
+                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5"
+                variants={staggerContainer}
+                initial="initial"
+                animate="animate"
+                key="team-grid"
+              >
+                {teams.map((t, i) => {
+                  const gradients = [
+                    "from-[#B4ED57]/50 via-[#7cb832]/30 to-[#4D58D4]/20",
+                    "from-[#4D58D4]/50 via-[#6B74E8]/30 to-[#B4ED57]/20",
+                    "from-[#5C6AE0]/50 via-[#4D58D4]/40 to-[#3a42a0]/20",
+                    "from-[#8BC34A]/50 via-[#B4ED57]/30 to-[#4D58D4]/20",
+                    "from-[#4D58D4]/40 via-[#B4ED57]/30 to-[#6B74E8]/20",
+                    "from-[#B4ED57]/40 via-[#4D58D4]/30 to-[#7cb832]/20",
+                  ];
+                  const grad = gradients[i % gradients.length];
+                  return (
+                    <motion.div
+                      key={t.id}
+                      className="rounded-3xl cursor-pointer group"
+                      style={{ background: "#111118" }}
+                      variants={staggerItem}
+                      whileHover={{ scale: 1.03, y: -4 }}
+                      whileTap={{ scale: 0.97 }}
+                      onClick={() => setSelectedTeam(t.id)}
+                      transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                    >
+                      {/* ── Top: gradient visual area ── */}
+                      <div className={`relative h-28 rounded-t-3xl overflow-hidden bg-gradient-to-br ${grad}`}>
+                        {/* Blur blobs for organic feel */}
+                        <div className="absolute -top-6 -right-6 w-24 h-24 rounded-full bg-white/20 blur-2xl" />
+                        <div className="absolute -bottom-4 -left-4 w-20 h-20 rounded-full bg-black/30 blur-xl" />
+                        {/* Track badge overlaid top-right */}
+                        <div className="absolute top-3 right-3 px-2.5 py-1 rounded-lg bg-black/40 backdrop-blur-md border border-white/10">
+                          <span className="text-white text-[11px] font-bold" style={{ fontFamily: "'Questrial', sans-serif" }}>{t.track}</span>
+                        </div>
+                        {/* Project name overlaid */}
+                        <div className="absolute top-3 left-4">
+                          <h3 className="text-white font-black text-lg leading-tight drop-shadow-lg" style={{ fontFamily: "'Questrial', sans-serif" }}>{t.project}</h3>
+                        </div>
+                      </div>
+
+                      {/* ── Middle: team info overlay strip ── */}
+                      <div className="relative -mt-5 mx-3 rounded-xl p-3.5 backdrop-blur-xl border border-white/[0.08]" style={{ background: "rgba(30,30,42,0.85)" }}>
+                        <h4 className="text-white font-bold text-sm" style={{ fontFamily: "'Questrial', sans-serif" }}>{t.name}</h4>
+                        <p className="text-white/35 text-xs mt-0.5">{t.project} · {t.track}</p>
+                      </div>
+
+                      {/* ── Bottom: stats & members ── */}
+                      <div className="px-4 pt-4 pb-4">
+                        <div className="flex flex-wrap gap-1.5 mb-4">
+                          {t.members.map((m) => (
+                            <span key={m} className="text-[10px] bg-white/[0.04] border border-white/[0.06] px-2 py-0.5 rounded-full text-white/40">{m}</span>
+                          ))}
+                        </div>
+                        <div className="flex items-end justify-between">
+                          <div className="flex items-baseline gap-1">
+                            <span className={`text-2xl font-black ${totalScore(t.scores) > 0 ? "text-[#B4ED57]" : "text-white/15"}`} style={{ fontFamily: "'Questrial', sans-serif" }}>
+                              {totalScore(t.scores) > 0 ? String(totalScore(t.scores)).padStart(2, "0") : "—"}
+                            </span>
+                            <span className="text-white/25 text-xs font-medium">/100</span>
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <span className={`w-1.5 h-1.5 rounded-full ${t.status === "submitted" ? "bg-[#B4ED57]" : "bg-yellow-400"}`} />
+                            <span className="text-white/30 text-[11px] font-medium">{saved[t.id] ? "Evaluated" : t.status === "submitted" ? "Ready" : "Pending"}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </motion.div>
+                  );
+                })}
+              </motion.div>
+            )}
+          </AnimatePresence>
         )}
 
-        {/* ═══════════ NOTES & FEEDBACK ═══════════ */}
+        {/* ═══════════ NOTES ═══════════ */}
         {activeSection === "notes" && (
           <motion.div
-            className="space-y-4"
-            variants={staggerContainer}
-            initial="initial"
-            animate="animate"
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
           >
-            {teams.map((t) => (
-              <motion.div
-                key={t.id}
-                className="rounded-2xl p-5 bg-[#4D58D4]/8 border border-[#4D58D4]/25 backdrop-blur-xl shadow-[0_8px_32px_rgba(0,0,0,0.3)]"
-                variants={staggerItem}
-                whileHover={{ borderColor: "rgba(180,237,87,0.3)", boxShadow: "0 12px 40px rgba(77,88,212,0.15)" }}
-              >
-                <div className="flex items-center justify-between mb-3">
-                  <div>
-                    <h3 className="text-white font-bold text-sm">{t.name}</h3>
-                    <p className="text-white/40 text-xs">{t.project} · {t.track}</p>
-                  </div>
-                  <span className={`text-sm font-bold ${totalScore(t.scores) > 0 ? "text-[#B4ED57]" : "text-white/20"}`}>
-                    {totalScore(t.scores)}/100
-                  </span>
+            {/* ── Excalidraw Whiteboard ── */}
+            <div
+              className="rounded-2xl border-2 border-[#B4ED57]/30 shadow-[0_8px_32px_rgba(0,0,0,0.5)]"
+            >
+              <div className="flex items-center justify-between px-5 py-3 rounded-t-2xl" style={{ borderBottom: "1px solid rgba(180,237,87,0.15)", background: "rgba(77,88,212,0.12)" }}>
+                <div className="flex items-center gap-2">
+                  <span className="text-lg">✏️</span>
+                  <h3 className="text-white font-bold text-sm" style={{ fontFamily: "'Questrial', sans-serif" }}>Whiteboard</h3>
                 </div>
-                <textarea
-                  value={notes[t.id] || ""}
-                  onChange={(e) => updateNote(t.id, e.target.value)}
-                  placeholder={`Add notes & feedback for ${t.name}...`}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-white placeholder-white/25 text-sm focus:outline-none focus:border-[#B4ED57]/40 transition-colors resize-none"
-                  rows={3}
-                />
-              </motion.div>
-            ))}
+                <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-[#B4ED57]/10 text-[#B4ED57] border border-[#B4ED57]/20 uppercase tracking-widest">Excalidraw</span>
+              </div>
+              <div style={{ height: "calc(100vh - 220px)", minHeight: "400px", position: "relative" }} className="rounded-b-2xl">
+                <Excalidraw theme="dark" />
+              </div>
+            </div>
           </motion.div>
         )}
 
