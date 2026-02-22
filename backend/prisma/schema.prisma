@@ -7,6 +7,18 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum Role {
+  PARTICIPANT
+  JUDGE
+  MENTOR
+  ADMIN
+}
+
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+}
+
 model Project {
   id          String       @id @default(uuid())
   teamName    String
@@ -62,7 +74,8 @@ model Participant {
   password                 String?
   positionOfResponsibility Json?
   projects                 Json?
-  role                     String             @default("USER")
+  role                     String             @default("PARTICIPANT")
+  status                   String             @default("ACTIVE")
   socialLinks              Json?
   tagline                  String?
   workExperience           Json?
@@ -79,6 +92,42 @@ model Participant {
   leadsTeams               Team[]             @relation("TeamLeader")
   checkInQRs               CheckInQR[]
   mealQRs                  MealQR[]
+  discussions              Discussion[]
+  evaluationsGiven         JudgeEvaluation[]  @relation("JudgeToEvaluation")
+  isProfileComplete        Boolean            @default(false)
+  stats                    Json?              // { hackathonsParticipated, projectsBuilt, globalRank }
+  skills                   String[]
+  lookingForTeam           Boolean            @default(false)
+  resumeUrl                String?
+}
+
+model JudgeEvaluation {
+  id               String      @id @default(uuid())
+  teamId           String
+  judgeId          String
+  innovationScore  Int         @default(0)
+  feasibilityScore Int         @default(0)
+  techDepthScore   Int         @default(0)
+  clarityScore     Int         @default(0)
+  impactScore      Int         @default(0)
+  totalScore       Int         @default(0)
+  note             String?
+  createdAt        DateTime    @default(now())
+
+  team             Team        @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  judge            Participant @relation("JudgeToEvaluation", fields: [judgeId], references: [id], onDelete: Cascade)
+}
+
+model Discussion {
+  id        String      @id @default(uuid())
+  title     String
+  content   String
+  authorId  String
+  likes     Int         @default(0)
+  replies   Json?       // Array of replies
+  createdAt DateTime    @default(now())
+
+  author    Participant @relation(fields: [authorId], references: [id], onDelete: Cascade)
 }
 
 model Team {
@@ -90,10 +139,14 @@ model Team {
   hackathonId  String?
   inviteCode   String?       @unique
   leaderId     String?
-  status       String        @default("INCOMPLETE")
-  participants Participant[]
-  hackathon    Hackathon?    @relation(fields: [hackathonId], references: [id])
-  leader       Participant?  @relation("TeamLeader", fields: [leaderId], references: [id])
+  status           String        @default("INCOMPLETE")
+  psPreferences    Json?
+  allocatedDomainId String?
+  participants     Participant[]
+  hackathon        Hackathon?    @relation(fields: [hackathonId], references: [id])
+  leader           Participant?  @relation("TeamLeader", fields: [leaderId], references: [id])
+  allocatedDomain  Domain?       @relation("AllocatedDomain", fields: [allocatedDomainId], references: [id])
+  evaluations      JudgeEvaluation[]
 }
 
 model ChatSession {
@@ -207,6 +260,7 @@ model Domain {
   problems    Json
   hackathonId String
   hackathon   Hackathon @relation(fields: [hackathonId], references: [id], onDelete: Cascade)
+  teams       Team[]    @relation("AllocatedDomain")
 }
 
 model Room {

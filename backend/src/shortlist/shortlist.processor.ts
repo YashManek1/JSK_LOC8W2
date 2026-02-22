@@ -14,7 +14,7 @@ export class ShortlistProcessor extends WorkerHost {
   private readonly logger = new Logger(ShortlistProcessor.name);
 
   /** Cast to any so TS doesn't complain about new Prisma models before restart */
-  private get db(): any {
+  private get db() {
     return this.prisma;
   }
 
@@ -138,14 +138,14 @@ export class ShortlistProcessor extends WorkerHost {
           pptXaiReasons: JSON.parse(
             JSON.stringify(
               Object.fromEntries(
-                Object.entries(evalResult.scores).map(
-                  ([k, v]: [string, any]) => [k, v.reason],
+                Object.entries(evalResult.scores as Record<string, any>).map(
+                  ([k, v]: [string, any]) => [k, String(v?.reason || '')],
                 ),
               ),
             ),
           ),
           finalScore: evalResult.finalScore,
-          rawGroqResponse: evalResult.rawText.slice(0, 50000),
+          rawGroqResponse: String(evalResult.rawText || '').slice(0, 50000),
           processingTimeMs,
         },
       });
@@ -156,10 +156,11 @@ export class ShortlistProcessor extends WorkerHost {
       } catch {
         /* ignore */
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       const processingTimeMs = Date.now() - startTime;
+      const errorMsg = err instanceof Error ? err.message : String(err);
       this.logger.error(
-        `  ❌ ${entry.teamName} FAILED after ${(processingTimeMs / 1000).toFixed(1)}s: ${err.message}`,
+        `  ❌ ${entry.teamName} FAILED after ${(processingTimeMs / 1000).toFixed(1)}s: ${errorMsg}`,
       );
 
       await this.db.shortlistEntry.update({
@@ -167,7 +168,7 @@ export class ShortlistProcessor extends WorkerHost {
         data: {
           status: 'FAILED',
           failReason:
-            err.message?.slice(0, 500) || 'Unknown error during evaluation.',
+            errorMsg.slice(0, 500) || 'Unknown error during evaluation.',
           processingTimeMs,
         },
       });

@@ -3,6 +3,7 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { PrismaModule } from '../prisma/prisma.module';
 import { MailModule } from '../mail/mail.module';
 import { NotificationModule } from '../notification/notification.module';
+import { BullModule } from '@nestjs/bullmq';
 import { CheckInService } from './check-in.service';
 import { CheckInController } from './check-in.controller';
 
@@ -12,6 +13,7 @@ import { CheckInController } from './check-in.controller';
     PrismaModule,
     MailModule,
     NotificationModule,
+    BullModule.registerQueue({ name: 'mailQueue' }),
   ],
   controllers: [CheckInController],
   providers: [CheckInService],

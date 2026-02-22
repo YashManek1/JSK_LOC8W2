@@ -64,11 +64,25 @@ Generate a JSON response that STRICTLY follows this structure (do NOT deviate):
 `;
 
     // Strip everything but author and messages to save LLM context
-    const strippedCommits = contributors.map((c) => ({
-      author: c.author,
-      commitCount: c.commits,
-      commits: (c.commitMessages || []).slice(0, 50), // Only take latest 50 for cost/context
-    }));
+    const strippedCommits = contributors.map(
+      (c: {
+        author?: unknown;
+        commits?: unknown;
+        commitMessages?: unknown;
+      }) => ({
+        author: String(c.author),
+        commitCount: Number(c.commits),
+        commits: (Array.isArray(c.commitMessages) ? c.commitMessages : [])
+          .slice(0, 50)
+          .map(String),
+      }),
+    );
+
+    const truncatedCodebase =
+      repomixOutput.length > 30000
+        ? repomixOutput.substring(0, 30000) +
+          '\n... (Codebase truncated due to length limits) ...'
+        : repomixOutput;
 
     const userPrompt = `
 PITCHED PROBLEM STATEMENT:
@@ -77,8 +91,8 @@ ${problemStatement}
 === DEVELOPER COMMIT HISTORIES ===
 ${JSON.stringify(strippedCommits, null, 2)}
 
-=== ACTUAL PACKED CODEBASE ===
-${repomixOutput}
+=== ACTUAL PACKED CODEBASE (TRUNCATED IF NECESSARY) ===
+${truncatedCodebase}
 `;
 
     try {
@@ -100,10 +114,17 @@ ${repomixOutput}
         .replace(/^```json/i, '')
         .replace(/```$/i, '');
 
-      const parsed = JSON.parse(cleanedContent);
+      const parsed = JSON.parse(cleanedContent) as {
+        implementedFeatures: string[];
+        missingPitchedFeatures: string[];
+        relevanceScore: number;
+        developerMapping: any[];
+      };
       return parsed;
-    } catch (error: any) {
-      this.logger.error(`Groq Secondary evaluation failed: ${error.message}`);
+    } catch (error: unknown) {
+      this.logger.error(
+        `Groq Secondary evaluation failed: ${(error as Error).message}`,
+      );
       throw new BadRequestException('Failed to analyze codebase via AI');
     }
   }

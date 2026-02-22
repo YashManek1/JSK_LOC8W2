@@ -4,12 +4,12 @@ import {
   Get,
   Body,
   Param,
-  Query,
   UseGuards,
   Req,
 } from '@nestjs/common';
 import { CommunityService } from './community.service';
 import { AuthGuard } from '@nestjs/passport';
+import { CreateDiscussionDto } from './dto/create-discussion.dto';
 
 interface RequestWithUser {
   user: { userId: string; email: string };
@@ -19,56 +19,61 @@ interface RequestWithUser {
 export class CommunityController {
   constructor(private readonly communityService: CommunityService) {}
 
-  @Post('posts')
+  @Get('teams')
+  async getTeams() {
+    return this.communityService.getTeamsLookingForMembers();
+  }
+
+  @Get('solo')
+  async getSoloParticipants() {
+    return this.communityService.getSoloParticipants();
+  }
+
+  @Get('requests')
+  async getRequests() {
+    return []; // Mocked until team joining request system is fully built
+  }
+
+  @Get('discussions')
+  async getDiscussions() {
+    return this.communityService.getDiscussions();
+  }
+
+  @Post('discussions')
   @UseGuards(AuthGuard('jwt'))
-  async createPost(
+  async createDiscussion(
     @Req() req: RequestWithUser,
-    @Body()
-    body: {
-      title: string;
-      content: string;
-      hackathonId?: string;
-      tags?: string[];
-    },
+    @Body() dto: CreateDiscussionDto,
   ) {
-    return this.communityService.createPost(
+    return this.communityService.createDiscussion(
       req.user.userId,
-      body.title,
-      body.content,
-      body.hackathonId,
-      body.tags,
+      dto.title,
+      dto.content,
     );
   }
 
-  @Get('posts')
-  async getPosts(
-    @Query('hackathonId') hackathonId?: string,
-    @Query('limit') limit?: string,
-    @Query('offset') offset?: string,
-  ) {
-    const limitNum = limit ? parseInt(limit) : 50;
-    const offsetNum = offset ? parseInt(offset) : 0;
-    return this.communityService.getPosts(hackathonId, limitNum, offsetNum);
+  @Get('discussions/:id')
+  getDiscussion(@Param('id') id: string) {
+    return this.communityService.getDiscussion(id);
   }
 
-  @Get('posts/:id')
-  async getPost(@Param('id') id: string) {
-    return this.communityService.getPost(id);
-  }
-
-  @Post('posts/:id/like')
+  @Post('discussions/:id/like')
   @UseGuards(AuthGuard('jwt'))
-  async likePost(@Param('id') id: string, @Req() req: RequestWithUser) {
-    return this.communityService.likePost(id, req.user.userId);
+  likeDiscussion(@Param('id') id: string) {
+    return this.communityService.likeDiscussion(id);
   }
 
-  @Post('posts/:id/reply')
+  @Post('discussions/:id/reply')
   @UseGuards(AuthGuard('jwt'))
-  async replyToPost(
+  async replyToDiscussion(
     @Param('id') id: string,
     @Req() req: RequestWithUser,
     @Body() body: { content: string },
   ) {
-    return this.communityService.replyToPost(id, req.user.userId, body.content);
+    return this.communityService.replyToDiscussion(
+      id,
+      req.user.userId,
+      body.content,
+    );
   }
 }

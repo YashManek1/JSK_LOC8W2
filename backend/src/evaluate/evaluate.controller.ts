@@ -6,9 +6,12 @@ import {
   UploadedFile,
   UseInterceptors,
   Body,
+  Query,
+  Sse,
   BadRequestException,
   NotFoundException,
 } from '@nestjs/common';
+import { Observable } from 'rxjs';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname, resolve } from 'path';
@@ -71,6 +74,35 @@ export class EvaluateController {
       throw new NotFoundException('Evaluation not found.');
     }
     return evaluation;
+  }
+
+  @Sse('stream')
+  stream(@Query('evaluationId') evaluationId: string): Observable<any> {
+    return new Observable((subscriber) => {
+      if (!evaluationId) {
+        subscriber.error(new BadRequestException('evaluationId is required'));
+        return;
+      }
+
+      const intervalId = setInterval(() => {
+        this.evaluateService
+          .getEvaluation(evaluationId)
+          .then((evalStat) => {
+            if (!evalStat) return;
+            subscriber.next({ data: evalStat });
+            if (
+              evalStat.status !== 'PROCESSING' &&
+              evalStat.status !== 'PENDING'
+            ) {
+              clearInterval(intervalId);
+              subscriber.complete();
+            }
+          })
+          .catch((err) => console.error(err));
+      }, 2000);
+
+      return () => clearInterval(intervalId);
+    });
   }
 
   @Post('score')

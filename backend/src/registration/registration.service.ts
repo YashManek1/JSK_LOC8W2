@@ -3,6 +3,7 @@ import {
   BadRequestException,
   ForbiddenException,
   NotFoundException,
+  Logger,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { MailService } from '../mail/mail.service';
@@ -10,12 +11,17 @@ import { CreateTeamDto } from './dto/create-team.dto';
 import { JoinTeamDto } from './dto/join-team.dto';
 import { RegisterSoloDto } from './dto/register-solo.dto';
 import { randomBytes } from 'crypto';
+import { InjectQueue } from '@nestjs/bullmq';
+import { Queue } from 'bullmq';
 
 @Injectable()
 export class RegistrationService {
+  private readonly logger = new Logger(RegistrationService.name);
+
   constructor(
     private prisma: PrismaService,
     private mailService: MailService,
+    @InjectQueue('mailQueue') private mailQueue: Queue,
   ) {}
 
   // Helper: Generates a 6-character alphanumeric invite code
@@ -432,17 +438,20 @@ export class RegistrationService {
     const updatedTeam = await this.prisma.team.update({
       where: { id: teamId },
       data: { status: 'REGISTERED' },
-      include: { participants: true },
+      include: { participants: true, leader: true },
     });
 
-    // Send registration email
-    this.mailService
-      .sendTeamRegistrationSuccess(
-        team.leadEmail,
-        team.teamName,
-        team.hackathon.name,
-      )
-      .catch(() => {});
+    // Send registration email via job queue
+    await this.mailQueue.add(
+      'registration_complete',
+      {
+        email: team.leadEmail,
+        leaderName: updatedTeam.leader?.fullName || team.leadEmail,
+        teamName: team.teamName,
+        hackathonName: team.hackathon.name,
+      },
+      { attempts: 3, backoff: { type: 'exponential', delay: 5000 } },
+    );
 
     return {
       message: `Team "${team.teamName}" is now REGISTERED for ${team.hackathon.name}!`,

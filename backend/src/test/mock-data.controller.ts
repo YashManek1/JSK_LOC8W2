@@ -4,6 +4,7 @@ import { Controller, Get, Param, Post } from '@nestjs/common';
 export class MockDataController {
   @Get('mock-github-data/:teamName')
   getMockGithubData(@Param('teamName') teamName: string) {
+    void teamName;
     return {
       totalCommits: 342,
       contributors: [
@@ -50,6 +51,7 @@ export class MockDataController {
 
   @Get('mock-ai-features/:teamName')
   getMockAiFeatures(@Param('teamName') teamName: string) {
+    void teamName;
     return {
       implementedFeatures: [
         'Full JWT Authentication with Passport Strategy',

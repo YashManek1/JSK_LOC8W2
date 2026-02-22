@@ -29,4 +29,25 @@ export class GithubAnalyticsController {
   async getStats(@Param('shortlistId') shortlistId: string) {
     return this.githubService.getRepoStats(decodeURIComponent(shortlistId));
   }
+
+  /**
+   * Proxies commits and stats mapped to the requested team name.
+   */
+  @Get('commits/:teamName')
+  async getCommitsByTeam(@Param('teamName') teamName: string) {
+    // Just map it using the backend GithubService logic
+    // Frontend expects commits array and total count
+    const stats = await this.githubService.getRepoStats(
+      decodeURIComponent(teamName),
+    );
+    if (!stats) return { total: 0, contributors: [] };
+
+    // Convert to what DashboardService/frontend expects
+    return {
+      total: stats.totalCommits || 0,
+      contributors: stats.contributors || [],
+      lastUpdated: stats.lastUpdated,
+      teamName,
+    };
+  }
 }

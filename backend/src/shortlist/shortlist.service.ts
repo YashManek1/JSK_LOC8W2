@@ -10,7 +10,7 @@ const SECONDS_PER_PPT = 47; // ~45s Groq + 2.5s delay
 @Injectable()
 export class ShortlistService {
   private readonly logger = new Logger(ShortlistService.name);
-  private get db(): any {
+  private get db() {
     return this.prisma;
   }
 
@@ -18,11 +18,14 @@ export class ShortlistService {
     private prisma: PrismaService,
     private groq: GroqService,
     @InjectQueue('shortlistQueue') private shortlistQueue: Queue,
+    @InjectQueue('mailQueue') private mailQueue: Queue,
   ) {}
 
   // ─── Config ──────────────────────────────────────────────────────
   async getActiveConfig() {
-    return this.db.roundConfig.findFirst({ orderBy: { createdAt: 'desc' } });
+    return await this.db.roundConfig.findFirst({
+      orderBy: { createdAt: 'desc' },
+    });
   }
 
   async upsertConfig(dto: any) {
@@ -52,7 +55,7 @@ export class ShortlistService {
         domains: prev?.domains ?? [],
         keywords: prev?.keywords ?? [],
         problemStatement: prev?.problemStatement ?? '',
-        scoringWeights: prev?.scoringWeights ?? null,
+        scoringWeights: prev?.scoringWeights ?? undefined,
         isPublished: false,
       },
     });
@@ -208,19 +211,20 @@ export class ShortlistService {
     if (!entry) return null;
     // NEVER expose adminNote to participant
     const { adminNote: _n, ...safe } = entry;
+    void _n;
     return safe;
   }
 
   // ─── Eliminate / Restore ─────────────────────────────────────────
   async eliminateEntry(id: string) {
-    return this.db.shortlistEntry.update({
+    return await this.db.shortlistEntry.update({
       where: { id },
       data: { status: 'ELIMINATED' },
     });
   }
 
   async restoreEntry(id: string) {
-    return this.db.shortlistEntry.update({
+    return await this.db.shortlistEntry.update({
       where: { id },
       data: { status: 'EVALUATED' },
     });
@@ -228,7 +232,7 @@ export class ShortlistService {
 
   // ─── Admin Note ───────────────────────────────────────────────────
   async setAdminNote(id: string, note: string) {
-    return this.db.shortlistEntry.update({
+    return await this.db.shortlistEntry.update({
       where: { id },
       data: { adminNote: note },
     });
@@ -236,7 +240,7 @@ export class ShortlistService {
 
   // ─── Admin Score Override ─────────────────────────────────────────
   async overrideScore(id: string, score: number, note: string) {
-    return this.db.shortlistEntry.update({
+    return await this.db.shortlistEntry.update({
       where: { id },
       data: { adminOverride: score, adminNote: note },
     });
@@ -266,6 +270,26 @@ export class ShortlistService {
         where: { id: entry.id },
         data: { rank },
       });
+
+      // Find team to get leader email
+      const team = await this.db.team.findFirst({
+        where: { teamName: entry.teamName },
+        include: { hackathon: true, leader: true },
+      });
+
+      if (team && team.leader) {
+        await this.mailQueue.add(
+          'shortlist_congrats',
+          {
+            email: team.leader.email,
+            participantName: team.leader.fullName || 'Team Leader',
+            teamName: team.teamName,
+            hackathonName: team.hackathon?.name || 'Hackathon',
+          },
+          { attempts: 3, backoff: { type: 'exponential', delay: 5000 } },
+        );
+      }
+
       rank++;
     }
 
@@ -279,7 +303,8 @@ export class ShortlistService {
   async rescoreAll() {
     const config = await this.getActiveConfig();
     if (!config) throw new Error('No config found.');
-    const weights: Record<string, number> = config.scoringWeights || {};
+    const weights =
+      (config.scoringWeights as unknown as Record<string, number>) || {};
 
     const evaluated = await this.db.shortlistEntry.findMany({
       where: { status: { in: ['EVALUATED', 'ELIMINATED'] } },
@@ -288,7 +313,13 @@ export class ShortlistService {
     let updated = 0;
     for (const entry of evaluated) {
       if (!entry.pptScores) continue;
-      const newScore = this.groq.recomputeFinalScore(entry.pptScores, weights);
+      const newScore = this.groq.recomputeFinalScore(
+        entry.pptScores as unknown as Record<
+          string,
+          import('./groq.service').CriterionResult
+        >,
+        weights,
+      );
       await this.db.shortlistEntry.update({
         where: { id: entry.id },
         data: { finalScore: newScore },

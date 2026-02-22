@@ -6,23 +6,22 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
-import { PrismaClient } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { MailService } from '../mail/mail.service';
 import { NotificationService } from '../notification/notification.service';
+import { InjectQueue } from '@nestjs/bullmq';
+import { Queue } from 'bullmq';
 
 @Injectable()
 export class CheckInService {
   private readonly logger = new Logger(CheckInService.name);
-  private readonly db: PrismaClient;
 
   constructor(
     private prisma: PrismaService,
     private mailService: MailService,
     private notificationService: NotificationService,
-  ) {
-    this.db = prisma as PrismaClient;
-  }
+    @InjectQueue('mailQueue') private mailQueue: Queue,
+  ) {}
 
   // ─── Cron: Generate check-in QRs 1 day before hackathon ───
   @Cron(CronExpression.EVERY_30_MINUTES)
@@ -31,7 +30,7 @@ export class CheckInService {
     const oneDayFromNow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
 
     // Find hackathons starting within the next 24 hours where QRs haven't been generated
-    const hackathons = await this.db.hackathon.findMany({
+    const hackathons = await this.prisma.hackathon.findMany({
       where: {
         startDate: { lte: oneDayFromNow },
         qrGenerated: false,
@@ -50,7 +49,7 @@ export class CheckInService {
   async cronGenerateMealQRs() {
     const now = new Date();
 
-    const hackathons = await this.db.hackathon.findMany({
+    const hackathons = await this.prisma.hackathon.findMany({
       where: {
         startDate: { lte: now },
         endDate: { gte: now },
@@ -84,7 +83,7 @@ export class CheckInService {
 
   // ─── Generate check-in QRs for all registered participants ───
   async generateCheckInQRs(hackathonId: string) {
-    const hackathon = await this.db.hackathon.findUnique({
+    const hackathon = await this.prisma.hackathon.findUnique({
       where: { id: hackathonId },
       include: {
         teams: {
@@ -101,7 +100,7 @@ export class CheckInService {
 
     for (const participant of participants) {
       try {
-        await this.db.checkInQR.create({
+        await this.prisma.checkInQR.create({
           data: {
             participantId: participant.id,
             hackathonId,
@@ -114,27 +113,31 @@ export class CheckInService {
     }
 
     // Send emails
-    const qrs = await this.db.checkInQR.findMany({
+    const qrs = await this.prisma.checkInQR.findMany({
       where: { hackathonId, emailSent: false },
       include: { participant: true },
     });
 
     for (const qr of qrs) {
-      await this.mailService.sendCheckInQR(
-        qr.participant.email,
-        qr.participant.fullName || 'Participant',
-        hackathon.name,
-        qr.qrToken,
+      await this.mailQueue.add(
+        'checkin_qr',
+        {
+          email: qr.participant.email,
+          participantName: qr.participant.fullName || 'Participant',
+          hackathonName: hackathon.name,
+          qrToken: qr.qrToken,
+        },
+        { attempts: 3, backoff: { type: 'exponential', delay: 5000 } },
       );
 
-      await this.db.checkInQR.update({
+      await this.prisma.checkInQR.update({
         where: { id: qr.id },
         data: { emailSent: true },
       });
     }
 
     // Mark hackathon as QR-generated
-    await this.db.hackathon.update({
+    await this.prisma.hackathon.update({
       where: { id: hackathonId },
       data: { qrGenerated: true },
     });
@@ -147,14 +150,14 @@ export class CheckInService {
   // ─── Generate meal QRs for checked-in participants ───
   async generateMealQRs(hackathonId: string, mealType: string, mealDate: Date) {
     // Only generate for participants who are already checked in
-    const checkedIn = await this.db.checkInQR.findMany({
+    const checkedIn = await this.prisma.checkInQR.findMany({
       where: { hackathonId, isCheckedIn: true },
     });
 
     let created = 0;
     for (const qr of checkedIn) {
       try {
-        await this.db.mealQR.create({
+        await this.prisma.mealQR.create({
           data: {
             participantId: qr.participantId,
             hackathonId,
@@ -177,7 +180,7 @@ export class CheckInService {
 
   // ─── Admin: Scan check-in QR ───
   async scanCheckInQR(qrToken: string) {
-    const qr = await this.db.checkInQR.findUnique({
+    const qr = await this.prisma.checkInQR.findUnique({
       where: { qrToken },
       include: {
         participant: {
@@ -201,7 +204,7 @@ export class CheckInService {
 
     // Mark as checked in if not already
     if (!qr.isCheckedIn) {
-      await this.db.checkInQR.update({
+      await this.prisma.checkInQR.update({
         where: { id: qr.id },
         data: { isCheckedIn: true, checkedInAt: new Date() },
       });
@@ -286,7 +289,7 @@ export class CheckInService {
 
   // ─── Admin: Scan one-time meal QR ───
   async scanMealQR(qrToken: string) {
-    const qr = await this.db.mealQR.findUnique({
+    const qr = await this.prisma.mealQR.findUnique({
       where: { qrToken },
       include: {
         participant: {
@@ -306,7 +309,7 @@ export class CheckInService {
     }
 
     // Mark as scanned (one-time use)
-    await this.db.mealQR.update({
+    await this.prisma.mealQR.update({
       where: { id: qr.id },
       data: { isScanned: true, scannedAt: new Date() },
     });
@@ -321,7 +324,7 @@ export class CheckInService {
 
   // ─── Student: Get my check-in QR ───
   async getMyCheckInQR(participantId: string, hackathonId: string) {
-    const qr = await this.db.checkInQR.findUnique({
+    const qr = await this.prisma.checkInQR.findUnique({
       where: {
         participantId_hackathonId: { participantId, hackathonId },
       },
@@ -340,7 +343,7 @@ export class CheckInService {
 
   // ─── Student: Get my meal QRs (only within 1hr window) ───
   async getMyMealQRs(participantId: string, hackathonId: string) {
-    const hackathon = await this.db.hackathon.findUnique({
+    const hackathon = await this.prisma.hackathon.findUnique({
       where: { id: hackathonId },
     });
 
@@ -369,7 +372,7 @@ export class CheckInService {
       return [];
     }
 
-    const qrs = await this.db.mealQR.findMany({
+    const qrs = await this.prisma.mealQR.findMany({
       where: {
         participantId,
         hackathonId,

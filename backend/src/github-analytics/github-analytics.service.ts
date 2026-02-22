@@ -152,12 +152,13 @@ export class GithubAnalyticsService {
 
       if (commitsResponse && Array.isArray(commitsResponse.data)) {
         commitsResponse.data.forEach((commitObj: any) => {
-          const authorLogin =
+          const authorLogin = String(
             commitObj.author?.login ||
-            commitObj.commit?.author?.name ||
-            'Unknown';
-          const avatarUrl = commitObj.author?.avatar_url || '';
-          const message = commitObj.commit?.message || '';
+              commitObj.commit?.author?.name ||
+              'Unknown',
+          );
+          const avatarUrl = String(commitObj.author?.avatar_url || '');
+          const message = String(commitObj.commit?.message || '');
 
           if (!commitCounts.has(authorLogin)) {
             commitCounts.set(authorLogin, {
@@ -184,16 +185,16 @@ export class GithubAnalyticsService {
         // Wipe totalCommits because the stats array has the full historical count
         totalCommits = 0;
         contributorsResponse.data.forEach((contributor: any) => {
-          totalCommits += contributor.total;
+          totalCommits += Number(contributor.total);
           let additions = 0;
           let deletions = 0;
           contributor.weeks.forEach((week: any) => {
-            additions += week.a;
-            deletions += week.d;
+            additions += Number(week.a);
+            deletions += Number(week.d);
           });
 
-          const authorLogin = contributor.author?.login || 'Unknown';
-          const avatarUrl = contributor.author?.avatar_url || '';
+          const authorLogin = String(contributor.author?.login || 'Unknown');
+          const avatarUrl = String(contributor.author?.avatar_url || '');
 
           if (!commitCounts.has(authorLogin)) {
             commitCounts.set(authorLogin, {
@@ -207,8 +208,10 @@ export class GithubAnalyticsService {
             });
           } else {
             const existing = commitCounts.get(authorLogin)!;
-            // Use stats engine count if it exceeds our 100 pagination limit
-            existing.commits = Math.max(existing.commits, contributor.total);
+            existing.commits = Math.max(
+              existing.commits,
+              typeof contributor.total === 'number' ? contributor.total : 0,
+            );
             existing.additions = additions;
             existing.deletions = deletions;
           }

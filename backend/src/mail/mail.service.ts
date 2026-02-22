@@ -115,4 +115,60 @@ export class MailService {
       this.logger.error(`Failed to send QR email to ${email}`, error);
     }
   }
+
+  async sendTeamRegistrationComplete(
+    to: string,
+    leaderName: string,
+    teamName: string,
+    hackathonName: string,
+  ) {
+    const subject = `Team Registration Complete - ${hackathonName}`;
+    const html = `
+      <h2>Hi ${leaderName},</h2>
+      <p>Your team <strong>${teamName}</strong> has been successfully registered for <strong>${hackathonName}</strong>!</p>
+      <p>Your registration is now complete and confirmed. We will notify you when the problem statements are released.</p>
+      <br/>
+      <p>Good luck!</p>
+    `;
+
+    return this.sendMail(to, subject, html);
+  }
+
+  private async sendMail(to: string, subject: string, html: string) {
+    try {
+      if (process.env.SMTP_HOST) {
+        await this.transporter.sendMail({
+          from:
+            process.env.SMTP_FROM ||
+            '"Hackathon Platform" <noreply@hackathon.dev>',
+          to,
+          subject,
+          html,
+        });
+        this.logger.log(`Email sent to ${to}: ${subject}`);
+      } else {
+        this.logger.log(`[DEV] Email would be sent to ${to}: ${subject}`);
+      }
+    } catch (error) {
+      this.logger.error(`Failed to send email to ${to}: ${subject}`, error);
+    }
+  }
+
+  async sendShortlistCongrats(
+    to: string,
+    participantName: string,
+    teamName: string,
+    hackathonName: string,
+  ) {
+    const subject = `Congratulations! Your team is shortlisted for ${hackathonName} 🎉`;
+    const html = `
+      <h2>Hi ${participantName},</h2>
+      <p>Great news! Your team <strong>${teamName}</strong> has been shortlisted for the next round of <strong>${hackathonName}</strong>!</p>
+      <p>Please check your dashboard for further instructions and make sure you are ready for the upcoming rounds.</p>
+      <br/>
+      <p>Congratulations and best of luck!</p>
+    `;
+
+    return this.sendMail(to, subject, html);
+  }
 }

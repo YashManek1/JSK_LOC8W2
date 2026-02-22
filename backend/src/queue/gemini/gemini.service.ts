@@ -342,6 +342,6 @@ export class GeminiService {
       contents: [{ role: 'user', parts: [{ text: prompt }] }],
       config: { temperature: 0.3, maxOutputTokens: 8192 },
     });
-    return response.text || '';
+    return String(response.text || '');
   }
 }

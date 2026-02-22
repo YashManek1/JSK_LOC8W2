@@ -1,10 +1,11 @@
 import { Module } from '@nestjs/common';
 import { AdminHackathonController } from './admin-hackathon.controller';
 import { AdminHackathonService } from './admin-hackathon.service';
-import { PrismaModule } from '../prisma/prisma.module'; // Adjust path
+import { PrismaModule } from '../prisma/prisma.module';
+import { AuthModule } from '../auth/auth.module';
 
 @Module({
-  imports: [PrismaModule],
+  imports: [PrismaModule, AuthModule],
   controllers: [AdminHackathonController],
   providers: [AdminHackathonService],
 })

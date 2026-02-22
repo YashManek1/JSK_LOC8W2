@@ -17,6 +17,11 @@ import { PsModule } from './ps/ps.module';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { CommunityModule } from './community/community.module';
 import { CheckInModule } from './check-in/check-in.module';
+import { JudgeService } from './judge/judge.service';
+import { JudgeController } from './judge/judge.controller';
+import { AdminModule } from './admin/admin.module';
+import { StudentModule } from './student/student.module';
+import { HackathonModule } from './hackathon/hackathon.module';
 import * as dotenv from 'dotenv';
 
 dotenv.config();
@@ -49,8 +54,11 @@ const redisUrl = process.env.REDIS_URL ? new URL(process.env.REDIS_URL) : null;
     DashboardModule,
     CommunityModule,
     CheckInModule,
+    AdminModule,
+    StudentModule,
+    HackathonModule,
   ],
-  controllers: [AppController, MockDataController],
-  providers: [AppService],
+  controllers: [AppController, MockDataController, JudgeController],
+  providers: [AppService, JudgeService],
 })
 export class AppModule {}

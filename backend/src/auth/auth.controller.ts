@@ -138,9 +138,7 @@ export class AuthController {
   }
 
   @Post('verify-otp')
-  async verifyOtp(
-    @Body() body: { email: string; phone?: string; otp: string },
-  ) {
+  verifyOtp(@Body() body: { email: string; phone?: string; otp: string }) {
     if (!body.email && !body.phone) {
       throw new BadRequestException('Email or phone is required');
     }

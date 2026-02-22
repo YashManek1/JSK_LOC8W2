@@ -1,5 +1,4 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { PrismaClient } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import pdfParse from 'pdf-parse';
 import { GeminiService } from '../queue/gemini/gemini.service';
@@ -15,17 +14,13 @@ export interface ResumeData {
 
 @Injectable()
 export class ProfileService {
-  private readonly db: PrismaClient;
-
   constructor(
     private prisma: PrismaService,
     private geminiService: GeminiService,
-  ) {
-    this.db = prisma as PrismaClient;
-  }
+  ) {}
 
   async getProfile(userId: string) {
-    const user = await this.db.participant.findUnique({
+    const user = await this.prisma.participant.findUnique({
       where: { id: userId },
       select: {
         id: true,
@@ -36,7 +31,6 @@ export class ProfileService {
         role: true,
         githubUrl: true,
         linkedinUrl: true,
-        portfolioUrl: true,
         primarySkillset: true,
         education: true,
         projects: true,
@@ -44,6 +38,8 @@ export class ProfileService {
         positionOfResponsibility: true,
         achievements: true,
         certifications: true,
+        stats: true,
+        isProfileComplete: true,
         socialLinks: true,
         hackathonPreferences: true,
         motivation: true,
@@ -51,6 +47,10 @@ export class ProfileService {
         roleSelection: true,
         sleepHabits: true,
         dietaryPref: true,
+        skills: true,
+        lookingForTeam: true,
+        resumeUrl: true,
+        portfolioUrl: true,
       },
     });
 
@@ -77,6 +77,20 @@ export class ProfileService {
     });
 
     return updatedUser;
+  }
+
+  async submitProfile(userId: string) {
+    const user = await this.prisma.participant.findUnique({
+      where: { id: userId },
+    });
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    return this.prisma.participant.update({
+      where: { id: userId },
+      data: { isProfileComplete: true },
+    });
   }
 
   async extractResumeData(userId: string, resumeFile: Express.Multer.File) {

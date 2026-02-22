@@ -9,7 +9,10 @@ import { ShortlistPptService } from './shortlist-ppt.service';
 import { PrismaModule } from '../prisma/prisma.module';
 
 @Module({
-  imports: [PrismaModule, BullModule.registerQueue({ name: 'shortlistQueue' })],
+  imports: [
+    PrismaModule,
+    BullModule.registerQueue({ name: 'shortlistQueue' }, { name: 'mailQueue' }),
+  ],
   controllers: [ShortlistController, AdminController],
   providers: [
     ShortlistService,

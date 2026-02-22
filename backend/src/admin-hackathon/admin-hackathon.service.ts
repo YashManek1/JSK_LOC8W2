@@ -130,4 +130,120 @@ export class AdminHackathonService {
       })),
     };
   }
+
+  async allocateProblemStatements(
+    adminId: string,
+    hackathonId: string,
+    config: {
+      maxTeamsPerDomain?: number;
+      minTeamsPerDomain?: number; // purely informational for now, max limits FCFS
+      dynamicCapacities?: Record<string, number>; // { domainId: maxCapacity }
+    },
+  ) {
+    // 1. Verify Hackathon and Admin
+    const hackathon = await this.prisma.hackathon.findUnique({
+      where: { id: hackathonId, adminId },
+      include: { domains: true },
+    });
+
+    if (!hackathon) {
+      throw new ForbiddenException(
+        'Hackathon not found or you are not the admin.',
+      );
+    }
+
+    if (!hackathon.domains || hackathon.domains.length === 0) {
+      throw new Error('This hackathon has no domains setup.');
+    }
+
+    // 2. Fetch all fully REGISTERED teams, ordered by createdAt ASC (FCFS)
+    const teams = await this.prisma.team.findMany({
+      where: { hackathonId, status: 'REGISTERED' },
+      orderBy: { createdAt: 'asc' },
+    });
+
+    if (teams.length === 0) {
+      return { message: 'No registered teams to allocate.', allocated: 0 };
+    }
+
+    // 3. Track capacities
+    const defaultMax = config.maxTeamsPerDomain || 999999;
+    const domainCapacities: Record<string, number> = {};
+    const domainUsage: Record<string, number> = {};
+
+    for (const domain of hackathon.domains) {
+      domainUsage[domain.id] = 0;
+      domainCapacities[domain.id] =
+        config.dynamicCapacities?.[domain.id] ?? defaultMax;
+    }
+
+    let allocatedCount = 0;
+    const updates: any[] = [];
+
+    // 4. Allocate (FCFS loop)
+    for (const team of teams) {
+      // Skip if already manually allocated
+      if (team.allocatedDomainId) continue;
+
+      const preferences = (team.psPreferences as string[]) || [];
+
+      let assignedDomainId: string | null = null;
+
+      // Try preferences in order
+      for (const prefId of preferences) {
+        if (
+          domainCapacities[prefId] !== undefined &&
+          domainUsage[prefId] < domainCapacities[prefId]
+        ) {
+          assignedDomainId = prefId;
+          break;
+        }
+      }
+
+      // If preferences fail / are full, assign to the first available domain
+      if (!assignedDomainId) {
+        for (const domain of hackathon.domains) {
+          if (domainUsage[domain.id] < domainCapacities[domain.id]) {
+            assignedDomainId = domain.id;
+            break;
+          }
+        }
+      }
+
+      // If absolutely everything is full (edge case where max limits < total teams)
+      // We will override capacity and assign to the domain with the least teams
+      if (!assignedDomainId) {
+        let leastUsedId = hackathon.domains[0].id;
+        for (const domain of hackathon.domains) {
+          if (domainUsage[domain.id] < domainUsage[leastUsedId]) {
+            leastUsedId = domain.id;
+          }
+        }
+        assignedDomainId = leastUsedId;
+      }
+
+      if (assignedDomainId) {
+        // Mark assigned
+        domainUsage[assignedDomainId]++;
+        updates.push(
+          this.prisma.team.update({
+            where: { id: team.id },
+            data: { allocatedDomainId: assignedDomainId },
+          }),
+        );
+        allocatedCount++;
+      }
+    }
+
+    // 5. Execute DB updates in transaction
+    if (updates.length > 0) {
+      await this.prisma.$transaction(updates);
+    }
+
+    return {
+      message: 'Initial problem statement allocation completed successfully.',
+      allocatedTeams: allocatedCount,
+      domainDistribution: domainUsage,
+    };
+  }
 }

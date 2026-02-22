@@ -5,6 +5,7 @@ import { PrismaModule } from '../prisma/prisma.module';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { GithubStrategy } from './github.strategy';
+import { JwtStrategy } from './jwt.strategy';
 import { SecurityModule } from '../security/security.module';
 import { MailService } from '../mail/mail.service';
 
@@ -19,7 +20,7 @@ import { MailService } from '../mail/mail.service';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, GithubStrategy, MailService],
-  exports: [AuthService],
+  providers: [AuthService, GithubStrategy, JwtStrategy, MailService],
+  exports: [AuthService, PassportModule, JwtModule],
 })
 export class AuthModule {}

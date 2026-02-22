@@ -1,6 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
-import { PrismaClient } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import * as webPush from 'web-push';
 
@@ -16,11 +15,8 @@ interface PushSub {
 @Injectable()
 export class NotificationService {
   private readonly logger = new Logger(NotificationService.name);
-  private readonly db: PrismaClient;
 
   constructor(private prisma: PrismaService) {
-    this.db = prisma as PrismaClient;
-
     const vapidPublic = process.env.VAPID_PUBLIC_KEY;
     const vapidPrivate = process.env.VAPID_PRIVATE_KEY;
     const vapidEmail = process.env.VAPID_EMAIL || 'mailto:admin@hackathon.dev';
@@ -42,7 +38,7 @@ export class NotificationService {
     participantId: string,
     subscription: { endpoint: string; keys: { p256dh: string; auth: string } },
   ): Promise<PushSub> {
-    return await this.db.pushSubscription.upsert({
+    return await this.prisma.pushSubscription.upsert({
       where: { endpoint: subscription.endpoint },
       update: {
         p256dh: subscription.keys.p256dh,
@@ -67,7 +63,7 @@ export class NotificationService {
     const now = new Date();
 
     // Find hackathons where PS release date has passed but notifications haven't been sent
-    const hackathons = await this.db.hackathon.findMany({
+    const hackathons = await this.prisma.hackathon.findMany({
       where: {
         psReleaseDate: { lte: now },
         psReleasedPushSent: false,
@@ -82,16 +78,17 @@ export class NotificationService {
       );
 
       // Find all push subscriptions for participants whose team status is REGISTERED
-      const subscriptions: PushSub[] = await this.db.pushSubscription.findMany({
-        where: {
-          participant: {
-            team: {
-              hackathonId: hackathon.id,
-              status: 'REGISTERED',
+      const subscriptions: PushSub[] =
+        await this.prisma.pushSubscription.findMany({
+          where: {
+            participant: {
+              team: {
+                hackathonId: hackathon.id,
+                status: 'REGISTERED',
+              },
             },
           },
-        },
-      });
+        });
 
       this.logger.log(
         `Dispatching PS release push to ${subscriptions.length} subscribers for ${hackathon.name}`,
@@ -117,7 +114,7 @@ export class NotificationService {
       );
 
       // Mark hackathon as notified
-      await this.db.hackathon.update({
+      await this.prisma.hackathon.update({
         where: { id: hackathon.id },
         data: { psReleasedPushSent: true },
       });

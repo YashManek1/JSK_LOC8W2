@@ -233,7 +233,7 @@ export class GithubService {
           const data: any = await res.json();
           fileTree = (data.tree || [])
             .filter((i: any) => i.type === 'blob')
-            .map((i: any) => i.path);
+            .map((i: any) => String(i.path));
           break;
         }
       } catch {

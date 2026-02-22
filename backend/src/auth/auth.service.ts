@@ -7,9 +7,8 @@ import { PrismaService } from '../prisma/prisma.service';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import { Aes256Service } from '../security/aes256.service';
-import { Participant } from '@prisma/client';
+import { Participant, Role } from '@prisma/client';
 import { MailService } from '../mail/mail.service';
-
 interface SignupData {
   email: string;
   password: string;
@@ -38,13 +37,14 @@ export class AuthService {
     private jwtService: JwtService,
     private aes256: Aes256Service,
     private mailService: MailService,
-  ) {}
+  ) { }
 
   async signup(
     data: SignupData,
     aadhaarFile?: Express.Multer.File,
     _idCardFile?: Express.Multer.File,
   ) {
+    void _idCardFile;
     const { email, password, fullName, phone, college, role } = data;
 
     const existingUser = await this.prisma.participant.findUnique({
@@ -55,8 +55,14 @@ export class AuthService {
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
-    const resolvedRole = role || 'Participant';
-    const isParticipant = resolvedRole !== 'ADMIN';
+    let resolvedRole: Role = Role.PARTICIPANT;
+    if (role) {
+      const upperRole = role.toUpperCase();
+      if (Object.values(Role).includes(upperRole as Role)) {
+        resolvedRole = upperRole as Role;
+      }
+    }
+    const isParticipant = resolvedRole === Role.PARTICIPANT;
 
     let encryptedAadhaar: string | null = null;
 
@@ -140,7 +146,7 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    if (user.role !== role) {
+    if (user.role?.toUpperCase() !== role?.toUpperCase()) {
       throw new UnauthorizedException('Invalid role');
     }
 
@@ -218,7 +224,7 @@ export class AuthService {
     };
   }
 
-  async verifyOtp(email?: string, phone?: string, otp?: string) {
+  verifyOtp(email?: string, phone?: string, otp?: string) {
     const identifier = email || phone;
     if (!identifier || !otp) {
       throw new BadRequestException('Identifier and OTP are required');

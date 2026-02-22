@@ -49,7 +49,7 @@ export class ShortlistController {
   )
   async submit(
     @UploadedFile() pptxFile: Express.Multer.File,
-    @Body() body: any,
+    @Body() body: Record<string, string>,
   ) {
     if (!pptxFile) throw new Error('PPTX file is required.');
     if (!body.teamName?.trim()) throw new Error('Team name is required.');

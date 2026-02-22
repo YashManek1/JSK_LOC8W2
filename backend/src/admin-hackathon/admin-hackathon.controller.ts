@@ -1,4 +1,12 @@
-import { Controller, Post, Get, Body, UseGuards, Req } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Get,
+  Body,
+  UseGuards,
+  Req,
+  Param,
+} from '@nestjs/common';
 import { AdminHackathonService } from './admin-hackathon.service';
 import { CreateHackathonDto } from './dto/create-hackathon.dto';
 import { AuthGuard } from '@nestjs/passport'; // Or your custom JwtAuthGuard
@@ -29,5 +37,23 @@ export class AdminHackathonController {
   @Get('stats')
   async getStats(@Req() req: RequestWithUser) {
     return this.adminHackathonService.getStats(req.user.userId);
+  }
+
+  @Post(':id/allocate-ps')
+  async allocatePS(
+    @Req() req: RequestWithUser,
+    @Param('id') hackathonId: string,
+    @Body()
+    dto: {
+      maxTeamsPerDomain?: number;
+      minTeamsPerDomain?: number;
+      dynamicCapacities?: Record<string, number>;
+    },
+  ) {
+    return this.adminHackathonService.allocateProblemStatements(
+      req.user.userId,
+      hackathonId,
+      dto,
+    );
   }
 }

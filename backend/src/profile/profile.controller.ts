@@ -15,28 +15,33 @@ import { FileInterceptor } from '@nestjs/platform-express';
 export class ProfileController {
   constructor(private readonly profileService: ProfileService) {}
 
-  @Get(':id')
-  async getProfile(@Param('id') id: string) {
-    return this.profileService.getProfile(id);
+  @Get(':userId')
+  async getProfile(@Param('userId') userId: string) {
+    return this.profileService.getProfile(userId);
   }
 
-  @Put(':id')
+  @Put(':userId')
   async updateProfile(
-    @Param('id') id: string,
+    @Param('userId') userId: string,
     @Body() body: Record<string, unknown>,
   ) {
-    return this.profileService.updateProfile(id, body);
+    return this.profileService.updateProfile(userId, body);
   }
 
-  @Post(':id/resume')
-  @UseInterceptors(FileInterceptor('resume'))
+  @Post('submit')
+  async submitProfile(@Body('userId') userId: string) {
+    return this.profileService.submitProfile(userId);
+  }
+
+  @Post(':userId/resume')
+  @UseInterceptors(FileInterceptor('file')) // Frontend expects `file` not `resume`
   async uploadResume(
-    @Param('id') id: string,
+    @Param('userId') userId: string,
     @UploadedFile() file: Express.Multer.File,
   ) {
     if (!file) {
       throw new Error('Resume file is required');
     }
-    return this.profileService.extractResumeData(id, file);
+    return this.profileService.extractResumeData(userId, file);
   }
 }

@@ -39,7 +39,7 @@ export class DashboardService {
       return null;
     }
 
-    const pptScores = shortlistEntry.pptScores as any;
+    const pptScores = shortlistEntry.pptScores as Record<string, number>;
 
     return {
       overall: shortlistEntry.finalScore || 0,
