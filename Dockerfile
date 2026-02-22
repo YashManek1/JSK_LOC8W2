@@ -29,11 +29,13 @@ RUN find node_modules/@prisma node_modules/.prisma -type f -name "*windows*" -de
 FROM python:3.10-slim AS python-builder
 WORKDIR /app
 
+# 🚨 FIX: Added 'curl' and 'ca-certificates' to handle robust model downloading
 RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc g++ binutils \
     libgl1 \
     libglib2.0-0 \
     libxcb1 \
+    curl ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
 # Pull in the ultra-fast Rust-based 'uv' package manager
@@ -44,12 +46,7 @@ ENV PATH="/opt/venv/bin:$PATH"
 
 COPY identity-service/requirements.txt ./
 
-# 🚨 THE ULTIMATE ANTI-BLOAT FIX: 
-# Everything is chained in a single RUN command so Docker never caches the GPU bloat.
-# 1. Force CPU-only indices.
-# 2. Uninstall GPU TensorFlow and completely wipe its folder to prevent overlap corruption.
-# 3. Nuke NVIDIA and Triton packages.
-# 4. Install lightweight tensorflow-cpu and aggressively strip C++ debug symbols.
+# Install Python requirements and wipe GPU bloat
 RUN uv pip install --no-cache torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu \
     && uv pip install --no-cache -r requirements.txt --index-url https://download.pytorch.org/whl/cpu --extra-index-url https://pypi.org/simple \
     && uv pip uninstall -y tensorflow tensorflow-cpu \
@@ -61,8 +58,10 @@ RUN uv pip install --no-cache torch torchvision torchaudio --index-url https://d
     && find /opt/venv -type d -name "__pycache__" -exec rm -rf {} + \
     && find /opt/venv -name "*.pyc" -delete
 
-# Pre-download ML models at build time to prevent massive startup delays/OOM in Railway
-RUN python -c "import easyocr; easyocr.Reader(['en'], gpu=False); from deepface import DeepFace; DeepFace.build_model('ArcFace')"
+# 🚨 FIX: Manually download the ArcFace model using cURL with aggressive retries so broken pipes don't fail the build.
+RUN mkdir -p /root/.deepface/weights \
+    && curl -L --retry 5 --retry-connrefused --retry-delay 2 -o /root/.deepface/weights/arcface_weights.h5 https://github.com/serengil/deepface_models/releases/download/v1.0/arcface_weights.h5 \
+    && python -c "import easyocr; easyocr.Reader(['en'], gpu=False); from deepface import DeepFace; DeepFace.build_model('ArcFace')"
 
 
 # ----- Stage 3: Final Production Image -----
