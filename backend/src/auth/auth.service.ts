@@ -9,6 +9,9 @@ import { JwtService } from '@nestjs/jwt';
 import { Aes256Service } from '../security/aes256.service';
 import { Participant, Role } from '@prisma/client';
 import { MailService } from '../mail/mail.service';
+import * as fs from 'fs';
+import * as path from 'path';
+import { v4 as uuidv4 } from 'uuid';
 interface SignupData {
   email: string;
   password: string;
@@ -42,9 +45,8 @@ export class AuthService {
   async signup(
     data: SignupData,
     aadhaarFile?: Express.Multer.File,
-    _idCardFile?: Express.Multer.File,
+    idCardFile?: Express.Multer.File,
   ) {
-    void _idCardFile;
     const { email, password, fullName, phone, college, role } = data;
 
     const existingUser = await this.prisma.participant.findUnique({
@@ -110,6 +112,21 @@ export class AuthService {
       encryptedAadhaar = this.aes256.encrypt(aadhaarNumber);
     }
 
+    let idCardUrl: string | null = null;
+    if (isParticipant && idCardFile) {
+      const fileExt = path.extname(idCardFile.originalname);
+      const fileName = `idcard_${uuidv4()}${fileExt}`;
+      const uploadsDir = path.join(process.cwd(), 'uploads');
+
+      if (!fs.existsSync(uploadsDir)) {
+        fs.mkdirSync(uploadsDir, { recursive: true });
+      }
+
+      const filePath = path.join(uploadsDir, fileName);
+      fs.writeFileSync(filePath, idCardFile.buffer);
+      idCardUrl = `/uploads/${fileName}`;
+    }
+
     // Create user
     const user = await this.prisma.participant.create({
       data: {
@@ -120,6 +137,7 @@ export class AuthService {
         college,
         role: resolvedRole,
         aadhaarEncrypted: encryptedAadhaar,
+        idCardUrl,
       },
     });
 

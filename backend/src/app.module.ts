@@ -22,6 +22,9 @@ import { JudgeController } from './judge/judge.controller';
 import { AdminModule } from './admin/admin.module';
 import { StudentModule } from './student/student.module';
 import { HackathonModule } from './hackathon/hackathon.module';
+import { PrismaModule } from './prisma/prisma.module';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import { join } from 'path';
 import * as dotenv from 'dotenv';
 
 dotenv.config();
@@ -40,6 +43,10 @@ const redisUrl = process.env.REDIS_URL ? new URL(process.env.REDIS_URL) : null;
         password: redisUrl?.password || undefined,
       },
     }),
+    ServeStaticModule.forRoot({
+      rootPath: join(process.cwd(), 'uploads'),
+      serveRoot: '/uploads',
+    }),
     EvaluateModule,
     QueueModule,
     VoiceChatModule,
@@ -57,8 +64,9 @@ const redisUrl = process.env.REDIS_URL ? new URL(process.env.REDIS_URL) : null;
     AdminModule,
     StudentModule,
     HackathonModule,
+    PrismaModule,
   ],
   controllers: [AppController, MockDataController, JudgeController],
   providers: [AppService, JudgeService],
 })
-export class AppModule {}
+export class AppModule { }
