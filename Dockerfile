@@ -61,7 +61,7 @@ RUN uv pip install --no-cache torch torchvision torchaudio \
     && rm -rf /opt/venv/lib/python3.10/site-packages/tensorboard* \
     && rm -rf /opt/venv/lib/python3.10/site-packages/nvidia* \
     && rm -rf /opt/venv/lib/python3.10/site-packages/triton* \
-    && uv pip install --no-cache "tensorflow-cpu<2.16" "protobuf==3.20.3" \
+    && uv pip install --no-cache "tensorflow-cpu<2.16" "protobuf==3.20.3" tf-keras \
     && find /opt/venv -name "*.so" -exec strip --strip-unneeded {} \; || true \
     && find /opt/venv -type d -name "__pycache__" -exec rm -rf {} + \
     && find /opt/venv -name "*.pyc" -delete
