@@ -15,6 +15,10 @@ import PPTRound1Page from "./pages/PPTRound1Page";
 import ShortlistAnnouncementPage from "./pages/ShortlistAnnouncementPage";
 import CommunityPage from "./pages/CommunityPage";
 import GeminiLivePage from "./pages/GeminiLivePage";
+import ProfileViewPage from "./pages/ProfileViewPage";
+import EvaluationStatus from "./pages/EvaluationStatus";
+import ShortlistSubmit from "./pages/ShortlistSubmit";
+import ShortlistResult from "./pages/ShortlistResult";
 
 function Router() {
   const { currentPage } = useApp();
@@ -29,11 +33,15 @@ function Router() {
     pptRound1: <PPTRound1Page />,
     shortlistAnnouncement: <ShortlistAnnouncementPage />,
     community: <CommunityPage />,
+    profileView: <ProfileViewPage />,
     landing: <LandingPage />,
     qr: <QRPage />,
     studentDashboard: <StudentDashboard />,
     adminHackathons: <AdminHackathonsPage />,
     adminDashboard: <AdminDashboard />,
+    evaluationStatus: <EvaluationStatus />,
+    shortlistSubmit: <ShortlistSubmit />,
+    shortlistResult: <ShortlistResult />,
     judgeDashboard: <JudgeDashboard />,
   };
 

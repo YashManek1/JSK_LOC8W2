@@ -1,20 +1,39 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useApp } from "../context/AppContext";
 
 export default function ProblemStatementPreferencesPage() {
-  const { selectedHackathon, teamData, saveProblemsPreference, proceedToNextPhase } = useApp();
+  const { selectedHackathon, teamData, saveProblemsPreference, proceedToNextPhase, fetchProblemStatements } = useApp();
 
-  // Mock problem statements
-  const mockProblems = [
-    { id: "p1", domain: "AI/ML", title: "Optimize Image Recognition", difficulty: "Hard" },
-    { id: "p2", domain: "AI/ML", title: "Build Chatbot", difficulty: "Medium" },
-    { id: "p3", domain: "Web Dev", title: "Create Real-time Dashboard", difficulty: "Hard" },
-    { id: "p4", domain: "Web Dev", title: "Build Todo App with APIs", difficulty: "Easy" },
-    { id: "p5", domain: "Blockchain", title: "Smart Contract Audit", difficulty: "Hard" },
-    { id: "p6", domain: "Blockchain", title: "Build DeFi Protocol", difficulty: "Very Hard" },
-  ];
-
+  const [domains, setDomains] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   const [preferences, setPreferences] = useState([]);
+
+  useEffect(() => {
+    const loadPS = async () => {
+      if (!selectedHackathon?.id) {
+        setLoading(false);
+        return;
+      }
+      const result = await fetchProblemStatements(selectedHackathon.id);
+      if (result?.success) {
+        setDomains(result.data.domains || []);
+      } else {
+        setError(result?.message || "Cannot load problem statements");
+      }
+      setLoading(false);
+    };
+    loadPS();
+  }, [selectedHackathon?.id]);
+
+  // Flatten domains into a list of selectable problems
+  const allProblems = domains.flatMap((domain) =>
+    (domain.problems || []).map((title, idx) => ({
+      id: `${domain.id || domain.name}-${idx}`,
+      domain: domain.name,
+      title,
+    }))
+  );
 
   const togglePreference = (problem) => {
     setPreferences((prev) => {
@@ -39,6 +58,29 @@ export default function ProblemStatementPreferencesPage() {
 
   const cardCls = "bg-[#111] border border-white/10 rounded-2xl p-8";
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#0a0a0a] text-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin text-4xl mb-4">⏳</div>
+          <p className="text-white/40">Loading problem statements...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-[#0a0a0a] text-white flex items-center justify-center p-6">
+        <div className="text-center max-w-md">
+          <p className="text-5xl mb-4">🔒</p>
+          <h2 className="text-2xl font-bold mb-2">Problem Statements Not Available</h2>
+          <p className="text-white/40">{error}</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white p-6 relative overflow-hidden">
       <div className="absolute inset-0">
@@ -59,38 +101,39 @@ export default function ProblemStatementPreferencesPage() {
           <h2 className="text-xl font-bold mb-2">Available Problem Statements</h2>
           <p className="text-white/60 text-sm mb-6">Select up to 3 problems in order of preference</p>
 
-          {/* Problems Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-            {mockProblems.map((problem) => {
-              const isSelected = preferences.find((p) => p.id === problem.id);
-              const rank = preferences.findIndex((p) => p.id === problem.id) + 1;
+          {/* Domain sections */}
+          {domains.map((domain) => (
+            <div key={domain.id || domain.name} className="mb-6">
+              <h3 className="text-[#B4ED57] text-xs font-bold uppercase tracking-widest mb-3">{domain.name}</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {(domain.problems || []).map((title, idx) => {
+                  const problemId = `${domain.id || domain.name}-${idx}`;
+                  const isSelected = preferences.find((p) => p.id === problemId);
+                  const rank = preferences.findIndex((p) => p.id === problemId) + 1;
 
-              return (
-                <button
-                  key={problem.id}
-                  onClick={() => togglePreference(problem)}
-                  className={`p-4 rounded-xl border-2 transition-all text-left ${
-                    isSelected
-                      ? "bg-[#B4ED57]/10 border-[#B4ED57]"
-                      : "bg-white/5 border-white/10 hover:border-[#B4ED57]/40"
-                  }`}
-                >
-                  <div className="flex justify-between items-start mb-2">
-                    <div className="flex-1">
-                      <p className="text-white/60 text-xs mb-1">{problem.domain}</p>
-                      <p className="text-white font-bold">{problem.title}</p>
-                    </div>
-                    {isSelected && (
-                      <span className="bg-[#B4ED57] text-black text-xs font-bold px-2 py-1 rounded-full ml-2">
-                        #{rank}
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-white/50 text-xs">Difficulty: {problem.difficulty}</p>
-                </button>
-              );
-            })}
-          </div>
+                  return (
+                    <button
+                      key={problemId}
+                      onClick={() => togglePreference({ id: problemId, domain: domain.name, title })}
+                      className={`p-4 rounded-xl border-2 transition-all text-left ${isSelected
+                        ? "bg-[#B4ED57]/10 border-[#B4ED57]"
+                        : "bg-white/5 border-white/10 hover:border-[#B4ED57]/40"
+                        }`}
+                    >
+                      <div className="flex justify-between items-start mb-1">
+                        <p className="text-white font-bold text-sm">{title}</p>
+                        {isSelected && (
+                          <span className="bg-[#B4ED57] text-black text-xs font-bold px-2 py-1 rounded-full ml-2">
+                            #{rank}
+                          </span>
+                        )}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
 
           {/* Selected Problems */}
           {preferences.length > 0 && (

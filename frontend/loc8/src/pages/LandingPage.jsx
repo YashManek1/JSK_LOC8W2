@@ -8,30 +8,22 @@ import Footer from "../components/layout/Footer";
 import { HACKATHONS } from "../data/hackathons";
 
 export default function LandingPage() {
-  const { navigateTo, setSelectedHackathon, joinTeam } = useApp();
+  const { navigateTo, setSelectedHackathon } = useApp();
 
-  /**
-   * Handles the registration flow for a student.
-   * Sets the active hackathon, simulates team formation, 
-   * and moves the user to the QR entry gate.
-   */
   const handleHackathonClick = (hackathon) => {
     setSelectedHackathon(hackathon);
-    // In a real app, this would open a team invitation modal.
-    // Here we trigger the 'teamJoined' state to allow QR generation.
-    joinTeam(); 
-    navigateTo("qr"); 
+    navigateTo("auth");
   };
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white">
       <Navbar />
-      
+
       <main>
         {/* Visual Hero and Global Stats */}
         <HeroSection />
         <StatsBar />
-        
+
         <div className="max-w-7xl mx-auto px-6 py-20">
           <div className="flex items-end justify-between mb-12">
             <div>
@@ -55,10 +47,10 @@ export default function LandingPage() {
           {/* Hackathon Listing Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {HACKATHONS.map((hackathon) => (
-              <HackathonCard 
-                key={hackathon.id} 
-                hackathon={hackathon} 
-                onClick={() => handleHackathonClick(hackathon)} 
+              <HackathonCard
+                key={hackathon.id}
+                hackathon={hackathon}
+                onClick={() => handleHackathonClick(hackathon)}
               />
             ))}
           </div>

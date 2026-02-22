@@ -99,7 +99,7 @@ export default function ShortlistAnnouncementPage() {
               <div className="bg-white/5 rounded-xl p-6">
                 <p className="text-white/60 text-sm mb-3">FEEDBACK</p>
                 <p className="text-white/80 text-sm leading-relaxed">
-                  While your team didn't make it to the next round this time, we really appreciated your effort and innovation. 
+                  While your team didn't make it to the next round this time, we really appreciated your effort and innovation.
                   Please join us for future hackathons and keep building amazing solutions!
                 </p>
               </div>

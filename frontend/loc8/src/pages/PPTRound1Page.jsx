@@ -86,7 +86,7 @@ export default function PPTRound1Page() {
             <div className="bg-[#B4ED57]/10 border border-[#B4ED57]/30 rounded-xl p-4 mb-8">
               <p className="text-[#B4ED57] text-xs font-bold mb-2">WHAT'S NEXT?</p>
               <p className="text-white/80 text-sm">
-                Our judges will evaluate all presentations. Shortlisted teams will be announced shortly. 
+                Our judges will evaluate all presentations. Shortlisted teams will be announced shortly.
                 Keep checking your dashboard for updates!
               </p>
             </div>

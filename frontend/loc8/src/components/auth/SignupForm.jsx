@@ -30,15 +30,15 @@ export default function SignupForm() {
       performAadhaarOCR(files[0]);
       return;
     }
-    
+
     if (files && files[0]) {
       const file = files[0];
-      
+
       // File validation logic from friend's code
       const maxSize = 5 * 1024 * 1024; // 5MB
       const validImageTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
       const validPdfTypes = ['application/pdf'];
-      
+
       if (name === 'aadhar') {
         if (!validImageTypes.includes(file.type) && !validPdfTypes.includes(file.type)) {
           setOtpError("Aadhaar: Please upload a valid image or PDF file");
@@ -49,7 +49,7 @@ export default function SignupForm() {
           return;
         }
       }
-      
+
       if (name === 'collegeId') {
         if (!validImageTypes.includes(file.type)) {
           setOtpError("College ID: Please upload a valid image file (JPG, PNG)");
@@ -60,10 +60,10 @@ export default function SignupForm() {
           return;
         }
       }
-      
+
       setOtpError("");
       setForm((prev) => ({ ...prev, [name]: file }));
-      
+
       // Log file upload (simulated backend)
       console.log(`[FILE UPLOAD] ${name}:`, file.name, `(${(file.size / 1024).toFixed(2)} KB)`);
     } else {
@@ -84,11 +84,14 @@ export default function SignupForm() {
         body: fd,
       });
       const data = await res.json();
-      if (res.ok && data.aadhaarNumber) {
-        setAadhaarNumber(data.aadhaarNumber);
+      console.log("[Aadhaar OCR] Status:", res.status, "Response:", data);
+      // Backend may return the number under different field names
+      const extractedNumber = data.aadhaarNumber || data.aadhaar_number || data.aadhaar || data.number || null;
+      if (res.ok && extractedNumber) {
+        setAadhaarNumber(extractedNumber);
       } else {
         setAadhaarError(
-          "Could not read Aadhaar number. Please try a clearer image.",
+          data.message || data.error || "Could not read Aadhaar number. Please try a clearer image.",
         );
       }
     } catch {
@@ -102,9 +105,57 @@ export default function SignupForm() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    // Temporarily navigate directly to judge dashboard
-    navigateTo("judgeDashboard");
-    return;
+    setOtpError("");
+    setLoading(true);
+
+    try {
+      const fd = new FormData();
+      fd.append("fullName", form.name);
+      fd.append("email", form.email);
+      fd.append("password", form.password);
+      const roleMap = { student: "Participant", mentor: "Mentor", organiser: "Organiser" };
+      fd.append("role", roleMap[role] || "Participant");
+
+      if (role === "student") {
+        fd.append("college", form.college);
+        fd.append("phone", form.phone);
+        if (form.aadhar) fd.append("aadhar", form.aadhar);
+        if (form.collegeId) fd.append("collegeId", form.collegeId);
+      }
+
+      const res = await fetch(`${API_BASE_URL}/auth/register`, {
+        method: "POST",
+        body: fd,
+      });
+      const data = await res.json();
+
+      if (res.ok) {
+        const mappedRole =
+          role === "organiser"
+            ? "admin"
+            : data.user?.role === "Participant"
+              ? "student"
+              : role;
+
+        loginUser(
+          {
+            id: data.user?.id || data.userId,
+            name: form.name,
+            email: form.email,
+            role: mappedRole,
+            hackathonId: selectedHackathon?.id || "h1",
+            hackathonName: selectedHackathon?.name || "HackOS 2026",
+          },
+          data.token || data.accessToken,
+        );
+      } else {
+        setOtpError(data.message || "Signup failed. Please try again.");
+      }
+    } catch (err) {
+      setOtpError("Network error. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleRequestOtp = async (e) => {

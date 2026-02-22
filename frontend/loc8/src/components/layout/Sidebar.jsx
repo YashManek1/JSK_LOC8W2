@@ -14,6 +14,8 @@ const adminNav = [
   { icon: "⊞", label: "Overview", key: "overview" },
   { icon: "👥", label: "Teams", key: "teams" },
   { icon: "📊", label: "PPT Evaluation", key: "ppt" },
+  { icon: "🛡️", label: "Screening", key: "screening" },
+  { icon: "✅", label: "Shortlist", key: "shortlist" },
   { icon: "📱", label: "QR Management", key: "qr" },
   { icon: "🔑", label: "Credential Management", key: "credentials" },
   { icon: "📦", label: "Allocations", key: "allocations" },
@@ -114,7 +116,7 @@ function AdminIcon({ name, active }) {
 }
 
 export default function Sidebar({ activeSection, setActiveSection, variant = "student", showRecruitment = false }) {
-  const { logout, currentUser } = useApp();
+  const { logout, currentUser, navigateTo } = useApp();
 
   /* ═══════════ ADMIN: Hover-expandable sidebar ═══════════ */
   if (variant === "admin") {
@@ -158,8 +160,8 @@ export default function Sidebar({ activeSection, setActiveSection, variant = "st
                 key={item.key}
                 onClick={() => setActiveSection(item.key)}
                 className={`w-full flex items-center rounded-xl transition-all duration-200 ${isActive
-                    ? "bg-[#B4ED57] text-black font-bold shadow-lg shadow-[#B4ED57]/20"
-                    : "text-white/50 hover:text-white hover:bg-white/5"
+                  ? "bg-[#B4ED57] text-black font-bold shadow-lg shadow-[#B4ED57]/20"
+                  : "text-white/50 hover:text-white hover:bg-white/5"
                   }`}
               >
                 <span className="w-12 h-10 flex items-center justify-center shrink-0">
@@ -175,7 +177,10 @@ export default function Sidebar({ activeSection, setActiveSection, variant = "st
 
         {/* Bottom: Profile + Logout */}
         <div className="px-2 pb-4 space-y-1">
-          <button className="w-full flex items-center rounded-xl text-white/50 hover:text-white hover:bg-white/5 transition-all duration-200">
+          <button
+            onClick={() => navigateTo("profileView")}
+            className="w-full flex items-center rounded-xl text-white/50 hover:text-white hover:bg-white/5 transition-all duration-200"
+          >
             <span className="w-12 h-10 flex items-center justify-center shrink-0">
               <AdminIcon name="profile" />
             </span>
@@ -223,8 +228,8 @@ export default function Sidebar({ activeSection, setActiveSection, variant = "st
             key={item.key}
             onClick={() => setActiveSection(item.key)}
             className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl text-sm transition-all ${activeSection === item.key
-                ? "bg-[#B4ED57]/15 text-[#B4ED57] border border-[#B4ED57]/20"
-                : "text-white/50 hover:text-white hover:bg-white/5"
+              ? "bg-[#B4ED57]/15 text-[#B4ED57] border border-[#B4ED57]/20"
+              : "text-white/50 hover:text-white hover:bg-white/5"
               }`}
           >
             <span className="text-base flex-shrink-0">{item.icon}</span>
@@ -244,6 +249,13 @@ export default function Sidebar({ activeSection, setActiveSection, variant = "st
             <div className="text-white/40 text-xs capitalize">{currentUser?.role}</div>
           </div>
         </div>
+        <button
+          onClick={() => navigateTo("profileView")}
+          className="w-full flex items-center justify-center md:justify-start gap-2 px-3 py-2.5 rounded-xl text-white/50 hover:text-white hover:bg-white/5 text-sm transition-all mb-1"
+        >
+          <span>👤</span>
+          <span className="hidden md:block">Profile</span>
+        </button>
         <button
           onClick={logout}
           className="w-full flex items-center justify-center md:justify-start gap-2 px-3 py-2.5 rounded-xl text-white/50 hover:text-white hover:bg-white/5 text-sm transition-all"

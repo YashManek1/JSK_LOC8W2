@@ -63,7 +63,7 @@ const CompleteProfilePage = () => {
     try {
       const raw = localStorage.getItem("voiceExtractedData");
       if (raw) voiceData = JSON.parse(raw);
-    } catch {}
+    } catch { }
 
     // Parse hackathonPreferences (could be string or object)
     let preferredRoles = [];
@@ -113,9 +113,43 @@ const CompleteProfilePage = () => {
     };
   });
 
+  // On mount: try to fetch existing profile from server and merge
   useEffect(() => {
+    const fetchExistingProfile = async () => {
+      if (!currentUser?.id) return;
+      try {
+        const res = await fetch(`${API_BASE_URL}/profile/${currentUser.id}`, {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        });
+        if (res.ok) {
+          const data = await res.json();
+          const p = data.profile || data;
+          setFormData((prev) => ({
+            tagline: prev.tagline || p.tagline || "",
+            university: prev.university || p.college || p.education?.institution || "",
+            degree: prev.degree || p.education?.degree || "",
+            endYear: prev.endYear || p.education?.year || "",
+            skills: prev.skills.length > 0 ? prev.skills : (p.primarySkillset || []),
+            github: prev.github || p.githubUrl || "",
+            linkedin: prev.linkedin || p.linkedinUrl || "",
+            portfolio: prev.portfolio || p.portfolioUrl || "",
+            motivation: prev.motivation || p.motivation || "",
+            resumeName: prev.resumeName,
+            resumeUrl: prev.resumeUrl,
+            experienceLevel: prev.experienceLevel !== "Beginner" ? prev.experienceLevel : (p.hackathonPreferences?.experienceLevel || "Beginner"),
+            preferredRoles: prev.preferredRoles.length > 0 ? prev.preferredRoles : (p.hackathonPreferences?.roles || []),
+            domainInterests: prev.domainInterests.length > 0 ? prev.domainInterests : (p.hackathonPreferences?.domains || []),
+          }));
+        }
+        // 404 = new user, just use voice data — no error needed
+      } catch {
+        // Network error — continue with existing form data
+      }
+    };
+    fetchExistingProfile();
+
     return () => localStorage.removeItem("voiceExtractedData");
-  }, []);
+  }, [currentUser?.id, token]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -148,7 +182,11 @@ const CompleteProfilePage = () => {
         fd.append("resume", file);
         const res = await fetch(
           `${API_BASE_URL}/profile/${currentUser.id}/resume`,
-          { method: "POST", body: fd },
+          {
+            method: "POST",
+            headers: token ? { Authorization: `Bearer ${token}` } : {},
+            body: fd,
+          },
         );
         const data = await res.json();
         if (res.ok && data.extractedData) {
@@ -217,29 +255,27 @@ const CompleteProfilePage = () => {
         primarySkillset: formData.skills,
         githubUrl: formData.github || null,
         linkedinUrl: formData.linkedin || null,
+        portfolioUrl: formData.portfolio || null,
         motivation: formData.motivation || null,
-        socialLinks: {
-          portfolio: formData.portfolio || "",
-          linkedin: formData.linkedin || "",
-          github: formData.github || "",
-        },
         hackathonPreferences: {
-          preferredRoles: formData.preferredRoles,
-          domainInterests: formData.domainInterests,
+          roles: formData.preferredRoles,
+          domains: formData.domainInterests,
           experienceLevel: formData.experienceLevel,
         },
-        education: [
-          {
-            institution: formData.university,
-            degree: formData.degree,
-            year: formData.endYear,
-          },
-        ],
+        education: {
+          institution: formData.university || null,
+          degree: formData.degree || null,
+          year: formData.endYear || null,
+        },
       };
 
+      console.log("[Profile PUT] currentUser:", currentUser, "id:", currentUser?.id);
       const res = await fetch(`${API_BASE_URL}/profile/${currentUser.id}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
         body: JSON.stringify(profilePayload),
       });
       if (!res.ok) {
