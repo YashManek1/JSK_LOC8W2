@@ -44,25 +44,24 @@ COPY --from=ghcr.io/astral-sh/uv:latest /uv /bin/uv
 RUN python -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
+# Set the Extra Index globally.
+ENV UV_EXTRA_INDEX_URL="https://download.pytorch.org/whl/cpu"
+
 COPY identity-service/requirements.txt ./
 
-# 🚨 THE ULTIMATE ANTI-BLOAT SOLUTION 🚨
-# 1. Swap heavy OpenCV for lightweight OpenCV-Headless.
-# 2. Install CPU PyTorch FIRST.
-# 3. Use bash pipes to dynamically hunt down and DESTROY all NVIDIA, Triton, and GPU TensorFlow packages.
-# 4. Strip C++ debug symbols from remaining libraries to squeeze out the last drops of space.
-RUN sed -i 's/opencv-python/opencv-python-headless/g' requirements.txt || true \
-    && uv pip install --no-cache torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu \
-    && uv pip install --no-cache -r requirements.txt --extra-index-url https://download.pytorch.org/whl/cpu \
-    && uv pip freeze | grep -i "nvidia" | cut -d= -f1 | xargs -r uv pip uninstall -y \
-    && uv pip freeze | grep -i "triton" | cut -d= -f1 | xargs -r uv pip uninstall -y \
-    && uv pip freeze | grep -i "tensorflow" | cut -d= -f1 | xargs -r uv pip uninstall -y \
-    && uv pip freeze | grep -i "keras" | cut -d= -f1 | xargs -r uv pip uninstall -y \
-    && uv pip freeze | grep -i "tensorboard" | cut -d= -f1 | xargs -r uv pip uninstall -y \
-    && uv pip install --no-cache "tensorflow-cpu<2.16" tf-keras \
+# 🚨 THE ULTIMATE ANTI-BLOAT FIX (Patched for grep errors)
+RUN uv pip install --no-cache torch torchvision torchaudio \
+    && uv pip install --no-cache -r requirements.txt --extra-index-url https://pypi.org/simple \
+    && uv pip uninstall -y tensorflow tensorflow-cpu keras tf-keras tensorboard tensorboard-data-server tensorflow-io-gcs-filesystem || true \
+    && rm -rf /opt/venv/lib/python3.10/site-packages/tensorflow* \
+    && rm -rf /opt/venv/lib/python3.10/site-packages/keras* \
+    && rm -rf /opt/venv/lib/python3.10/site-packages/tensorboard* \
+    && rm -rf /opt/venv/lib/python3.10/site-packages/nvidia* \
+    && rm -rf /opt/venv/lib/python3.10/site-packages/triton* \
+    && uv pip install --no-cache "tensorflow-cpu<2.16" \
     && find /opt/venv -name "*.so" -exec strip --strip-unneeded {} \; || true \
-    && find /opt/venv -type d -name "__pycache__" -exec rm -rf {} + \
-    && find /opt/venv -name "*.pyc" -delete
+    && find /opt/venv -type d -name "__pycache__" -exec rm -rf {} + || true \
+    && find /opt/venv -name "*.pyc" -delete || true
 
 # Pre-download ArcFace Model using a robust wget resume loop
 RUN mkdir -p /root/.deepface/weights \
@@ -70,7 +69,6 @@ RUN mkdir -p /root/.deepface/weights \
          wget -c -O /root/.deepface/weights/arcface_weights.h5 https://github.com/serengil/deepface_models/releases/download/v1.0/arcface_weights.h5 && break || sleep 2; \
        done \
     && python -c "import os; os.environ['TF_CPP_MIN_LOG_LEVEL']='3'; import easyocr; easyocr.Reader(['en'], gpu=False); from deepface import DeepFace; DeepFace.build_model('ArcFace')"
-
 
 # ----- Stage 3: Final Production Image -----
 FROM python:3.10-slim
