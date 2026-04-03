@@ -45,27 +45,53 @@ export default function IdentityVerification() {
     setError(null);
     setResult(null);
 
-    const formData = new FormData();
-    formData.append("email", email);
-    formData.append("aadhaar", aadhaarFile);
-    formData.append("idCard", idCardFile);
-    formData.append("selfie", selfieFile);
-
     try {
-      const res = await fetch(
-        "/api/chat/verify-identity",
-        {
-          method: "POST",
-          body: formData,
-        },
-      );
-
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.message || "Verification failed");
+      // Aadhaar OCR
+      const aadhaarForm = new FormData();
+      aadhaarForm.append("file", aadhaarFile);
+      const aadhaarRes = await fetch("http://localhost:8000/ocr/aadhaar", {
+        method: "POST",
+        body: aadhaarForm,
+      });
+      let aadhaarData = {};
+      try {
+        const aadhaarText = await aadhaarRes.text();
+        aadhaarData = aadhaarText ? JSON.parse(aadhaarText) : {};
+      } catch (err) {
+        throw new Error("Failed to parse Aadhaar OCR response.");
+      }
+      if (!aadhaarRes.ok) {
+        throw new Error(aadhaarData.detail || "Aadhaar OCR failed");
       }
 
-      setResult(data);
+      // Face verification
+      const faceForm = new FormData();
+      faceForm.append("selfie", selfieFile);
+      faceForm.append("document", idCardFile);
+      const faceRes = await fetch("http://localhost:8000/verify/face", {
+        method: "POST",
+        body: faceForm,
+      });
+      let faceData = {};
+      try {
+        const faceText = await faceRes.text();
+        faceData = faceText ? JSON.parse(faceText) : {};
+      } catch (err) {
+        throw new Error("Failed to parse Face Verification response.");
+      }
+      if (!faceRes.ok) {
+        throw new Error(faceData.detail || "Face verification failed");
+      }
+
+      // Combine results
+      setResult({
+        message: "Verification successful!",
+        aadhaarNumber: aadhaarData.aadhaarNumber || "Not found",
+        faceMatchConfidence:
+          faceData.distance !== undefined ? 1 - faceData.distance : 0,
+        isMatch: faceData.isMatch,
+        embedding: faceData.faceEmbedding,
+      });
     } catch (err) {
       setError(err.message);
     } finally {

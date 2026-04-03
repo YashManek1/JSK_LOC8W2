@@ -112,6 +112,10 @@
       "**/*.(t|j)s"
     ],
     "coverageDirectory": "../coverage",
-    "testEnvironment": "node"
+    "testEnvironment": "node",
+    "moduleNameMapper": {
+      "^uuid$": "<rootDir>/../test/mock.js",
+      "^@octokit/rest$": "<rootDir>/../test/mock.js"
+    }
   }
 }

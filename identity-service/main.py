@@ -90,7 +90,7 @@ async def verify_face(selfie: UploadFile = File(...), document: UploadFile = Fil
         embedding_objs = DeepFace.represent(
             img_path=selfie_img,
             model_name="ArcFace",
-            detector_backend="opencv",
+            detector_backend="mtcnn",
             enforce_detection=True
         )
         face_embedding = embedding_objs[0]["embedding"] if len(embedding_objs) > 0 else []

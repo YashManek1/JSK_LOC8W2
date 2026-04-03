@@ -1,0 +1,523 @@
+[
+  {
+    "route": "POST /auth/signup",
+    "purpose": "Register a new user (participant or admin)",
+    "payload": {
+      "email": "string",
+      "password": "string",
+      "fullName": "string (optional)",
+      "phone": "string (optional)",
+      "college": "string (optional)",
+      "role": "string (optional)",
+      "files": {
+        "aadhaar": "Express.Multer.File[] (required for participants)",
+        "idCard": "Express.Multer.File[] (required for participants)"
+      }
+    },
+    "response": { "id": "string", "email": "string", "role": "string" }
+  },
+  {
+    "route": "POST /auth/login",
+    "purpose": "Login existing user and return access tokens",
+    "payload": { "email": "string", "password": "string", "role": "string" },
+    "response": { "accessToken": "string" }
+  },
+  {
+    "route": "GET /auth/github",
+    "purpose": "Initiates the GitHub OAuth flow",
+    "payload": {},
+    "response": "Redirects to GitHub OAuth page"
+  },
+  {
+    "route": "GET /auth/github/callback",
+    "purpose": "Handles GitHub OAuth callback",
+    "payload": {},
+    "response": "Redirects to frontend with tokens on success or error page on failure"
+  },
+  {
+    "route": "POST /auth/send-otp",
+    "purpose": "Send an OTP for verification",
+    "payload": { "email": "string", "phone": "string (optional)" },
+    "response": { "message": "string" }
+  },
+  {
+    "route": "POST /auth/verify-otp",
+    "purpose": "Verify a sent OTP",
+    "payload": { "email": "string", "phone": "string (optional)", "otp": "string" },
+    "response": { "verified": "boolean" }
+  },
+  {
+    "route": "GET /api/admin/users",
+    "purpose": "Get all users (Admin only)",
+    "payload": {},
+    "response": "[ { \"id\": \"string\", \"email\": \"string\", \"role\": \"string\" } ]"
+  },
+  {
+    "route": "POST /api/admin/users",
+    "purpose": "Create a new user manually (Admin only)",
+    "payload": { "email": "string", "role": "string" },
+    "response": { "id": "string", "email": "string", "role": "string" }
+  },
+  {
+    "route": "PATCH /api/admin/users/:userId/status",
+    "purpose": "Toggle the status of a user (Admin only)",
+    "payload": { "status": "string" },
+    "response": { "id": "string", "status": "string" }
+  },
+  {
+    "route": "PATCH /api/admin/users/:userId/role",
+    "purpose": "Change the role of a user (Admin only)",
+    "payload": { "role": "string" },
+    "response": { "id": "string", "role": "string" }
+  },
+  {
+    "route": "GET /api/admin/participants",
+    "purpose": "Get all participants (Admin only)",
+    "payload": {},
+    "response": "[ { \"id\": \"string\", \"name\": \"string\" } ]"
+  },
+  {
+    "route": "GET /api/admin/stats/overview",
+    "purpose": "Get platform-wide statistics for admins",
+    "payload": {},
+    "response": { "totalUsers": "number", "totalTeams": "number" }
+  },
+  {
+    "route": "GET /api/hackathon/:id/time",
+    "purpose": "Get start and end times for a specific hackathon",
+    "payload": {},
+    "response": { "startTime": "Date", "endTime": "Date" }
+  },
+  {
+    "route": "POST /registration/team",
+    "purpose": "Create a new team for a participant",
+    "payload": { "teamName": "string", "hackathonId": "string" },
+    "response": { "id": "string", "teamName": "string" }
+  },
+  {
+    "route": "POST /registration/join",
+    "purpose": "Join an existing team via invite code",
+    "payload": { "teamCode": "string" },
+    "response": { "joined": "boolean" }
+  },
+  {
+    "route": "POST /registration/solo",
+    "purpose": "Register user as solo participant for community features",
+    "payload": { "hackathonId": "string" },
+    "response": { "solo": "boolean" }
+  },
+  {
+    "route": "GET /registration/community/:hackathonId",
+    "purpose": "Get community members for a hackathon",
+    "payload": {},
+    "response": "[ { \"id\": \"string\", \"name\": \"string\" } ]"
+  },
+  {
+    "route": "PUT /registration/team/:teamId",
+    "purpose": "Update team details (like team name)",
+    "payload": { "teamName": "string" },
+    "response": { "id": "string", "name": "string" }
+  },
+  {
+    "route": "DELETE /registration/team/:teamId",
+    "purpose": "Delete a team",
+    "payload": {},
+    "response": { "deleted": "boolean" }
+  },
+  {
+    "route": "POST /registration/invite/:teamId/:userId",
+    "purpose": "Invite a solo user to join a team",
+    "payload": {},
+    "response": { "invited": "boolean" }
+  },
+  {
+    "route": "PUT /registration/team/finalize/:teamId",
+    "purpose": "Finalize a team's registration (freeze changes)",
+    "payload": {},
+    "response": { "finalized": "boolean" }
+  },
+  {
+    "route": "GET /profile/:userId",
+    "purpose": "Get participant's profile details",
+    "payload": {},
+    "response": { "id": "string", "name": "string", "college": "string" }
+  },
+  {
+    "route": "PUT /profile/:userId",
+    "purpose": "Update participant's profile (delta updates)",
+    "payload": "Record<string, unknown>",
+    "response": { "updated": "boolean" }
+  },
+  {
+    "route": "POST /profile/submit",
+    "purpose": "Submit full profile details (used during onboarding)",
+    "payload": { "userId": "string", "college": "string", "skills": "string[]" },
+    "response": { "submitted": "boolean" }
+  },
+  {
+    "route": "POST /profile/:userId/resume",
+    "purpose": "Upload resume file and trigger data extraction parsing",
+    "payload": { "file": "Express.Multer.File" },
+    "response": { "skills": "string[]", "parsedText": "string" }
+  },
+  {
+    "route": "POST /evaluate",
+    "purpose": "Submit a presentation for automated evaluation via PPTX/PDF upload",
+    "payload": { "teamName": "string", "githubUrl": "string", "pptx": "Express.Multer.File" },
+    "response": { "id": "string" }
+  },
+  {
+    "route": "GET /evaluate/:id",
+    "purpose": "Get standard evaluation status and details",
+    "payload": {},
+    "response": { "id": "string", "status": "string", "score": "number" }
+  },
+  {
+    "route": "GET /evaluate/stream?evaluationId=:id",
+    "purpose": "Server-Sent Events streaming of evaluation status",
+    "payload": {},
+    "response": "SSE Stream of { \"data\": { ...evaluation details } }"
+  },
+  {
+    "route": "POST /evaluate/score",
+    "purpose": "Save judge's scores for a specific team presentation / evaluation",
+    "payload": { "evaluationId": "string", "scores": "Record<string, number>", "judgeId": "string (optional)" },
+    "response": { "saved": "boolean" }
+  },
+  {
+    "route": "POST /check-in/scan",
+    "purpose": "Admin scans a check-in QR code",
+    "payload": { "qrToken": "string" },
+    "response": { "success": "boolean" }
+  },
+  {
+    "route": "POST /check-in/verify-face",
+    "purpose": "Admin verifies participant via live face selfie",
+    "payload": { "participantId": "string", "selfie": "Express.Multer.File" },
+    "response": { "matched": "boolean" }
+  },
+  {
+    "route": "POST /check-in/scan-meal",
+    "purpose": "Admin scans a meal QR code",
+    "payload": { "qrToken": "string" },
+    "response": { "meal": "string" }
+  },
+  {
+    "route": "GET /check-in/my-qr/:hackathonId",
+    "purpose": "Get the personal check-in QR code for a student",
+    "payload": {},
+    "response": { "qr": "string (base64 image)" }
+  },
+  {
+    "route": "GET /check-in/my-meals/:hackathonId",
+    "purpose": "Get personal meal QR codes for a student",
+    "payload": {},
+    "response": "[ { \"meal\": \"string\", \"used\": \"boolean\" } ]"
+  },
+  {
+    "route": "GET /api/community/teams",
+    "purpose": "Get teams looking for more members",
+    "payload": {},
+    "response": "[ { \"id\": \"string\", \"name\": \"string\" } ]"
+  },
+  {
+    "route": "GET /api/community/solo",
+    "purpose": "Get solo participants looking for teams",
+    "payload": {},
+    "response": "[ { \"id\": \"string\", \"name\": \"string\" } ]"
+  },
+  {
+    "route": "GET /api/community/requests",
+    "purpose": "Get pending team join requests",
+    "payload": {},
+    "response": "[]"
+  },
+  {
+    "route": "GET /api/community/discussions",
+    "purpose": "Get all public community discussions",
+    "payload": {},
+    "response": "[ { \"id\": \"string\", \"title\": \"string\" } ]"
+  },
+  {
+    "route": "POST /api/community/discussions",
+    "purpose": "Create a new community discussion",
+    "payload": { "title": "string", "content": "string" },
+    "response": { "id": "string", "title": "string" }
+  },
+  {
+    "route": "GET /api/community/discussions/:id",
+    "purpose": "Get discussion details",
+    "payload": {},
+    "response": { "id": "string", "title": "string", "content": "string", "replies": "[]" }
+  },
+  {
+    "route": "POST /api/community/discussions/:id/like",
+    "purpose": "Like a community discussion",
+    "payload": {},
+    "response": { "likes": "number" }
+  },
+  {
+    "route": "POST /api/community/discussions/:id/reply",
+    "purpose": "Reply to a discussion",
+    "payload": { "content": "string" },
+    "response": { "id": "string" }
+  },
+  {
+    "route": "GET /api/dashboard/commits/:teamId",
+    "purpose": "Get total git commits and contributors for a team repo",
+    "payload": {},
+    "response": { "total": "number", "contributors": "string[]" }
+  },
+  {
+    "route": "GET /api/dashboard/ppt-scores/:teamId",
+    "purpose": "Get evaluated PPT scores for a team",
+    "payload": {},
+    "response": { "overall": "number", "breakdown": "Record<string, number>" }
+  },
+  {
+    "route": "GET /api/dashboard/summary/:teamId",
+    "purpose": "Get aggregated github commits and PPT scores summary for dashboard",
+    "payload": {},
+    "response": { "teamId": "string", "commits": "object", "pptScores": "object" }
+  },
+  {
+    "route": "POST /github/sync/:shortlistId",
+    "purpose": "Force synchronization of GitHub repo stats for a shortlisted entry",
+    "payload": { "githubUrl": "string (optional)" },
+    "response": { "synced": "boolean" }
+  },
+  {
+    "route": "GET /github/stats/:shortlistId",
+    "purpose": "Get cached GitHub repo stats",
+    "payload": {},
+    "response": { "totalCommits": "number", "lastUpdated": "Date" }
+  },
+  {
+    "route": "GET /github/commits/:teamName",
+    "purpose": "Get GitHub repo commits directly mapped to a team name",
+    "payload": {},
+    "response": { "total": "number", "contributors": "string[]", "lastUpdated": "Date", "teamName": "string" }
+  },
+  {
+    "route": "GET /api/judge/teams",
+    "purpose": "Get all teams assigned to the authenticated judge",
+    "payload": {},
+    "response": "[ { \"id\": \"string\", \"name\": \"string\" } ]"
+  },
+  {
+    "route": "POST /api/judge/score/:teamId",
+    "purpose": "Submit judge's scores for a team",
+    "payload": { "scores": "object { clarity: number, innovation: number, execution: number }" },
+    "response": { "saved": "boolean" }
+  },
+  {
+    "route": "POST /api/judge/note/:teamId",
+    "purpose": "Submit a textual judge's note for a team",
+    "payload": { "note": "string" },
+    "response": { "noted": "boolean" }
+  },
+  {
+    "route": "POST /shortlist/submit",
+    "purpose": "Allows participant to submit project (PPTX & GitHub) for shortlisting",
+    "payload": { "pptx": "Express.Multer.File", "teamName": "string", "githubUrl": "string (optional)" },
+    "response": { "id": "string" }
+  },
+  {
+    "route": "GET /shortlist/:id",
+    "purpose": "Get participant shortlist entry (filters admin notes)",
+    "payload": {},
+    "response": { "id": "string", "teamName": "string", "score": "number" }
+  },
+  {
+    "route": "GET /admin/config",
+    "purpose": "Get admin config for shortlisting round",
+    "payload": {},
+    "response": { "maxRounds": "number" }
+  },
+  {
+    "route": "POST /admin/config",
+    "purpose": "Save admin config for shortlisting round",
+    "payload": "any object config",
+    "response": "saved config object"
+  },
+  {
+    "route": "POST /admin/new-round",
+    "purpose": "Trigger a new evaluation round for shortlisting",
+    "payload": {},
+    "response": { "round": "number" }
+  },
+  {
+    "route": "POST /admin/mass-upload",
+    "purpose": "Mass upload multiple PPTX files for bulk team shortlisting",
+    "payload": { "pptxFiles": "Express.Multer.File[] array up to 200 files" },
+    "response": { "count": "number", "etaSeconds": "number" }
+  },
+  {
+    "route": "POST /admin/start-evaluation",
+    "purpose": "Trigger processing of queued mass evaluation items",
+    "payload": {},
+    "response": { "queued": "number", "started": "boolean" }
+  },
+  {
+    "route": "GET /admin/leaderboard",
+    "purpose": "View shortlist leaderboard",
+    "payload": {},
+    "response": "[ { \"rank\": \"number\", \"teamName\": \"string\", \"score\": \"number\" } ]"
+  },
+  {
+    "route": "GET /admin/entries",
+    "purpose": "Get all shortlist entries (including admin notes)",
+    "payload": {},
+    "response": "[ ...entries ]"
+  },
+  {
+    "route": "GET /admin/queue-status",
+    "purpose": "View background mass-processing queue status",
+    "payload": {},
+    "response": { "pending": "number", "processing": "number", "done": "number", "failed": "number" }
+  },
+  {
+    "route": "GET /admin/stats",
+    "purpose": "Get shortlist queue and parsing stats",
+    "payload": {},
+    "response": "Stats object"
+  },
+  {
+    "route": "POST /admin/entries/:id/eliminate",
+    "purpose": "Eliminate a team from the shortlist",
+    "payload": {},
+    "response": { "eliminated": "boolean" }
+  },
+  {
+    "route": "POST /admin/entries/:id/restore",
+    "purpose": "Restore an eliminated team",
+    "payload": {},
+    "response": { "restored": "boolean" }
+  },
+  {
+    "route": "POST /admin/entries/:id/requeue",
+    "purpose": "Re-queue an evaluation parsing for a specific team",
+    "payload": {},
+    "response": { "requeued": "boolean" }
+  },
+  {
+    "route": "PATCH /admin/entries/:id/note",
+    "purpose": "Set an administrator tracking note on a team",
+    "payload": { "note": "string" },
+    "response": { "noted": "boolean" }
+  },
+  {
+    "route": "PATCH /admin/entries/:id/override",
+    "purpose": "Manually override automated scores for a team",
+    "payload": { "score": "number", "note": "string (optional)" },
+    "response": { "overridden": "boolean" }
+  },
+  {
+    "route": "POST /admin/publish",
+    "purpose": "Publish current shortlist leaderboards",
+    "payload": {},
+    "response": { "published": "boolean" }
+  },
+  {
+    "route": "POST /admin/rescore",
+    "purpose": "Force a rescore calculation across all existing entries",
+    "payload": {},
+    "response": { "rescored": "number" }
+  },
+  {
+    "route": "GET /api/student/score",
+    "purpose": "Get current student's gamified performance score",
+    "payload": {},
+    "response": { "score": "number" }
+  },
+  {
+    "route": "GET /api/student/meals",
+    "purpose": "Get student's meal status array",
+    "payload": {},
+    "response": "[ { \"meal\": \"string\", \"used\": \"boolean\" } ]"
+  },
+  {
+    "route": "POST /api/chat/start",
+    "purpose": "Start a voice chat or text support session given email",
+    "payload": { "email": "string" },
+    "response": { "sessionId": "string" }
+  },
+  {
+    "route": "POST /api/chat/voice",
+    "purpose": "Process audio message recording",
+    "payload": { "sessionId": "string", "audio": "Express.Multer.File" },
+    "response": { "reply": "string", "responseAudio": "string (base64 or URL)" }
+  },
+  {
+    "route": "POST /api/chat/message",
+    "purpose": "Process textual chat message",
+    "payload": { "sessionId": "string", "message": "string" },
+    "response": { "reply": "string" }
+  },
+  {
+    "route": "GET /api/chat/:sessionId",
+    "purpose": "Get current state/history of support session",
+    "payload": {},
+    "response": { "sessionId": "string", "status": "string", "history": "[]" }
+  },
+  {
+    "route": "POST /api/chat/verify-identity",
+    "purpose": "Verify identity via documents as an alternative chat fallback",
+    "payload": { "email": "string", "aadhaar": "Express.Multer.File", "idCard": "Express.Multer.File", "selfie": "Express.Multer.File" },
+    "response": { "verified": "boolean" }
+  },
+  {
+    "route": "GET /ps/:hackathonId",
+    "purpose": "Retrieve problem statements if published, for fully registered teams",
+    "payload": {},
+    "response": { "hackathonName": "string", "psReleaseDate": "Date", "domains": "[ { id: string, name: string } ]" }
+  },
+  {
+    "route": "GET /ps/:hackathonId/preferences",
+    "purpose": "Get current problem statement preferences for user's team",
+    "payload": {},
+    "response": { "preferences": "string[] array of up to 3 domain IDs" }
+  },
+  {
+    "route": "PUT /ps/:hackathonId/preferences",
+    "purpose": "Set top 3 problem statement preferences for team (leader only)",
+    "payload": { "preferences": "string[]" },
+    "response": { "message": "string", "preferences": "string[]" }
+  },
+  {
+    "route": "POST /api/identity/verify",
+    "purpose": "Participant trigger to verify their identity matching ID and live face",
+    "payload": { "idCard": "Express.Multer.File", "liveSelfie": "Express.Multer.File" },
+    "response": { "verified": "boolean" }
+  },
+  {
+    "route": "POST /notifications/subscribe",
+    "purpose": "Subscribes client device for Web Push notifications",
+    "payload": { "endpoint": "string", "keys": { "p256dh": "string", "auth": "string" } },
+    "response": { "message": "string" }
+  },
+  {
+    "route": "POST /admin/hackathons",
+    "purpose": "Admin creates a new hackathon",
+    "payload": { "name": "string", "startDate": "string (ISO)", "endDate": "string (ISO)" },
+    "response": { "id": "string", "name": "string" }
+  },
+  {
+    "route": "GET /admin/hackathons",
+    "purpose": "Get all hackathons managed by logged-in admin",
+    "payload": {},
+    "response": "[ { \"id\": \"string\", \"name\": \"string\" } ]"
+  },
+  {
+    "route": "GET /admin/hackathons/stats",
+    "purpose": "Admin organizational stats regarding hackathons",
+    "payload": {},
+    "response": { "total": "number", "active": "number" }
+  },
+  {
+    "route": "POST /admin/hackathons/:id/allocate-ps",
+    "purpose": "Programmatically allocate problem statement domains to teams based on preferences and capacities",
+    "payload": { "maxTeamsPerDomain": "number (optional)", "minTeamsPerDomain": "number (optional)", "dynamicCapacities": "Record<string, number> (optional)" },
+    "response": { "allocated": "number" }
+  }
+]
